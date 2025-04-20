@@ -40,8 +40,20 @@
 
         <div class="col-md-12">
             <label for="photo" class="form-label">Upload New Photo (optional)</label>
-            <input type="file" name="photo" class="form-control">
+            <input type="file" name="photo" class="form-control" onchange="previewPhoto(event)">
             <input type="hidden" name="existing_photo" value="{{ resident[6] }}">
+
+            {% if resident[6] %}
+            <div class="mt-3">
+                <label class="form-label">Current Photo:</label><br>
+                <img id="currentPhoto" src="{{ url_for('static', filename=resident[6].replace('static/', '').replace('\\', '/')) }}" alt="Current Photo" width="120">
+            </div>
+            {% endif %}
+
+            <div class="mt-3" id="previewContainer" style="display:none;">
+                <label class="form-label">New Photo Preview:</label><br>
+                <img id="photoPreview" src="#" alt="New Photo" width="120">
+            </div>
         </div>
 
         <div class="col-12 d-flex justify-content-between mt-3">
@@ -50,5 +62,20 @@
         </div>
     </div>
 </form>
+
+<script>
+    function previewPhoto(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            const preview = document.getElementById('photoPreview');
+            preview.src = reader.result;
+            document.getElementById('previewContainer').style.display = 'block';
+        };
+        if (event.target.files.length > 0) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+</script>
 {% endblock %}
+
 
