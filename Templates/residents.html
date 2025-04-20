@@ -7,7 +7,7 @@
 <div class="mb-4">
     <a href="{{ url_for('import_residents') }}" class="btn btn-success">Import Residents</a>
     <a href="{{ url_for('export_residents') }}" class="btn btn-success">Export Residents</a>
-    
+
     <form action="{{ url_for('delete_all_residents') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL residents?');">
         <button type="submit" class="btn btn-danger">Delete All Residents</button>
     </form>
@@ -23,8 +23,8 @@
             <input type="text" name="mdoc" class="form-control" placeholder="MDOC" required>
         </div>
         <div class="col-md-4">
-            <select name="unit" class="form-select" required>
-                <option value="" disabled selected>Select Unit</option>
+            <select name="area" class="form-select" required>
+                <option value="" disabled selected>Select Area</option>
                 {% for option in unit_options %}
                 <option value="{{ option }}">{{ option }}</option>
                 {% endfor %}
@@ -58,13 +58,14 @@
     </div>
 </form>
 
+<!-- ✅ Filters -->
 <div class="row g-2 mb-3 align-items-end">
     <div class="col-md-3">
         <input type="text" id="searchInput" class="form-control" placeholder="Search residents..." onkeyup="filterTable()" autocomplete="off">
     </div>
     <div class="col-md-2">
-        <select id="filterUnit" class="form-select" onchange="filterTable()">
-            <option value="">All Units</option>
+        <select id="filterArea" class="form-select" onchange="filterTable()">
+            <option value="">All Areas</option>
             {% for option in unit_options %}
             <option value="{{ option }}">{{ option }}</option>
             {% endfor %}
@@ -91,6 +92,7 @@
     </div>
 </div>
 
+<!-- ✅ Table -->
 <div class="card p-3">
     <h5 class="card-title">All Residents</h5>
     <div class="table-responsive">
@@ -99,7 +101,7 @@
                 <tr>
                     <th>Name</th>
                     <th>MDOC</th>
-                    <th>Unit</th>
+                    <th>Area</th>
                     <th>Housing Unit</th>
                     <th>Level</th>
                     <th>Photo</th>
@@ -116,7 +118,7 @@
                     <td>{{ r[5] }}</td>
                     <td>
                         {% if r[6] %}
-                            <img src="{{ url_for('static', filename=r[6].replace('static/', '').replace('\\', '/').replace('\\', '/') )|urlencode }}" alt="Photo" width="60">
+                            <img src="{{ url_for('static', filename=r[6].replace('static/', '').replace('\\', '/'))|urlencode }}" alt="Photo" width="60">
                         {% else %}
                             N/A
                         {% endif %}
@@ -137,34 +139,35 @@
 <script>
     function filterTable() {
         const search = document.getElementById("searchInput").value.toLowerCase();
-        const unit = document.getElementById("filterUnit").value.toLowerCase();
+        const area = document.getElementById("filterArea").value.toLowerCase();
         const housing = document.getElementById("filterHousing").value.toLowerCase();
         const level = document.getElementById("filterLevel").value.toLowerCase();
         const rows = document.querySelectorAll("#residentsTable tbody tr");
 
         rows.forEach(row => {
             const rowText = row.innerText.toLowerCase();
-            const rowUnit = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+            const rowArea = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
             const rowHousing = row.querySelector("td:nth-child(4)").innerText.toLowerCase();
             const rowLevel = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
 
             const matchSearch = rowText.includes(search);
-            const matchUnit = unit === "" || rowUnit === unit;
+            const matchArea = area === "" || rowArea === area;
             const matchHousing = housing === "" || rowHousing === housing;
             const matchLevel = level === "" || rowLevel === level;
 
-            row.style.display = (matchSearch && matchUnit && matchHousing && matchLevel) ? "" : "none";
+            row.style.display = (matchSearch && matchArea && matchHousing && matchLevel) ? "" : "none";
         });
     }
 
     function resetFilters() {
         document.getElementById("searchInput").value = "";
-        document.getElementById("filterUnit").value = "";
+        document.getElementById("filterArea").value = "";
         document.getElementById("filterHousing").value = "";
         document.getElementById("filterLevel").value = "";
         filterTable();
     }
 </script>
 {% endblock %}
+
 
 
