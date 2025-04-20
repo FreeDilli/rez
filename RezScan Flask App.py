@@ -189,7 +189,7 @@ def edit_resident(mdoc):
         c = conn.cursor()
         if request.method == 'POST':
             name = request.form['name'].strip()
-            mdoc = request.form['mdoc'].strip()
+            new_mdoc = request.form['mdoc'].strip()  # New mdoc value from the form
             unit = request.form['unit'].strip()
             housing_unit = request.form['housing_unit'].strip()
             level = request.form['level'].strip()
@@ -202,16 +202,30 @@ def edit_resident(mdoc):
                 photo_file.save(filepath)
                 photo_path = os.path.join('static', 'uploads', filename).replace("\\", "/")
 
-            c.execute("""
-                UPDATE residents
-                SET name = ?, mdoc = ?, unit = ?, housing_unit = ?, level = ?, photo = ?
-                WHERE id = ?
-            """, (name, mdoc, unit, housing_unit, level, photo_path, mdoc))
-            conn.commit()
+            try:
+                c.execute("""
+                    UPDATE residents
+                    SET name = ?, mdoc = ?, unit = ?, housing_unit = ?, level = ?, photo = ?
+                    WHERE id = ?
+                """, (name, new_mdoc, unit, housing_unit, level, photo_path, mdoc))
+                conn.commit()
+                flash("Resident updated successfully.", "success")
+            except sqlite3.IntegrityError:
+                flash("Error: MDOC must be unique.", "error")
+                # Re-fetch resident for re-rendering the form
+                c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE id = ?", (mdoc,))
+                resident = c.fetchone()
+                return render_template('edit_resident.html', resident=resident,
+                                       unit_options=unit_options, housing_options=housing_options, level_options=level_options)
+
             return redirect(url_for('manage_residents'))
 
+        # Fetch resident by id
         c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE id = ?", (mdoc,))
         resident = c.fetchone()
+        if not resident:
+            flash("Resident not found.", "error")
+            return redirect(url_for('manage_residents'))
 
     return render_template('edit_resident.html', resident=resident,
                            unit_options=unit_options, housing_options=housing_options, level_options=level_options)
@@ -227,6 +241,7 @@ def delete_resident(mdoc):
         c = conn.cursor()
         c.execute("DELETE FROM residents WHERE id = ?", (mdoc,))
         conn.commit()
+        flash("Resident deleted successfully.", "success")
     return redirect(url_for('manage_residents'))
 # ---------------------
 # End Delete Resident
