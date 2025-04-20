@@ -231,7 +231,19 @@ def delete_resident(mdoc):
 # ---------------------
 # End Delete Resident
 # ---------------------
-
+# -------------------------
+# Start Delete All Residents
+# -------------------------
+@app.route('/admin/residents/delete_all', methods=['POST'])
+def delete_all_residents():
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM residents")
+        conn.commit()
+    return redirect(url_for('manage_residents'))
+# -------------------------
+# End Delete All Residents
+# -------------------------
 # ---------------------
 # Start Export Residents
 # ---------------------
