@@ -121,7 +121,7 @@ def scan():
 @app.route('/admin/residents', methods=['GET', 'POST'])
 def manage_residents():
     message = None
-    area_options = ["Unit I", "Unit II", "Unit III", "MPU", "SMWRC"]
+    area_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
     unit_options = [
         "Delta", "Echo", "Foxtrot", "Dorm 5", "Dorm 6",
         "Women's Center", "A Pod", "B North", "B South",
@@ -175,7 +175,7 @@ def manage_residents():
 # ---------------------
 @app.route('/admin/residents/edit/<int:resident_id>', methods=['GET', 'POST'])
 def edit_resident(resident_id):
-    area_options = ["Unit I", "Unit II", "Unit III", "MPU", "SMWRC"]
+    area_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
     unit_options = [
         "Delta", "Echo", "Foxtrot", "Dorm 5", "Dorm 6",
         "Women's Center", "A Pod", "B North", "B South",
@@ -288,8 +288,8 @@ def sample_csv():
     sample = io.StringIO()
     writer = csv.writer(sample)
     writer.writerow(['name', 'barcode', 'area', 'housing_unit', 'level', 'photo'])
-    writer.writerow(['John Doe', '1001', 'Unit I', 'Delta', 'Level 1', ''])
-    writer.writerow(['Jane Smith', '1002', 'Unit II', 'Dorm 5', 'Level 2', ''])
+    writer.writerow(['John Doe', '1001', 'Unit 1', 'Delta', 'Level 1', ''])
+    writer.writerow(['Jane Smith', '1002', 'Unit 2', 'Dorm 5', 'Level 2', ''])
     sample.seek(0)
     return send_file(io.BytesIO(sample.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='sample_residents.csv')
 # ---------------------
