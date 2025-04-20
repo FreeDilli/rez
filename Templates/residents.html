@@ -7,7 +7,12 @@
 <div class="mb-4">
     <a href="{{ url_for('import_residents') }}" class="btn btn-success">Import Residents</a>
     <a href="{{ url_for('export_residents') }}" class="btn btn-success">Export Residents</a>
+    
+    <form action="{{ url_for('delete_all_residents') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL residents?');">
+        <button type="submit" class="btn btn-danger">Delete All Residents</button>
+    </form>
 </div>
+
 
 <!-- ✅ Add Resident Form -->
 <form method="POST" enctype="multipart/form-data" class="card p-4 mb-4">
