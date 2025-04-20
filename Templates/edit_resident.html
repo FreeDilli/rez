@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+
+{% block title %}Edit Resident{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Edit Resident</h2>
+<form method="POST" enctype="multipart/form-data" class="card p-4">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <input type="text" name="name" class="form-control" placeholder="Resident Name" value="{{ resident[1] }}" required>
+        </div>
+        <div class="col-md-6">
+            <input type="text" name="barcode" class="form-control" placeholder="Barcode ID" value="{{ resident[2] }}" required>
+        </div>
+
+        <div class="col-md-4">
+            <select name="area" class="form-select" required>
+                {% for option in area_options %}
+                <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select name="housing_unit" class="form-select" required>
+                {% for option in unit_options %}
+                <option value="{{ option }}" {% if option == resident[4] %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select name="level" class="form-select" required>
+                {% for option in level_options %}
+                <option value="{{ option }}" {% if option == resident[5] %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-12">
+            <label for="photo" class="form-label">Upload New Photo (optional)</label>
+            <input type="file" name="photo" class="form-control">
+            <input type="hidden" name="existing_photo" value="{{ resident[6] }}">
+        </div>
+
+        <div class="col-12 d-flex justify-content-between mt-3">
+            <a href="{{ url_for('manage_residents') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button class="btn btn-primary" type="submit">Update Resident</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

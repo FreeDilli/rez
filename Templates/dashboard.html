@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+
+{% block title %}Live Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Live Dashboard</h2>
+    <a href="{{ url_for('manage_residents') }}" class="btn btn-outline-primary">← Back to Admin</a>
+</div>
+
+{% if data %}
+    {% set grouped = {} %}
+    {% for row in data %}
+        {% set location = row[5] %}
+        {% if location not in grouped %}
+            {% set _ = grouped.update({location: []}) %}
+        {% endif %}
+        {% set _ = grouped[location].append(row) %}
+    {% endfor %}
+
+    {% for location, people in grouped.items() %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ location }}</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Barcode</th>
+                            <th>Area</th>
+                            <th>Housing Unit</th>
+                            <th>Level</th>
+                            <th>Scanned In</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in people %}
+                        <tr>
+                            <td>{{ p[0] }}</td>
+                            <td>{{ p[1] }}</td>
+                            <td>{{ p[2] }}</td>
+                            <td>{{ p[3] }}</td>
+                            <td>{{ p[4] }}</td>
+                            <td>{{ p[6][:19]|replace('T', ' ') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">No residents are currently checked in.</div>
+{% endif %}
+{% endblock %}
+
+

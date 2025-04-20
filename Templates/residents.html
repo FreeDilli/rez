@@ -1,0 +1,166 @@
+{% extends 'layout.html' %}
+
+{% block title %}Manage Residents{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Resident Management</h2>
+
+<!-- ✅ Add Resident Form -->
+<form method="POST" enctype="multipart/form-data" class="card p-4 mb-4">
+    <h5 class="card-title">Add New Resident</h5>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <input type="text" name="name" class="form-control" placeholder="Resident Name" required>
+        </div>
+        <div class="col-md-6">
+            <input type="text" name="barcode" class="form-control" placeholder="Barcode ID" required>
+        </div>
+
+        <div class="col-md-4">
+            <select name="area" class="form-select" required>
+                <option value="" disabled selected>Select Area</option>
+                {% for option in area_options %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select name="housing_unit" class="form-select" required>
+                <option value="" disabled selected>Select Housing Unit</option>
+                {% for option in unit_options %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select name="level" class="form-select" required>
+                <option value="" disabled selected>Select Level</option>
+                {% for option in level_options %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-12">
+            <label for="photo" class="form-label">Upload Photo (optional)</label>
+            <input type="file" name="photo" class="form-control">
+        </div>
+
+        <div class="col-12 d-grid mt-3">
+            <button class="btn btn-success" type="submit">Add Resident</button>
+        </div>
+    </div>
+</form>
+
+<!-- ✅ Filter Controls -->
+<div class="row g-2 mb-3 align-items-end">
+    <div class="col-md-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search residents..." onkeyup="filterTable()" autocomplete="off">
+    </div>
+    <div class="col-md-2">
+        <select id="filterArea" class="form-select" onchange="filterTable()">
+            <option value="">All Areas</option>
+            {% for option in area_options %}
+            <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select id="filterHousing" class="form-select" onchange="filterTable()">
+            <option value="">All Housing</option>
+            {% for option in unit_options %}
+            <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select id="filterLevel" class="form-select" onchange="filterTable()">
+            <option value="">All Levels</option>
+            {% for option in level_options %}
+            <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
+    </div>
+</div>
+
+<!-- ✅ Residents Table with Edit/Delete -->
+<div class="card p-3">
+    <h5 class="card-title">All Residents</h5>
+    <div class="table-responsive">
+        <table id="residentsTable" class="table table-striped mt-3 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Barcode</th>
+                    <th>Area</th>
+                    <th>Housing Unit</th>
+                    <th>Level</th>
+                    <th>Photo</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in residents %}
+                <tr>
+                    <td>{{ r[1] }}</td>
+                    <td>{{ r[2] }}</td>
+                    <td>{{ r[3] }}</td>
+                    <td>{{ r[4] }}</td>
+                    <td>{{ r[5] }}</td>
+                    <td>
+                        {% if r[6] %}
+                            <img src="{{ url_for('static', filename=r[6].replace('static/', '').replace('\\', '/').replace('\\', '/') )|urlencode }}" alt="Photo" width="60">
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit_resident', resident_id=r[0]) }}" class="btn btn-sm btn-primary">Edit</a>
+                        <form action="{{ url_for('delete_resident', resident_id=r[0]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this resident?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        const search = document.getElementById("searchInput").value.toLowerCase();
+        const area = document.getElementById("filterArea").value.toLowerCase();
+        const housing = document.getElementById("filterHousing").value.toLowerCase();
+        const level = document.getElementById("filterLevel").value.toLowerCase();
+        const rows = document.querySelectorAll("#residentsTable tbody tr");
+
+        rows.forEach(row => {
+            const rowText = row.innerText.toLowerCase();
+            const rowArea = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+            const rowHousing = row.querySelector("td:nth-child(4)").innerText.toLowerCase();
+            const rowLevel = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
+
+            const matchSearch = rowText.includes(search);
+            const matchArea = area === "" || rowArea === area;
+            const matchHousing = housing === "" || rowHousing === housing;
+            const matchLevel = level === "" || rowLevel === level;
+
+            row.style.display = (matchSearch && matchArea && matchHousing && matchLevel) ? "" : "none";
+        });
+    }
+
+    function resetFilters() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("filterArea").value = "";
+        document.getElementById("filterHousing").value = "";
+        document.getElementById("filterLevel").value = "";
+        filterTable();
+    }
+</script>
+{% endblock %}
+
+

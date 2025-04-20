@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% block title %}Scan In/Out{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Scan In/Out</h2>
+<form method="POST" class="card p-4">
+    <div class="mb-3">
+        <label for="barcode" class="form-label">Scan Barcode</label>
+        <input type="text" name="barcode" class="form-control" placeholder="Scan or enter barcode" required autofocus>
+    </div>
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary">Submit Scan</button>
+    </div>
+</form>
+
+{% if message %}
+<div class="alert alert-info mt-4">{{ message }}</div>
+{% endif %}
+{% endblock %}
+
+
