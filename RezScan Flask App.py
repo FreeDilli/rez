@@ -25,8 +25,8 @@ def init_db():
             CREATE TABLE IF NOT EXISTS residents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
-                barcode TEXT UNIQUE NOT NULL,
-                area TEXT,
+                mdoc TEXT UNIQUE NOT NULL,
+                unit TEXT,
                 housing_unit TEXT,
                 level TEXT,
                 photo TEXT
@@ -43,11 +43,11 @@ def init_db():
         c.execute('''
             CREATE TABLE IF NOT EXISTS scans (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                resident_id INTEGER,
+                mdoc INTEGER,
                 timestamp TEXT,
                 location_id INTEGER,
                 direction TEXT CHECK(direction IN ('in', 'out')),
-                FOREIGN KEY(resident_id) REFERENCES residents(id),
+                FOREIGN KEY(mdoc) REFERENCES residents(id),
                 FOREIGN KEY(location_id) REFERENCES locations(id)
             )
         ''')
@@ -73,25 +73,25 @@ def index():
 def scan():
     message = None
     if request.method == 'POST':
-        raw_input = request.form['barcode'].strip()
+        raw_input = request.form['mdoc'].strip()
         if raw_input.startswith('EDU-'):
             location = 'Education'
-            barcode = raw_input.replace('EDU-', '', 1)
+            mdoc = raw_input.replace('EDU-', '', 1)
         elif raw_input.startswith('ACT-'):
             location = 'Activities'
-            barcode = raw_input.replace('ACT-', '', 1)
+            mdoc = raw_input.replace('ACT-', '', 1)
         else:
             message = "Invalid prefix or unrecognized scanner."
             return render_template('scan.html', message=message)
 
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
-            c.execute("SELECT id FROM residents WHERE barcode = ?", (barcode,))
+            c.execute("SELECT id FROM residents WHERE mdoc = ?", (mdoc,))
             res = c.fetchone()
             if not res:
-                message = f"Resident with barcode {barcode} not found."
+                message = f"Resident with mdoc {mdoc} not found."
             else:
-                resident_id = res[0]
+                mdoc = res[0]
                 c.execute("SELECT id FROM locations WHERE name = ?", (location,))
                 loc = c.fetchone()
                 if not loc:
@@ -100,16 +100,16 @@ def scan():
                     location_id = loc[0]
                     c.execute("""
                         SELECT location_id FROM scans
-                        WHERE resident_id = ? AND direction = 'in'
+                        WHERE mdoc = ? AND direction = 'in'
                         ORDER BY timestamp DESC LIMIT 1
-                    """, (resident_id,))
+                    """, (mdoc,))
                     active = c.fetchone()
                     if active:
-                        c.execute("INSERT INTO scans (resident_id, timestamp, location_id, direction) VALUES (?, ?, ?, 'out')",
-                                  (resident_id, datetime.now().isoformat(), active[0]))
-                    c.execute("INSERT INTO scans (resident_id, timestamp, location_id, direction) VALUES (?, ?, ?, 'in')",
-                              (resident_id, datetime.now().isoformat(), location_id))
-                    message = f"{location} scan recorded for resident {barcode}."
+                        c.execute("INSERT INTO scans (mdoc, timestamp, location_id, direction) VALUES (?, ?, ?, 'out')",
+                                  (mdoc, datetime.now().isoformat(), active[0]))
+                    c.execute("INSERT INTO scans (mdoc, timestamp, location_id, direction) VALUES (?, ?, ?, 'in')",
+                              (mdoc, datetime.now().isoformat(), location_id))
+                    message = f"{location} scan recorded for resident {mdoc}."
             conn.commit()
 
     return render_template('scan.html', message=message)
@@ -123,8 +123,8 @@ def scan():
 @app.route('/admin/residents', methods=['GET', 'POST'])
 def manage_residents():
     message = None
-    area_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
-    unit_options = [
+    unit_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
+    housing_options = [
         "Delta", "Echo", "Foxtrot", "Dorm 5", "Dorm 6",
         "Women's Center", "A Pod", "B North", "B South",
         "B Ad North", "B Ad South", "C North", "C South", "C Center", "SMWRC"
@@ -141,7 +141,7 @@ def manage_residents():
                 return redirect(url_for('manage_residents'))
             else:
                 name = request.form['name'].strip()
-                barcode = request.form['barcode'].strip()
+                mdoc = request.form['mdoc'].strip()
                 area = request.form['area'].strip()
                 housing_unit = request.form['housing_unit'].strip()
                 level = request.form['level'].strip()
@@ -157,28 +157,28 @@ def manage_residents():
                     photo_path = request.form.get('photo', '').strip()
 
                 try:
-                    c.execute("INSERT INTO residents (name, barcode, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
-                              (name, barcode, area, housing_unit, level, photo_path))
+                    c.execute("INSERT INTO residents (name, mdoc, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
+                              (name, mdoc, area, housing_unit, level, photo_path))
                     conn.commit()
                     message = "Resident added successfully."
                 except sqlite3.IntegrityError:
-                    message = "Error: Barcode must be unique."
+                    message = "Error: mdoc must be unique."
 
-        c.execute("SELECT id, name, barcode, area, housing_unit, level, photo FROM residents ORDER BY name")
+        c.execute("SELECT id, name, mdoc, area, housing_unit, level, photo FROM residents ORDER BY name")
         residents = c.fetchall()
 
     return render_template('residents.html', residents=residents, message=message,
-                           area_options=area_options, unit_options=unit_options, level_options=level_options)
+                           unit_options=unit_options, housing_options=housing_options, level_options=level_options)
 # ---------------------
 # End Residents Page
 # ---------------------
 # ---------------------
 # Start Edit Residents Page
 # ---------------------
-@app.route('/admin/residents/edit/<int:resident_id>', methods=['GET', 'POST'])
-def edit_resident(resident_id):
-    area_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
-    unit_options = [
+@app.route('/admin/residents/edit/<int:mdoc>', methods=['GET', 'POST'])
+def edit_resident(mdoc):
+    unit_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
+    housing_options = [
         "Delta", "Echo", "Foxtrot", "Dorm 5", "Dorm 6",
         "Women's Center", "A Pod", "B North", "B South",
         "B Ad North", "B Ad South", "C North", "C South", "C Center", "SMWRC"
@@ -189,7 +189,7 @@ def edit_resident(resident_id):
         c = conn.cursor()
         if request.method == 'POST':
             name = request.form['name'].strip()
-            barcode = request.form['barcode'].strip()
+            mdoc = request.form['mdoc'].strip()
             area = request.form['area'].strip()
             housing_unit = request.form['housing_unit'].strip()
             level = request.form['level'].strip()
@@ -204,28 +204,28 @@ def edit_resident(resident_id):
 
             c.execute("""
                 UPDATE residents
-                SET name = ?, barcode = ?, area = ?, housing_unit = ?, level = ?, photo = ?
+                SET name = ?, mdoc = ?, area = ?, housing_unit = ?, level = ?, photo = ?
                 WHERE id = ?
-            """, (name, barcode, area, housing_unit, level, photo_path, resident_id))
+            """, (name, mdoc, area, housing_unit, level, photo_path, mdoc))
             conn.commit()
             return redirect(url_for('manage_residents'))
 
-        c.execute("SELECT id, name, barcode, area, housing_unit, level, photo FROM residents WHERE id = ?", (resident_id,))
+        c.execute("SELECT id, name, mdoc, area, housing_unit, level, photo FROM residents WHERE id = ?", (mdoc,))
         resident = c.fetchone()
 
     return render_template('edit_resident.html', resident=resident,
-                           area_options=area_options, unit_options=unit_options, level_options=level_options)
+                           unit_options=unit_options, housing_options=housing_options, level_options=level_options)
 # ---------------------
 # End Edit Residents Page
 # ---------------------
 # ---------------------
 # Start Delete Resident
 # ---------------------
-@app.route('/admin/residents/delete/<int:resident_id>', methods=['POST'])
-def delete_resident(resident_id):
+@app.route('/admin/residents/delete/<int:mdoc>', methods=['POST'])
+def delete_resident(mdoc):
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        c.execute("DELETE FROM residents WHERE id = ?", (resident_id,))
+        c.execute("DELETE FROM residents WHERE id = ?", (mdoc,))
         conn.commit()
     return redirect(url_for('manage_residents'))
 # ---------------------
@@ -239,11 +239,11 @@ def delete_resident(resident_id):
 def export_residents():
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Name', 'Barcode', 'Area', 'Housing Unit', 'Level', 'Photo'])
+    writer.writerow(['ID', 'Name', 'mdoc', 'Area', 'Housing Unit', 'Level', 'Photo'])
 
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        c.execute("SELECT id, name, barcode, area, housing_unit, level, photo FROM residents ORDER BY name")
+        c.execute("SELECT id, name, mdoc, area, housing_unit, level, photo FROM residents ORDER BY name")
         for row in c.fetchall():
             writer.writerow(row)
 
@@ -259,6 +259,7 @@ def export_residents():
 @app.route('/admin/residents/import', methods=['GET', 'POST'])
 def import_residents():
     messages = []
+    import_count = 0  # Initialize counter for successful imports
     if request.method == 'POST':
         file = request.files.get('csv_file')
         if not file or not file.filename.endswith('.csv'):
@@ -268,16 +269,20 @@ def import_residents():
             reader = csv.DictReader(stream)
             with sqlite3.connect(DB_PATH) as conn:
                 c = conn.cursor()
+                # Truncate the residents table before import
+                c.execute("DELETE FROM residents")
+                conn.commit()
                 for row in reader:
                     try:
-                        c.execute("INSERT INTO residents (name, barcode, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
-                                  (row['name'], row['barcode'], row['area'], row['housing_unit'], row['level'], row.get('photo', '')))
+                        c.execute("INSERT INTO residents (name, mdoc, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
+                                  (row['name'], row['mdoc'], row['area'], row['housing_unit'], row['level'], row.get('photo', '')))
+                        import_count += 1  # Increment counter on successful import
                         conn.commit()
                         messages.append(f"✔ Imported {row['name']}")
                     except Exception as e:
                         messages.append(f"✘ Error on {row.get('name', 'Unknown')}: {str(e)}")
 
-    return render_template('import_residents.html', messages=messages)
+    return render_template('import_residents.html', messages=messages, import_count=import_count)
 # ---------------------
 # End Import Residents
 # ---------------------
@@ -289,7 +294,7 @@ def import_residents():
 def sample_csv():
     sample = io.StringIO()
     writer = csv.writer(sample)
-    writer.writerow(['name', 'barcode', 'area', 'housing_unit', 'level', 'photo'])
+    writer.writerow(['name', 'mdoc', 'area', 'housing_unit', 'level', 'photo'])
     writer.writerow(['John Doe', '1001', 'Unit 1', 'Delta', '1', ''])
     writer.writerow(['Jane Smith', '1002', 'Unit 2', 'Dorm 5', '2', ''])
     sample.seek(0)
@@ -306,22 +311,22 @@ def dashboard():
         c = conn.cursor()
         # Get latest scan per resident
         c.execute('''
-            SELECT s.resident_id, MAX(s.timestamp)
+            SELECT s.mdoc, MAX(s.timestamp)
             FROM scans s
-            GROUP BY s.resident_id
+            GROUP BY s.mdoc
         ''')
         latest_scans = c.fetchall()
 
         # Filter only those where latest scan is 'in'
         checked_in = []
-        for resident_id, latest_time in latest_scans:
+        for mdoc, latest_time in latest_scans:
             c.execute('''
-                SELECT r.name, r.barcode, r.area, r.housing_unit, r.level, l.name, s.timestamp
+                SELECT r.name, r.mdoc, r.area, r.housing_unit, r.level, l.name, s.timestamp
                 FROM scans s
-                JOIN residents r ON s.resident_id = r.id
+                JOIN residents r ON s.mdoc = r.id
                 JOIN locations l ON s.location_id = l.id
-                WHERE s.resident_id = ? AND s.timestamp = ? AND s.direction = 'in'
-            ''', (resident_id, latest_time))
+                WHERE s.mdoc = ? AND s.timestamp = ? AND s.direction = 'in'
+            ''', (mdoc, latest_time))
             result = c.fetchone()
             if result:
                 checked_in.append(result)

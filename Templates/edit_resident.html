@@ -10,19 +10,19 @@
             <input type="text" name="name" class="form-control" placeholder="Resident Name" value="{{ resident[1] }}" required>
         </div>
         <div class="col-md-6">
-            <input type="text" name="barcode" class="form-control" placeholder="Barcode ID" value="{{ resident[2] }}" required>
+            <input type="text" name="mdoc" class="form-control" placeholder="MDOC" value="{{ resident[2] }}" required>
         </div>
 
         <div class="col-md-4">
             <select name="area" class="form-select" required>
-                {% for option in area_options %}
+                {% for option in unit_options %}
                 <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-md-4">
             <select name="housing_unit" class="form-select" required>
-                {% for option in unit_options %}
+                {% for option in housing_options %}
                 <option value="{{ option }}" {% if option == resident[4] %}selected{% endif %}>{{ option }}</option>
                 {% endfor %}
             </select>
