@@ -127,7 +127,7 @@ def manage_residents():
         "Women's Center", "A Pod", "B North", "B South",
         "B Ad North", "B Ad South", "C North", "C South", "C Center", "SMWRC"
     ]
-    level_options = ["Level 1", "Level 2", "Level 3", "Level 4"]
+    level_options = ["1", "2", "3", "4"]
 
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
@@ -181,7 +181,7 @@ def edit_resident(resident_id):
         "Women's Center", "A Pod", "B North", "B South",
         "B Ad North", "B Ad South", "C North", "C South", "C Center", "SMWRC"
     ]
-    level_options = ["Level 1", "Level 2", "Level 3", "Level 4"]
+    level_options = ["1", "2", "3", "4"]
 
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
@@ -288,8 +288,8 @@ def sample_csv():
     sample = io.StringIO()
     writer = csv.writer(sample)
     writer.writerow(['name', 'barcode', 'area', 'housing_unit', 'level', 'photo'])
-    writer.writerow(['John Doe', '1001', 'Unit 1', 'Delta', 'Level 1', ''])
-    writer.writerow(['Jane Smith', '1002', 'Unit 2', 'Dorm 5', 'Level 2', ''])
+    writer.writerow(['John Doe', '1001', 'Unit 1', 'Delta', '1', ''])
+    writer.writerow(['Jane Smith', '1002', 'Unit 2', 'Dorm 5', '2', ''])
     sample.seek(0)
     return send_file(io.BytesIO(sample.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='sample_residents.csv')
 # ---------------------
