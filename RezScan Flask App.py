@@ -50,9 +50,17 @@ def init_db():
             )
         ''')
         conn.commit()
+        
+# ---------------------
+# End Database Setup
+# ---------------------
 
 # ---------------------
 # Routes
+# ---------------------
+
+# ---------------------
+# Start Scan Page
 # ---------------------
 
 @app.route('/')
@@ -103,7 +111,13 @@ def scan():
             conn.commit()
 
     return render_template('scan.html', message=message)
+# ---------------------
+# End Scan Page
+# ---------------------
 
+# ---------------------
+# Start Residents Page
+# ---------------------
 @app.route('/admin/residents', methods=['GET', 'POST'])
 def manage_residents():
     message = None
@@ -153,7 +167,12 @@ def manage_residents():
 
     return render_template('residents.html', residents=residents, message=message,
                            area_options=area_options, unit_options=unit_options, level_options=level_options)
-
+# ---------------------
+# End Residents Page
+# ---------------------
+# ---------------------
+# Start Edit Residents Page
+# ---------------------
 @app.route('/admin/residents/edit/<int:resident_id>', methods=['GET', 'POST'])
 def edit_resident(resident_id):
     area_options = ["Unit I", "Unit II", "Unit III", "MPU", "SMWRC"]
@@ -194,7 +213,12 @@ def edit_resident(resident_id):
 
     return render_template('edit_resident.html', resident=resident,
                            area_options=area_options, unit_options=unit_options, level_options=level_options)
-
+# ---------------------
+# End Edit Residents Page
+# ---------------------
+# ---------------------
+# Start Delete Resident
+# ---------------------
 @app.route('/admin/residents/delete/<int:resident_id>', methods=['POST'])
 def delete_resident(resident_id):
     with sqlite3.connect(DB_PATH) as conn:
@@ -202,7 +226,13 @@ def delete_resident(resident_id):
         c.execute("DELETE FROM residents WHERE id = ?", (resident_id,))
         conn.commit()
     return redirect(url_for('manage_residents'))
+# ---------------------
+# End Delete Resident
+# ---------------------
 
+# ---------------------
+# Start Export Residents
+# ---------------------
 @app.route('/admin/residents/export')
 def export_residents():
     output = io.StringIO()
@@ -217,7 +247,13 @@ def export_residents():
 
     output.seek(0)
     return send_file(io.BytesIO(output.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='residents.csv')
+# ---------------------
+# End Export Residents
+# ---------------------
 
+# ---------------------
+# Start Import Residents
+# ---------------------
 @app.route('/admin/residents/import', methods=['GET', 'POST'])
 def import_residents():
     messages = []
@@ -240,7 +276,13 @@ def import_residents():
                         messages.append(f"✘ Error on {row.get('name', 'Unknown')}: {str(e)}")
 
     return render_template('import_residents.html', messages=messages)
+# ---------------------
+# End Import Residents
+# ---------------------
 
+# ---------------------
+# Start Sample Residents CSV
+# ---------------------
 @app.route('/admin/residents/sample')
 def sample_csv():
     sample = io.StringIO()
@@ -250,7 +292,12 @@ def sample_csv():
     writer.writerow(['Jane Smith', '1002', 'Unit II', 'Dorm 5', 'Level 2', ''])
     sample.seek(0)
     return send_file(io.BytesIO(sample.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='sample_residents.csv')
-
+# ---------------------
+# End Sample Residents CSV
+# ---------------------
+# ---------------------
+# Start Admin Dashboard Page
+# ---------------------
 @app.route('/admin/dashboard')
 def dashboard():
     with sqlite3.connect(DB_PATH) as conn:
@@ -278,6 +325,9 @@ def dashboard():
                 checked_in.append(result)
 
     return render_template('dashboard.html', data=checked_in)
+# ---------------------
+# End Admin Dashboard Page
+# ---------------------
 
 # ---------------------
 # App Entry Point
