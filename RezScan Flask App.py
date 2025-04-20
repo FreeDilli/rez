@@ -262,7 +262,7 @@ def import_residents():
         if not file or not file.filename.endswith('.csv'):
             messages.append("Invalid or missing CSV file.")
         else:
-            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            stream = io.StringIO(file.stream.read().decode("utf-8-sig"), newline=None)
             reader = csv.DictReader(stream)
             with sqlite3.connect(DB_PATH) as conn:
                 c = conn.cursor()
