@@ -13,8 +13,6 @@
     </form>
 </div>
 
-
-<!-- ✅ Add Resident Form -->
 <form method="POST" enctype="multipart/form-data" class="card p-4 mb-4">
     <h5 class="card-title">Add New Resident</h5>
     <div class="row g-3">
@@ -25,8 +23,8 @@
             <input type="text" name="mdoc" class="form-control" placeholder="MDOC" required>
         </div>
         <div class="col-md-4">
-            <select name="area" class="form-select" required>
-                <option value="" disabled selected>Select Area</option>
+            <select name="unit" class="form-select" required>
+                <option value="" disabled selected>Select Unit</option>
                 {% for option in unit_options %}
                 <option value="{{ option }}">{{ option }}</option>
                 {% endfor %}
@@ -60,14 +58,13 @@
     </div>
 </form>
 
-<!-- ✅ Filter Controls -->
 <div class="row g-2 mb-3 align-items-end">
     <div class="col-md-3">
         <input type="text" id="searchInput" class="form-control" placeholder="Search residents..." onkeyup="filterTable()" autocomplete="off">
     </div>
     <div class="col-md-2">
-        <select id="filterArea" class="form-select" onchange="filterTable()">
-            <option value="">All Areas</option>
+        <select id="filterUnit" class="form-select" onchange="filterTable()">
+            <option value="">All Units</option>
             {% for option in unit_options %}
             <option value="{{ option }}">{{ option }}</option>
             {% endfor %}
@@ -94,7 +91,6 @@
     </div>
 </div>
 
-<!-- ✅ Residents Table with Edit/Delete -->
 <div class="card p-3">
     <h5 class="card-title">All Residents</h5>
     <div class="table-responsive">
@@ -103,7 +99,7 @@
                 <tr>
                     <th>Name</th>
                     <th>MDOC</th>
-                    <th>Area</th>
+                    <th>Unit</th>
                     <th>Housing Unit</th>
                     <th>Level</th>
                     <th>Photo</th>
@@ -141,29 +137,29 @@
 <script>
     function filterTable() {
         const search = document.getElementById("searchInput").value.toLowerCase();
-        const area = document.getElementById("filterArea").value.toLowerCase();
+        const unit = document.getElementById("filterUnit").value.toLowerCase();
         const housing = document.getElementById("filterHousing").value.toLowerCase();
         const level = document.getElementById("filterLevel").value.toLowerCase();
         const rows = document.querySelectorAll("#residentsTable tbody tr");
 
         rows.forEach(row => {
             const rowText = row.innerText.toLowerCase();
-            const rowArea = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
+            const rowUnit = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
             const rowHousing = row.querySelector("td:nth-child(4)").innerText.toLowerCase();
             const rowLevel = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
 
             const matchSearch = rowText.includes(search);
-            const matchArea = area === "" || rowArea === area;
+            const matchUnit = unit === "" || rowUnit === unit;
             const matchHousing = housing === "" || rowHousing === housing;
             const matchLevel = level === "" || rowLevel === level;
 
-            row.style.display = (matchSearch && matchArea && matchHousing && matchLevel) ? "" : "none";
+            row.style.display = (matchSearch && matchUnit && matchHousing && matchLevel) ? "" : "none";
         });
     }
 
     function resetFilters() {
         document.getElementById("searchInput").value = "";
-        document.getElementById("filterArea").value = "";
+        document.getElementById("filterUnit").value = "";
         document.getElementById("filterHousing").value = "";
         document.getElementById("filterLevel").value = "";
         filterTable();
