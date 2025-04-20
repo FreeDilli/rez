@@ -15,8 +15,8 @@
 
         <div class="col-md-4">
             <label class="form-label">Select Area</label>
-            <select name="area" class="form-select" required>
-                {% for option in area_options %}
+            <select name="unit" class="form-select" required>
+                {% for option in unit_options %}
                 <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
                 {% endfor %}
             </select>
