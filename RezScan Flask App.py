@@ -142,7 +142,7 @@ def manage_residents():
             else:
                 name = request.form['name'].strip()
                 mdoc = request.form['mdoc'].strip()
-                area = request.form['area'].strip()
+                unit = request.form['unit'].strip()
                 housing_unit = request.form['housing_unit'].strip()
                 level = request.form['level'].strip()
                 photo_file = request.files.get('photo')
@@ -157,14 +157,14 @@ def manage_residents():
                     photo_path = request.form.get('photo', '').strip()
 
                 try:
-                    c.execute("INSERT INTO residents (name, mdoc, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
-                              (name, mdoc, area, housing_unit, level, photo_path))
+                    c.execute("INSERT INTO residents (name, mdoc, unit, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
+                              (name, mdoc, unit, housing_unit, level, photo_path))
                     conn.commit()
                     message = "Resident added successfully."
                 except sqlite3.IntegrityError:
                     message = "Error: mdoc must be unique."
 
-        c.execute("SELECT id, name, mdoc, area, housing_unit, level, photo FROM residents ORDER BY name")
+        c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")
         residents = c.fetchall()
 
     return render_template('residents.html', residents=residents, message=message,
@@ -190,7 +190,7 @@ def edit_resident(mdoc):
         if request.method == 'POST':
             name = request.form['name'].strip()
             mdoc = request.form['mdoc'].strip()
-            area = request.form['area'].strip()
+            unit = request.form['unit'].strip()
             housing_unit = request.form['housing_unit'].strip()
             level = request.form['level'].strip()
             photo_file = request.files.get('photo')
@@ -204,13 +204,13 @@ def edit_resident(mdoc):
 
             c.execute("""
                 UPDATE residents
-                SET name = ?, mdoc = ?, area = ?, housing_unit = ?, level = ?, photo = ?
+                SET name = ?, mdoc = ?, unit = ?, housing_unit = ?, level = ?, photo = ?
                 WHERE id = ?
-            """, (name, mdoc, area, housing_unit, level, photo_path, mdoc))
+            """, (name, mdoc, unit, housing_unit, level, photo_path, mdoc))
             conn.commit()
             return redirect(url_for('manage_residents'))
 
-        c.execute("SELECT id, name, mdoc, area, housing_unit, level, photo FROM residents WHERE id = ?", (mdoc,))
+        c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE id = ?", (mdoc,))
         resident = c.fetchone()
 
     return render_template('edit_resident.html', resident=resident,
@@ -251,11 +251,11 @@ def delete_all_residents():
 def export_residents():
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Name', 'mdoc', 'Area', 'Housing Unit', 'Level', 'Photo'])
+    writer.writerow(['ID', 'Name', 'mdoc', 'unit', 'Housing Unit', 'Level', 'Photo'])
 
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        c.execute("SELECT id, name, mdoc, area, housing_unit, level, photo FROM residents ORDER BY name")
+        c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")
         for row in c.fetchall():
             writer.writerow(row)
 
@@ -276,7 +276,7 @@ def import_residents():
         file = request.files.get('csv_file')
         if not file or not file.filename.endswith('.csv'):
             messages.append("Invalid or missing CSV file.")
-        else:
+        else: 
             stream = io.StringIO(file.stream.read().decode("utf-8-sig"), newline=None)
             reader = csv.DictReader(stream)
             with sqlite3.connect(DB_PATH) as conn:
@@ -286,8 +286,8 @@ def import_residents():
                 conn.commit()
                 for row in reader:
                     try:
-                        c.execute("INSERT INTO residents (name, mdoc, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
-                                  (row['name'], row['mdoc'], row['area'], row['housing_unit'], row['level'], row.get('photo', '')))
+                        c.execute("INSERT INTO residents (name, mdoc, unit, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
+                                  (row['name'], row['mdoc'], row['unit'], row['housing_unit'], row['level'], row.get('photo', '')))
                         import_count += 1  # Increment counter on successful import
                         conn.commit()
                         messages.append(f"✔ Imported {row['name']}")
@@ -306,7 +306,7 @@ def import_residents():
 def sample_csv():
     sample = io.StringIO()
     writer = csv.writer(sample)
-    writer.writerow(['name', 'mdoc', 'area', 'housing_unit', 'level', 'photo'])
+    writer.writerow(['name', 'mdoc', 'unit', 'housing_unit', 'level', 'photo'])
     writer.writerow(['John Doe', '1001', 'Unit 1', 'Delta', '1', ''])
     writer.writerow(['Jane Smith', '1002', 'Unit 2', 'Dorm 5', '2', ''])
     sample.seek(0)
@@ -333,7 +333,7 @@ def dashboard():
         checked_in = []
         for mdoc, latest_time in latest_scans:
             c.execute('''
-                SELECT r.name, r.mdoc, r.area, r.housing_unit, r.level, l.name, s.timestamp
+                SELECT r.name, r.mdoc, r.unit, r.housing_unit, r.level, l.name, s.timestamp
                 FROM scans s
                 JOIN residents r ON s.mdoc = r.id
                 JOIN locations l ON s.location_id = l.id
