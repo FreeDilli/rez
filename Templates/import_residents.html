@@ -76,6 +76,7 @@
 {% if messages %}
 <div class="card p-3">
     <h5 class="card-title">Import Results</h5>
+    <p><strong>Total Residents Imported: {{ import_count }}</strong></p>
     <ul class="list-group list-group-flush">
         {% for m in messages %}
         <li class="list-group-item {% if '✔' in m %}text-success{% elif '✘' in m %}text-danger{% endif %}">{{ m }}</li>

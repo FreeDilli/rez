@@ -257,6 +257,7 @@ def export_residents():
 @app.route('/admin/residents/import', methods=['GET', 'POST'])
 def import_residents():
     messages = []
+    import_count = 0  # Initialize counter for successful imports
     if request.method == 'POST':
         file = request.files.get('csv_file')
         if not file or not file.filename.endswith('.csv'):
@@ -266,16 +267,20 @@ def import_residents():
             reader = csv.DictReader(stream)
             with sqlite3.connect(DB_PATH) as conn:
                 c = conn.cursor()
+                # Truncate the residents table before import
+                c.execute("DELETE FROM residents")
+                conn.commit()
                 for row in reader:
                     try:
                         c.execute("INSERT INTO residents (name, barcode, area, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
                                   (row['name'], row['barcode'], row['area'], row['housing_unit'], row['level'], row.get('photo', '')))
+                        import_count += 1  # Increment counter on successful import
                         conn.commit()
                         messages.append(f"✔ Imported {row['name']}")
                     except Exception as e:
                         messages.append(f"✘ Error on {row.get('name', 'Unknown')}: {str(e)}")
 
-    return render_template('import_residents.html', messages=messages)
+    return render_template('import_residents.html', messages=messages, import_count=import_count)
 # ---------------------
 # End Import Residents
 # ---------------------
