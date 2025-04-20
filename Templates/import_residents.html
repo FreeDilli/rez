@@ -6,10 +6,63 @@
 <h2 class="mb-4">Import Residents from CSV</h2>
 
 <div class="mb-3">
-    <a href="{{ url_for('sample_csv') }}" class="btn btn-outline-secondary">📄 Download Sample CSV</a>
+    <a href="{{ url_for('sample_csv') }}" class="btn btn-outline-secondary">📄 Download CSV Template</a>
     <a href="{{ url_for('manage_residents') }}" class="btn btn-outline-primary float-end">← Back to Residents</a>
 </div>
-
+<!-- Start CSV File Layout Guideline-->
+<div class="card p-3 mb-4">
+    <h5 class="card-title" data-bs-toggle="collapse" data-bs-target="#csvLayout" style="cursor: pointer;">
+        CSV File Layout
+        <span class="float-end">▼</span>
+    </h5>
+    <div id="csvLayout" class="collapse">
+        <p>The CSV file must include the following headers and corresponding data:</p>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Header</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>name</td>
+                    <td>Full name of the resident, last name first (required)</td>
+                    <td>SMITH, JOHN</td>
+                </tr>
+                <tr>
+                    <td>barcode</td>
+                    <td>The resident's MDOC ID number (required)</td>
+                    <td>166978</td>
+                </tr>
+                <tr>
+                    <td>area</td>
+                    <td>The unit where the resident is located (required)</td>
+                    <td>Unit 1</td>
+                </tr>
+                <tr>
+                    <td>housing_unit</td>
+                    <td>Specific housing unit (required)</td>
+                    <td>Foxtrot</td>
+                </tr>
+                <tr>
+                    <td>level</td>
+                    <td>Behavior level of the resident (required)</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td>photo</td>
+                    <td>File path or URL to the resident's photo (optional)</td>
+                    <td>/photos/johndoe.jpg</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>Note:</strong> Ensure all required fields are included in the CSV. The <code>photo</code> field is optional but, if provided, should reference a valid file path or URL.</p>
+    </div>
+</div>
+<!-- End CSV File Guideline-->
+ <!--Start CSV import form-->
 <form method="POST" enctype="multipart/form-data" class="card p-4 mb-4">
     <div class="mb-3">
         <label for="csv_file" class="form-label">Select CSV File</label>
@@ -19,10 +72,11 @@
         <button type="submit" class="btn btn-success">Import Residents</button>
     </div>
 </form>
-
+<!--End CSV import form-->
 {% if messages %}
 <div class="card p-3">
     <h5 class="card-title">Import Results</h5>
+    <p><strong>Total Residents Imported: {{ import_count }}</strong></p>
     <ul class="list-group list-group-flush">
         {% for m in messages %}
         <li class="list-group-item {% if '✔' in m %}text-success{% elif '✘' in m %}text-danger{% endif %}">{{ m }}</li>
@@ -31,4 +85,3 @@
 </div>
 {% endif %}
 {% endblock %}
-
