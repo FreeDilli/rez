@@ -14,13 +14,15 @@
         </div>
 
         <div class="col-md-4">
+            <label class="form-label">Select Area</label>
             <select name="area" class="form-select" required>
-                {% for option in unit_options %}
+                {% for option in area_options %}
                 <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-md-4">
+            <label class="form-label">Select Housing Unit</label>
             <select name="housing_unit" class="form-select" required>
                 {% for option in housing_options %}
                 <option value="{{ option }}" {% if option == resident[4] %}selected{% endif %}>{{ option }}</option>
@@ -28,6 +30,7 @@
             </select>
         </div>
         <div class="col-md-4">
+            <label class="form-label">Select Level</label>
             <select name="level" class="form-select" required>
                 {% for option in level_options %}
                 <option value="{{ option }}" {% if option == resident[5] %}selected{% endif %}>{{ option }}</option>
@@ -48,3 +51,4 @@
     </div>
 </form>
 {% endblock %}
+
