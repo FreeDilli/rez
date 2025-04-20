@@ -35,7 +35,9 @@ def init_db():
         c.execute('''
             CREATE TABLE IF NOT EXISTS locations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE
+                name TEXT NOT NULL UNIQUE,
+                prefix TEXT UNIQUE,
+                type TEXT 
             )
         ''')
         c.execute('''
@@ -325,9 +327,36 @@ def dashboard():
                 checked_in.append(result)
 
     return render_template('dashboard.html', data=checked_in)
-# ---------------------
+# -----------------------
 # End Admin Dashboard Page
-# ---------------------
+# -----------------------
+
+# -------------------------
+# Start Location Management
+# -------------------------
+@app.route('/admin/locations', methods=['GET', 'POST'])
+def manage_locations():
+    message = None
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        if request.method == 'POST':
+            name = request.form['name'].strip()
+            prefix = request.form['prefix'].strip()
+            location_type = request.form['type'].strip()
+            try:
+                c.execute("INSERT INTO locations (name, prefix, type) VALUES (?, ?, ?)", (name, prefix, location_type))
+                conn.commit()
+                message = f"Location '{name}' added."
+            except sqlite3.IntegrityError:
+                message = f"Location or prefix already exists."
+
+        c.execute("SELECT id, name, prefix, type FROM locations ORDER BY name")
+        locations = c.fetchall()
+    return render_template('locations.html', locations=locations, message=message)
+
+# -----------------------
+# End Location Management
+# -----------------------
 
 # ---------------------
 # App Entry Point
