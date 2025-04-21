@@ -382,6 +382,16 @@ def delete_location(location_id):
 # -------------------
 # End Delete Location 
 # -------------------
+# ---------------------
+# Start Scan Log 
+# ---------------------
+@app.route('/admin/scanlog', methods=['GET', 'POST'])
+def scanlog():
+
+    return render_template('scanlog.html')
+# -------------------
+# End Scan Log 
+# -------------------
 
 # ---------------------
 # App Entry Point
