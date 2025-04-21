@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 DB_PATH = 'rezscan.db'
 
 def process_scan(mdoc, prefix):
-    """Process a barcode scan and insert into scanstest table."""
+    """Process a barcode scan and insert into scans table."""
     try:
         location_name = get_location_name_by_prefix(prefix)
         if not location_name:
@@ -28,7 +28,7 @@ def process_scan(mdoc, prefix):
             # Check last scan
             c.execute('''
                 SELECT location, status, date || ' ' || time AS timestamp
-                FROM scanstest
+                FROM scans
                 WHERE mdoc = ?
                 ORDER BY datetime(timestamp) DESC LIMIT 1
             ''', (mdoc,))
@@ -71,11 +71,11 @@ def process_scan(mdoc, prefix):
         return f"Error processing scan: {str(e)}"
 
 def insert_scan(cursor, mdoc, timestamp, status, location):
-    """Insert a scan record into scanstest."""
+    """Insert a scan record into scans."""
     date_str = timestamp.strftime('%Y-%m-%d')
     time_str = timestamp.strftime('%H:%M:%S')
     cursor.execute("""
-        INSERT INTO scanstest (mdoc, date, time, status, location)
+        INSERT INTO scans (mdoc, date, time, status, location)
         VALUES (?, ?, ?, ?, ?)
     """, (mdoc, date_str, time_str, status, location))
 
