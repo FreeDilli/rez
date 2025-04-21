@@ -1,3 +1,4 @@
+import sqlite3
 from flask import Blueprint, render_template, request
 from models.database import get_db
 
