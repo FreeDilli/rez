@@ -53,6 +53,28 @@ def init_db():
                 FOREIGN KEY(location_id) REFERENCES locations(id)
             )
         ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS scanstest (
+                scanid INTEGER PRIMARY KEY AUTOINCREMENT,
+                mdoc TEXT,
+                date TEXT,
+                time TEXT,
+                status TEXT,
+                location TEXT
+            )
+        ''')
+        c.execute('''
+            CREATE VIEW IF NOT EXISTS scans_with_residents AS
+                SELECT 
+            s.mdoc,
+            r.name,
+            s.date,
+            s.time,
+            s.status,
+            s.location
+            FROM scanstest s
+        LEFT JOIN residents r ON s.mdoc = r.mdoc;
+        ''')
         conn.commit()
         
 # ---------------------
@@ -387,8 +409,23 @@ def delete_location(location_id):
 # ---------------------
 @app.route('/admin/scanlog', methods=['GET', 'POST'])
 def scanlog():
-
-    return render_template('scanlog.html')
+    # Connect to SQLite database
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+    
+        # Query all data from the table
+        c.execute('SELECT * FROM scans_with_residents ORDER BY time desc')
+        data = c.fetchall()
+    
+        # Get distinct status and location options for filters
+        c.execute('SELECT DISTINCT status FROM scans_with_residents ORDER BY status')
+        status_options = [row[0] for row in c.fetchall() if row[0]]
+        
+        c.execute('SELECT DISTINCT location FROM scans_with_residents ORDER BY location')
+        location_options = [row[0] for row in c.fetchall() if row[0]]
+    
+    # Render template with data and filter options
+    return render_template('scanlog.html', scans=data, status_options=status_options, location_options=location_options)
 # -------------------
 # End Scan Log 
 # -------------------
