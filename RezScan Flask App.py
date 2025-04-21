@@ -438,6 +438,7 @@ def export_scanlog():
     writer = csv.writer(output)
     writer.writerow(['MDOC', 'Name', 'Date', 'Time', 'Status', 'Location'])
 
+<<<<<<< Updated upstream
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM scans_with_residents ORDER BY time desc")
@@ -449,6 +450,60 @@ def export_scanlog():
 # ---------------------
 # End Export Scan Log
 # ---------------------
+=======
+# ----------------------------------
+# Start Resident Status API Endpoint
+# ----------------------------------
+@app.route('/api/status/<mdoc>', methods=['GET'])
+def get_resident_status(mdoc):
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+
+        # Get resident info
+        c.execute("SELECT id, name FROM residents WHERE mdoc = ?", (mdoc,))
+        resident = c.fetchone()
+        if not resident:
+            return {
+                "mdoc": mdoc,
+                "status": "Not Found",
+                "message": f"Resident with MDOC {mdoc} not found."
+            }, 404
+
+        resident_id, name = resident
+
+        # Get last scan
+        c.execute('''
+            SELECT s.timestamp, s.direction, l.name
+            FROM scans s
+            JOIN locations l ON s.location_id = l.id
+            WHERE s.mdoc = ?
+            ORDER BY s.timestamp DESC
+            LIMIT 1
+        ''', (resident_id,))
+        scan = c.fetchone()
+
+        if not scan:
+            return {
+                "mdoc": mdoc,
+                "name": name,
+                "status": "No Scans Found"
+            }
+
+        timestamp, direction, location = scan
+
+        return {
+            "mdoc": mdoc,
+            "name": name,
+            "last_location": location,
+            "last_direction": direction,
+            "timestamp": timestamp,
+            "status": "Scanned In" if direction == 'in' else "Scanned Out"
+        }
+# --------------------------------
+# End Resident Status API Endpoint
+# --------------------------------
+
+>>>>>>> Stashed changes
 # ---------------------
 # App Entry Point
 # ---------------------
