@@ -13,50 +13,55 @@
     </form>
 </div>
 
-<form method="POST" enctype="multipart/form-data" class="card p-4 mb-4">
-    <h5 class="card-title">Add New Resident</h5>
-    <div class="row g-3">
-        <div class="col-md-6">
-            <input type="text" name="name" class="form-control" placeholder="Resident Name" required>
-        </div>
-        <div class="col-md-6">
-            <input type="text" name="mdoc" class="form-control" placeholder="MDOC" required>
-        </div>
-        <div class="col-md-4">
-            <select name="area" class="form-select" required>
-                <option value="" disabled selected>Select Area</option>
-                {% for option in unit_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-4">
-            <select name="housing_unit" class="form-select" required>
-                <option value="" disabled selected>Select Housing Unit</option>
-                {% for option in housing_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-4">
-            <select name="level" class="form-select" required>
-                <option value="" disabled selected>Select Level</option>
-                {% for option in level_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-12">
-            <label for="photo" class="form-label">Upload Photo (optional)</label>
-            <input type="file" name="photo" class="form-control">
-        </div>
-
-        <div class="col-12 d-grid mt-3">
-            <button class="btn btn-success" type="submit">Add Resident</button>
-        </div>
+<div class="card p-3 mb-4">
+    <h5 class="card-title" data-bs-toggle="collapse" data-bs-target="#residentForm" style="cursor: pointer;">
+        Add New Resident
+        <span class="float-end">▼</span>
+    </h5>
+    <div id="residentForm" class="collapse">
+        <form method="POST" enctype="multipart/form-data" class="p-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="name" class="form-control" placeholder="Resident Name" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" name="mdoc" class="form-control" placeholder="MDOC" required>
+                </div>
+                <div class="col-md-4">
+                    <select name="unit" class="form-select" required>
+                        <option value="" disabled selected>Select Area</option>
+                        {% for option in unit_options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="housing_unit" class="form-select" required>
+                        <option value="" disabled selected>Select Housing Unit</option>
+                        {% for option in housing_options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="level" class="form-select" required>
+                        <option value="" disabled selected>Select Level</option>
+                        {% for option in level_options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label for="photo" class="form-label">Upload Photo (optional)</label>
+                    <input type="file" name="photo" class="form-control">
+                </div>
+                <div class="col-12 d-grid mt-3">
+                    <button class="btn btn-success" type="submit">Add Resident</button>
+                </div>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 
 <!-- ✅ Filters -->
 <div class="row g-2 mb-3 align-items-end">
