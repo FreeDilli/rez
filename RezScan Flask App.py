@@ -85,14 +85,14 @@ def init_db():
 # Start Routes
 # ---------------------
 
-# ---------------------
-# Start Scan Page
-# ---------------------
+
 
 @app.route('/')
 def index():
     return redirect(url_for('scan'))
-
+# ---------------------
+# Start Scan Page
+# ---------------------
 @app.route('/scan', methods=['GET', 'POST'])
 def scan():
     message = None
@@ -332,27 +332,29 @@ def sample_csv():
 # ---------------------
 # Start Admin Dashboard Page
 # ---------------------
+from flask import render_template
+import sqlite3
+
 @app.route('/admin/dashboard')
 def dashboard():
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        # Get latest scan per resident
+        # Get latest scan per mdoc
         c.execute('''
-            SELECT s.mdoc, MAX(s.timestamp)
-            FROM scans s
+            SELECT s.mdoc, MAX(s.date || ' ' || s.time) as latest_time
+            FROM scanstest s
             GROUP BY s.mdoc
         ''')
         latest_scans = c.fetchall()
 
-        # Filter only those where latest scan is 'in'
+        # Filter only those where latest scan status is 'in' and join with residents
         checked_in = []
         for mdoc, latest_time in latest_scans:
             c.execute('''
-                SELECT r.name, r.mdoc, r.unit, r.housing_unit, r.level, l.name, s.timestamp
-                FROM scans s
-                JOIN residents r ON s.mdoc = r.id
-                JOIN locations l ON s.location_id = l.id
-                WHERE s.mdoc = ? AND s.timestamp = ? AND s.direction = 'in'
+                SELECT r.name, r.mdoc, r.unit, r.housing_unit, r.level, s.date, s.time, s.location
+                FROM scanstest s
+                JOIN residents r ON s.mdoc = r.mdoc
+                WHERE s.mdoc = ? AND (s.date || ' ' || s.time) = ? AND s.status = 'In'
             ''', (mdoc, latest_time))
             result = c.fetchone()
             if result:

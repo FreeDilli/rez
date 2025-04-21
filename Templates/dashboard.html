@@ -11,7 +11,7 @@
 {% if data %}
     {% set grouped = {} %}
     {% for row in data %}
-        {% set location = row[5] %}
+        {% set location = row[7] %}
         {% if location not in grouped %}
             {% set _ = grouped.update({location: []}) %}
         {% endif %}
@@ -43,7 +43,7 @@
                             <td>{{ p[2] }}</td>
                             <td>{{ p[3] }}</td>
                             <td>{{ p[4] }}</td>
-                            <td>{{ p[6][:19]|replace('T', ' ') }}</td>
+                            <td>{{ p[5] }} {{ p[6] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -55,5 +55,3 @@
     <div class="alert alert-info">No residents are currently checked in.</div>
 {% endif %}
 {% endblock %}
-
-

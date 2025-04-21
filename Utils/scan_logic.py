@@ -1,104 +1,92 @@
 import sqlite3
-from datetime import datetime
+import logging
+from datetime import datetime, timedelta
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 DB_PATH = 'rezscan.db'
 
 def process_scan(mdoc, prefix):
-    location_name = get_location_name_by_prefix(prefix)
-    if not location_name:
-        return f"Prefix '{prefix}' not associated with any location."
+    """Process a barcode scan and insert into scanstest table."""
+    try:
+        location_name = get_location_name_by_prefix(prefix)
+        if not location_name:
+            logging.warning(f"Prefix '{prefix}' not found.")
+            return f"Prefix '{prefix}' not associated with any location."
 
-    with sqlite3.connect(DB_PATH) as conn:
-        c = conn.cursor()
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
 
-        # Get resident ID from mdoc
-        c.execute("SELECT id FROM residents WHERE mdoc = ?", (mdoc,))
-        res = c.fetchone()
-        if not res:
-            return f"Resident with MDOC '{mdoc}' not found."
+            # Validate resident
+            c.execute("SELECT id FROM residents WHERE mdoc = ?", (mdoc,))
+            resident = c.fetchone()
+            if not resident:
+                logging.warning(f"Resident with MDOC '{mdoc}' not found.")
+                return f"Resident with MDOC '{mdoc}' not found."
 
-        resident_id = res[0]
+            # Check last scan
+            c.execute('''
+                SELECT location, status, date || ' ' || time AS timestamp
+                FROM scanstest
+                WHERE mdoc = ?
+                ORDER BY datetime(timestamp) DESC LIMIT 1
+            ''', (mdoc,))
+            last_scan = c.fetchone()
 
-        # Get location ID
-        c.execute("SELECT id FROM locations WHERE prefix = ?", (prefix,))
-        loc = c.fetchone()
-        if not loc:
-            return f"Location with prefix '{prefix}' not found."
+            now = datetime.now()
+            scan_time = now
+            out_time = now - timedelta(seconds=1)  # 1 second earlier for Out scan
 
-        location_id = loc[0]
+            if last_scan:
+                last_location, last_status, _ = last_scan
 
-        # Check last scan
-        c.execute('''
-            SELECT location_id, direction, timestamp FROM scans
-            WHERE mdoc = ?
-            ORDER BY timestamp DESC LIMIT 1
-        ''', (resident_id,))
-        last_scan = c.fetchone()
+                if last_status == 'In' and last_location != location_name:
+                    # Missed scan: insert 'Out' for last location, 'In' for new
+                    insert_scan(c, mdoc, out_time, 'Out', last_location)
+                    insert_scan(c, mdoc, scan_time, 'In', location_name)
+                    conn.commit()
+                    logging.info(f"Missed scan corrected for MDOC {mdoc}: Out at {last_location}, In at {location_name}.")
+                    return f"Missed scan corrected: 'Out' recorded at {last_location}, new 'In' at {location_name}."
 
-        now = datetime.now().isoformat()
+                if last_location == location_name:
+                    # Same location: toggle status
+                    status = 'Out' if last_status == 'In' else 'In'
+                    insert_scan(c, mdoc, scan_time, status, location_name)
+                    conn.commit()
+                    logging.info(f"Scan recorded for MDOC {mdoc}: {status} at {location_name}.")
+                    return f"{status.capitalize()} scan recorded at {location_name}."
 
-        if last_scan:
-            last_location_id, last_direction, last_time = last_scan
+            # Default: new 'In' scan
+            insert_scan(c, mdoc, scan_time, 'In', location_name)
+            conn.commit()
+            logging.info(f"New In scan recorded for MDOC {mdoc} at {location_name}.")
+            return f"In scan recorded at {location_name}."
 
-            # Flag if last scan was "in" and no "out" occurred
-            if last_direction == 'in' and last_location_id != location_id:
-                # Missed scan (flag it)
-                c.execute("""
-                    INSERT INTO scans (mdoc, timestamp, location_id, direction)
-                    VALUES (?, ?, ?, ?)
-                """, (resident_id, now, location_id, 'in'))
-                conn.commit()
-                return f"⚠️ Missed scan detected (no 'out' at last location). New 'in' at {location_name} recorded."
+    except sqlite3.Error as e:
+        logging.error(f"Database error processing scan for MDOC {mdoc}: {str(e)}")
+        return f"Database error: {str(e)}"
+    except Exception as e:
+        logging.error(f"Unexpected error processing scan for MDOC {mdoc}: {str(e)}")
+        return f"Error processing scan: {str(e)}"
 
-            elif last_location_id == location_id:
-                # Same location: toggle direction
-                new_direction = 'out' if last_direction == 'in' else 'in'
-                c.execute("""
-                    INSERT INTO scans (mdoc, timestamp, location_id, direction)
-                    VALUES (?, ?, ?, ?)
-                """, (resident_id, now, location_id, new_direction))
-                conn.commit()
-                return f"{new_direction.capitalize()} scan recorded at {location_name}."
-
-        # Default: new 'in' scan
-        c.execute("""
-            INSERT INTO scans (mdoc, timestamp, location_id, direction)
-            VALUES (?, ?, ?, 'in')
-        """, (resident_id, now, location_id))
-        conn.commit()
-        return f"In scan recorded at {location_name}."
+def insert_scan(cursor, mdoc, timestamp, status, location):
+    """Insert a scan record into scanstest."""
+    date_str = timestamp.strftime('%Y-%m-%d')
+    time_str = timestamp.strftime('%H:%M:%S')
+    cursor.execute("""
+        INSERT INTO scanstest (mdoc, date, time, status, location)
+        VALUES (?, ?, ?, ?, ?)
+    """, (mdoc, date_str, time_str, status, location))
 
 def get_location_name_by_prefix(prefix):
-    with sqlite3.connect(DB_PATH) as conn:
-        c = conn.cursor()
-        c.execute("SELECT name FROM locations WHERE prefix = ?", (prefix,))
-        row = c.fetchone()
-        return row[0] if row else None
-
-
-
-# For future SQL Server use:
-# def insert_scan_sqlserver(mdoc, location, device_name, connection_string):
-#     import pyodbc
-#     from datetime import datetime
-#     try:
-#         conn = pyodbc.connect(connection_string)
-#         cursor = conn.cursor()
-#         cursor.execute("{CALL Insert_Scanner (?, ?, ?, ?, ?, ?, ?, ?)}", (
-#             mdoc,
-#             datetime.now().strftime('%Y-%m-%d'),
-#             datetime.now().strftime('%H:%M:%S'),
-#             "",  # Status
-#             location,
-#             "Scanner",
-#             "DEDICATED_SCANNER",
-#             device_name
-#         ))
-#         conn.commit()
-#         return True
-#     except Exception as e:
-#         print("SQL Server Scan Insert Error:", e)
-#         return False
-#     finally:
-#         cursor.close()
-#         conn.close()
+    """Get location name by prefix (case-insensitive)."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute("SELECT name FROM locations WHERE UPPER(prefix) = UPPER(?)", (prefix,))
+            row = c.fetchone()
+            return row[0] if row else None
+    except sqlite3.Error as e:
+        logging.error(f"Error querying location for prefix '{prefix}': {str(e)}")
+        return None
