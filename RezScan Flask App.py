@@ -450,6 +450,7 @@ def export_scanlog():
 # ---------------------
 # End Export Scan Log
 # ---------------------
+<<<<<<< HEAD
 =======
 # ----------------------------------
 # Start Resident Status API Endpoint
@@ -504,6 +505,21 @@ def get_resident_status(mdoc):
 # --------------------------------
 
 >>>>>>> Stashed changes
+=======
+# -------------------------
+# Start Delete Scan Log
+# -------------------------
+@app.route('/admin/scanlog/delete', methods=['POST'])
+def delete_scanlog():
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM scanstest")
+        conn.commit()
+    return redirect(url_for('scanlog'))
+# -------------------------
+# End Delete All Residents
+# -------------------------
+>>>>>>> 17a725adcaf0d5e822636bb34f433cf5ddbe46cd
 # ---------------------
 # App Entry Point
 # ---------------------
