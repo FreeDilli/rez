@@ -6,8 +6,8 @@
 <div class="container mx-auto px-4 py-8">
     <h2 class="text-2xl font-bold mb-6 text-gray-800">Scan Log</h2>
     <div class="mb-4">
-        <a href="{{ url_for('export_scanlog') }}" class="btn btn-success">Export Scan Log</a>
-        <form action="{{ url_for('delete_scanlog') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete the scan log?');">
+        <a href="{{ url_for('scanlog_export.export_scanlog') }}" class="btn btn-success">Export Scan Log</a>
+        <form action="{{ url_for('scanlog_delete.delete_scanlog') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete the scan log?');">
             <button type="submit" class="btn btn-danger">Delete Scan Log</button>
         </form>
     </div>
