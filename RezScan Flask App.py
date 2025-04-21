@@ -440,7 +440,6 @@ def export_scanlog():
     writer = csv.writer(output)
     writer.writerow(['MDOC', 'Name', 'Date', 'Time', 'Status', 'Location'])
 
-<<<<<<< Updated upstream
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM scans_with_residents ORDER BY time desc")
@@ -452,8 +451,7 @@ def export_scanlog():
 # ---------------------
 # End Export Scan Log
 # ---------------------
-<<<<<<< HEAD
-=======
+
 # ----------------------------------
 # Start Resident Status API Endpoint
 # ----------------------------------
@@ -502,12 +500,7 @@ def get_resident_status(mdoc):
             "timestamp": timestamp,
             "status": "Scanned In" if direction == 'in' else "Scanned Out"
         }
-# --------------------------------
-# End Resident Status API Endpoint
-# --------------------------------
-
->>>>>>> Stashed changes
-=======
+        
 # -------------------------
 # Start Delete Scan Log
 # -------------------------
@@ -521,7 +514,11 @@ def delete_scanlog():
 # -------------------------
 # End Delete All Residents
 # -------------------------
->>>>>>> 17a725adcaf0d5e822636bb34f433cf5ddbe46cd
+
+# --------------------------------
+# End Resident Status API Endpoint
+# --------------------------------
+
 # ---------------------
 # App Entry Point
 # ---------------------
