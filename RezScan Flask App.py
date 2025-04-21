@@ -449,6 +449,19 @@ def export_scanlog():
 # ---------------------
 # End Export Scan Log
 # ---------------------
+# -------------------------
+# Start Delete Scan Log
+# -------------------------
+@app.route('/admin/scanlog/delete', methods=['POST'])
+def delete_scanlog():
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM scanstest")
+        conn.commit()
+    return redirect(url_for('scanlog'))
+# -------------------------
+# End Delete All Residents
+# -------------------------
 # ---------------------
 # App Entry Point
 # ---------------------
