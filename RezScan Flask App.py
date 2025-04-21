@@ -5,6 +5,8 @@ import os
 from werkzeug.utils import secure_filename
 import csv
 import io
+from Utils.scan_logic import process_scan
+
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'
@@ -74,45 +76,21 @@ def scan():
     message = None
     if request.method == 'POST':
         raw_input = request.form['mdoc'].strip()
-        if raw_input.startswith('EDU-'):
-            location = 'Education'
-            mdoc = raw_input.replace('EDU-', '', 1)
-        elif raw_input.startswith('ACT-'):
-            location = 'Activities'
-            mdoc = raw_input.replace('ACT-', '', 1)
-        else:
-            message = "Invalid prefix or unrecognized scanner."
+
+        # Determine location from prefix
+        if '-' not in raw_input:
+            message = "Invalid scan format. Expected format: PREFIX-MDOC"
             return render_template('scan.html', message=message)
 
-        with sqlite3.connect(DB_PATH) as conn:
-            c = conn.cursor()
-            c.execute("SELECT id FROM residents WHERE mdoc = ?", (mdoc,))
-            res = c.fetchone()
-            if not res:
-                message = f"Resident with mdoc {mdoc} not found."
-            else:
-                mdoc = res[0]
-                c.execute("SELECT id FROM locations WHERE name = ?", (location,))
-                loc = c.fetchone()
-                if not loc:
-                    message = f"Location '{location}' not found."
-                else:
-                    location_id = loc[0]
-                    c.execute("""
-                        SELECT location_id FROM scans
-                        WHERE mdoc = ? AND direction = 'in'
-                        ORDER BY timestamp DESC LIMIT 1
-                    """, (mdoc,))
-                    active = c.fetchone()
-                    if active:
-                        c.execute("INSERT INTO scans (mdoc, timestamp, location_id, direction) VALUES (?, ?, ?, 'out')",
-                                  (mdoc, datetime.now().isoformat(), active[0]))
-                    c.execute("INSERT INTO scans (mdoc, timestamp, location_id, direction) VALUES (?, ?, ?, 'in')",
-                              (mdoc, datetime.now().isoformat(), location_id))
-                    message = f"{location} scan recorded for resident {mdoc}."
-            conn.commit()
+        prefix, mdoc = raw_input.split('-', 1)
+
+        try:
+            message = process_scan(mdoc.strip(), prefix.strip().upper())
+        except Exception as e:
+            message = f"Error processing scan: {str(e)}"
 
     return render_template('scan.html', message=message)
+
 # ---------------------
 # End Scan Page
 # ---------------------
