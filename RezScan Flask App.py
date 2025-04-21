@@ -42,19 +42,19 @@ def init_db():
                 type TEXT 
             )
         ''')
+        # c.execute('''
+        #     CREATE TABLE IF NOT EXISTS scans (
+        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #         mdoc INTEGER,
+        #         timestamp TEXT,
+        #         location_id INTEGER,
+        #         direction TEXT CHECK(direction IN ('in', 'out')),
+        #         FOREIGN KEY(mdoc) REFERENCES residents(id),
+        #         FOREIGN KEY(location_id) REFERENCES locations(id)
+        #     )
+        # ''')
         c.execute('''
             CREATE TABLE IF NOT EXISTS scans (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mdoc INTEGER,
-                timestamp TEXT,
-                location_id INTEGER,
-                direction TEXT CHECK(direction IN ('in', 'out')),
-                FOREIGN KEY(mdoc) REFERENCES residents(id),
-                FOREIGN KEY(location_id) REFERENCES locations(id)
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS scanstest (
                 scanid INTEGER PRIMARY KEY AUTOINCREMENT,
                 mdoc TEXT,
                 date TEXT,
@@ -72,7 +72,7 @@ def init_db():
             s.time,
             s.status,
             s.location
-            FROM scanstest s
+            FROM scans s
         LEFT JOIN residents r ON s.mdoc = r.mdoc;
         ''')
         conn.commit()
@@ -342,7 +342,7 @@ def dashboard():
         # Get latest scan per mdoc
         c.execute('''
             SELECT s.mdoc, MAX(s.date || ' ' || s.time) as latest_time
-            FROM scanstest s
+            FROM scans s
             GROUP BY s.mdoc
         ''')
         latest_scans = c.fetchall()
@@ -352,7 +352,7 @@ def dashboard():
         for mdoc, latest_time in latest_scans:
             c.execute('''
                 SELECT r.name, r.mdoc, r.unit, r.housing_unit, r.level, s.date, s.time, s.location
-                FROM scanstest s
+                FROM scans s
                 JOIN residents r ON s.mdoc = r.mdoc
                 WHERE s.mdoc = ? AND (s.date || ' ' || s.time) = ? AND s.status = 'In'
             ''', (mdoc, latest_time))
@@ -458,7 +458,7 @@ def export_scanlog():
 def delete_scanlog():
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        c.execute("DELETE FROM scanstest")
+        c.execute("DELETE FROM scans")
         conn.commit()
     return redirect(url_for('scanlog'))
 # -------------------------
