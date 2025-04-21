@@ -429,7 +429,26 @@ def scanlog():
 # -------------------
 # End Scan Log 
 # -------------------
+# ---------------------
+# Start Export Scan Log
+# ---------------------
+@app.route('/admin/scanlog/export')
+def export_scanlog():
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['MDOC', 'Name', 'Date', 'Time', 'Status', 'Location'])
 
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM scans_with_residents ORDER BY time desc")
+        for row in c.fetchall():
+            writer.writerow(row)
+
+    output.seek(0)
+    return send_file(io.BytesIO(output.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='scanlog.csv')
+# ---------------------
+# End Export Scan Log
+# ---------------------
 # ---------------------
 # App Entry Point
 # ---------------------

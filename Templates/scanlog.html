@@ -5,7 +5,12 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h2 class="text-2xl font-bold mb-6 text-gray-800">Scan Log</h2>
-
+    <div class="mb-4">
+        <a href="{{ url_for('export_scanlog') }}" class="btn btn-success">Export Scan Log</a>
+        <form action="" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete the scan log?');">
+            <button type="submit" class="btn btn-danger">Delete Scan Log</button>
+        </form>
+    </div>
     <!-- Filters -->
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-md-3">
@@ -61,6 +66,10 @@
                 </tbody>
             </table>
         </div>
+        <!-- No results message -->
+        <div id="noResults" class="text-center text-gray-500 mt-3" style="display: none;">
+            No results found.
+        </div>
     </div>
 </div>
 
@@ -72,22 +81,50 @@
 
 <script>
     function filterTable() {
-        const search = document.getElementById("searchInput").value.toLowerCase();
+        const search = document.getElementById("searchInput").value.toLowerCase().trim();
         const status = document.getElementById("filterStatus").value.toLowerCase();
         const location = document.getElementById("filterLocation").value.toLowerCase();
         const rows = document.querySelectorAll("#scansTable tbody tr");
+        const noResults = document.getElementById("noResults");
+        let visibleRows = 0;
 
         rows.forEach(row => {
             const rowText = row.innerText.toLowerCase();
             const rowStatus = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
             const rowLocation = row.querySelector("td:nth-child(6)").innerText.toLowerCase();
+            const name = row.querySelector("td:nth-child(2)").innerText.toLowerCase(); // Name field (e.g., "cardilli, mark")
 
-            const matchSearch = rowText.includes(search);
+            // Process the name field
+            let matchSearch = rowText.includes(search); // Default check for MDOC or partial matches
+            if (search && name) {
+                // Split name into last and first (assuming format "LAST, FIRST")
+                const [lastName = "", firstName = ""] = name.split(",").map(part => part.trim());
+                const fullName = `${firstName} ${lastName}`.trim(); // e.g., "mark cardilli"
+                const reverseFullName = `${lastName} ${firstName}`.trim(); // e.g., "cardilli mark"
+
+                // Check if search matches first name, last name, full name, reverse full name, or original row text
+                matchSearch = (
+                    firstName.includes(search) ||
+                    lastName.includes(search) ||
+                    fullName.includes(search) ||
+                    reverseFullName.includes(search) ||
+                    rowText.includes(search)
+                );
+            }
+
             const matchStatus = status === "" || rowStatus === status;
             const matchLocation = location === "" || rowLocation === location;
 
-            row.style.display = (matchSearch && matchStatus && matchLocation) ? "" : "none";
+            if (matchSearch && matchStatus && matchLocation) {
+                row.style.display = "";
+                visibleRows++;
+            } else {
+                row.style.display = "none";
+            }
         });
+
+        // Show or hide "No results" message
+        noResults.style.display = visibleRows === 0 ? "block" : "none";
     }
 
     function resetFilters() {
