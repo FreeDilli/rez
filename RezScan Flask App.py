@@ -160,9 +160,9 @@ def manage_residents():
                     c.execute("INSERT INTO residents (name, mdoc, unit, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
                               (name, mdoc, unit, housing_unit, level, photo_path))
                     conn.commit()
-                    message = "Resident added successfully."
+                    flash("Resident added successfully.", "success")
                 except sqlite3.IntegrityError:
-                    message = "Error: mdoc must be unique."
+                    flash("Error: MDOC must be unique.", "error")
 
         c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")
         residents = c.fetchall()
