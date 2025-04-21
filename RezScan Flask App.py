@@ -369,6 +369,21 @@ def manage_locations():
 # -----------------------
 
 # ---------------------
+# Start Delete Location 
+# ---------------------
+@app.route('/admin/locations/delete/<int:location_id>', methods=['POST'])
+def delete_location(location_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM locations WHERE id = ?", (location_id,))
+        conn.commit()
+    flash("Location deleted successfully.", "success")
+    return redirect(url_for('manage_locations'))
+# -------------------
+# End Delete Location 
+# -------------------
+
+# ---------------------
 # App Entry Point
 # ---------------------
 if __name__ == '__main__':
