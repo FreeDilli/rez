@@ -1,18 +1,12 @@
 import logging
+from Utils.logging_config import setup_logging
 from flask import Flask, redirect, url_for
 from config import Config
 from models.database import init_db, init_app
 import os
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('./logs/app.log')
-    ]
-)
+setup_logging()
 logger = logging.getLogger(__name__)
 
 # Import blueprints
