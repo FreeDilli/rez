@@ -88,8 +88,18 @@ def init_db():
                 LEFT JOIN residents r ON s.mdoc = r.mdoc
         ''')
 
+        # Audit Log Table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS audit_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                action TEXT NOT NULL,
+                target TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                details TEXT
+            )
+        ''')
         conn.commit()
 
 def init_app(app):
     app.teardown_appcontext(close_db)
-
