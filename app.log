@@ -98,3 +98,38 @@
  * Running on http://127.0.0.1:5080
 2025-04-21 23:22:03,822 [INFO] [33mPress CTRL+C to quit[0m
 2025-04-21 23:22:08,800 [INFO] 127.0.0.1 - - [21/Apr/2025 23:22:08] "GET /admin/residents HTTP/1.1" 200 -
+2025-04-21 23:45:40,322 [INFO] All Blueprints imported successfully
+2025-04-21 23:45:40,324 [INFO] Registered blueprint: residents_export
+2025-04-21 23:45:40,324 [INFO] Registered blueprint: residents_import
+2025-04-21 23:45:40,325 [INFO] Registered blueprint: scanlog_export
+2025-04-21 23:45:40,325 [INFO] Registered blueprint: scanlog_delete
+2025-04-21 23:45:40,326 [INFO] Registered blueprint: scanlog
+2025-04-21 23:45:40,326 [INFO] Registered blueprint: locations
+2025-04-21 23:45:40,327 [INFO] Registered blueprint: locations_delete
+2025-04-21 23:45:40,327 [INFO] Registered blueprint: residents
+2025-04-21 23:45:40,328 [INFO] Registered blueprint: residents_edit
+2025-04-21 23:45:40,329 [INFO] Registered blueprint: residents_delete
+2025-04-21 23:45:40,329 [INFO] Registered blueprint: residents_delete_all
+2025-04-21 23:45:40,330 [INFO] Registered blueprint: residents_import_sample
+2025-04-21 23:45:40,331 [INFO] Registered blueprint: scan
+2025-04-21 23:45:40,331 [INFO] Registered blueprint: dashboard
+2025-04-21 23:45:40,332 [INFO] Registered blueprint: auth
+2025-04-21 23:45:40,334 [INFO] Registered blueprint: users
+2025-04-21 23:45:40,335 [INFO] Registered blueprint: api
+2025-04-21 23:45:40,384 [INFO] Starting Flask app
+2025-04-21 23:45:40,400 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5080
+2025-04-21 23:45:40,401 [INFO] [33mPress CTRL+C to quit[0m
+2025-04-21 23:45:46,460 [INFO] 127.0.0.1 - - [21/Apr/2025 23:45:46] "[32mGET / HTTP/1.1[0m" 302 -
+2025-04-21 23:45:46,492 [INFO] 127.0.0.1 - - [21/Apr/2025 23:45:46] "GET /scan HTTP/1.1" 200 -
+2025-04-21 23:46:01,197 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:01] "GET /admin/dashboard HTTP/1.1" 200 -
+2025-04-21 23:46:03,751 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:03] "GET /scan HTTP/1.1" 200 -
+2025-04-21 23:46:05,668 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:05] "GET /admin/residents HTTP/1.1" 200 -
+2025-04-21 23:46:08,192 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:08] "GET /admin/scanlog HTTP/1.1" 200 -
+2025-04-21 23:46:12,421 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:12] "GET /admin/locations HTTP/1.1" 200 -
+2025-04-21 23:46:14,866 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:14] "GET /admin/users HTTP/1.1" 200 -
+2025-04-21 23:46:20,352 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:20] "GET /scan HTTP/1.1" 200 -
+2025-04-21 23:46:21,287 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:21] "GET /admin/dashboard HTTP/1.1" 200 -
+2025-04-21 23:46:23,615 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:23] "[32mGET / HTTP/1.1[0m" 302 -
+2025-04-21 23:46:23,619 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:23] "GET /scan HTTP/1.1" 200 -
+2025-04-21 23:46:31,106 [INFO] 127.0.0.1 - - [21/Apr/2025 23:46:31] "POST /scan HTTP/1.1" 200 -
