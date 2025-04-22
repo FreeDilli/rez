@@ -3,10 +3,12 @@ from models.database import get_db
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
+from routes.auth import login_required
 
 residents_bp = Blueprint('residents', __name__)
 
 @residents_bp.route('/admin/residents', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
 def manage_residents():
     message = None
     unit_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]

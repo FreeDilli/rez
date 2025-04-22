@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template
 from models.database import get_db
+from routes.auth import login_required
 
 scanlog_bp = Blueprint('scanlog', __name__)
 
 @scanlog_bp.route('/admin/scanlog', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
 def scanlog():
     try:
         db = get_db()
