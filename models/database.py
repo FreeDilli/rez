@@ -16,8 +16,12 @@ def close_db(e=None):
         db.close()
 
 def init_db():
-    # Use app config DB_PATH (don't redefine it here if Flask is already configured)
-    db_path = Config.DB_PATH
+    # Use DB_PATH from Flask app config
+    db_path = current_app.config['DB_PATH']
+    
+    # Ensure the directory for the database exists
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    
     print(f"🔨 Initializing DB at: {db_path}")
 
     os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure /data or parent folder exists
