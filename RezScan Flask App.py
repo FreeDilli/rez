@@ -20,6 +20,7 @@ try:
     from routes.dashboard import dashboard_bp
     from routes.auth import auth_bp
     from routes.users import users_bp
+    from routes.api import api_bp
     print("All Blueprints imported successfully")
 except ImportError as e:
     print(f"ImportError: {e}")
@@ -46,6 +47,7 @@ app.register_blueprint(scan_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(users_bp)
+app.register_blueprint(api_bp)
 print("All Blueprints registered successfully")
 
 init_app(app)
