@@ -15,6 +15,20 @@ DB_PATH = Config.DB_PATH
 VALID_ROLES = ['admin', 'viewer']  # Define valid roles
 MIN_PASSWORD_LENGTH = 8  # Minimum password length
 
+def log_audit_action(username, action, target, details=None):
+    """Helper function to log actions to audit_log table and logger."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
+            c.execute(
+                "INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)",
+                (username, action, target, details)
+            )
+            conn.commit()
+            logger.info(f"Audit log: {username} performed '{action}' on '{target}'{f' - {details}' if details else ''}")
+    except sqlite3.Error as e:
+        logger.error(f"Failed to log audit action for '{username}' on '{target}': {str(e)}")
+
 @users_bp.route('/admin/users', methods=['GET', 'POST'])
 def manage_users():
     logger.debug(f"Accessing /admin/users route with method: {request.method}")
@@ -45,6 +59,7 @@ def manage_users():
                     conn.commit()
                     logger.info(f"User '{username}' added successfully with role '{role}'")
                     flash(f"User '{username}' added successfully.", "success")
+                    log_audit_action(session.get('username'), "Added user", username, f"Role: {role}")
             except sqlite3.IntegrityError:
                 logger.warning(f"Failed to add user '{username}': Username already exists")
                 flash(f"User '{username}' already exists.", "danger")
@@ -90,6 +105,7 @@ def edit_user(username):
                     conn.commit()
                     logger.info(f"Role for user '{username}' updated to '{new_role}'")
                     flash(f"Role for '{username}' updated to '{new_role}'.", "success")
+                    log_audit_action(session.get('username'), "Updated role", username, f"New role: {new_role}")
         except sqlite3.Error as e:
             logger.error(f"Database error updating role for '{username}': {str(e)}")
             flash("Database error updating user role.", "danger")
@@ -164,6 +180,7 @@ def change_password():
                 conn.commit()
                 logger.info(f"Password changed successfully for user '{username}'")
                 flash("Password changed successfully.", "success")
+                log_audit_action(username, "Changed password", username)
                 return redirect(url_for('users.change_password'))
         except sqlite3.Error as e:
             logger.error(f"Database error changing password for '{username}': {str(e)}")
@@ -186,6 +203,7 @@ def reset_password(username):
                 conn.commit()
                 logger.info(f"Password reset for user '{username}' to 'temp1234'")
                 flash(f"Password for '{username}' reset to 'temp1234'.", "info")
+                log_audit_action(session.get('username'), "Reset password", username)
     except sqlite3.Error as e:
         logger.error(f"Database error resetting password for '{username}': {str(e)}")
         flash("Database error resetting password.", "danger")
@@ -194,6 +212,10 @@ def reset_password(username):
 @users_bp.route('/admin/users/delete/<username>', methods=['POST'])
 def delete_user(username):
     logger.debug(f"Accessing /admin/users/delete/{username} route")
+    if username == session.get('username'):
+        logger.warning(f"User '{username}' attempted to delete their own account")
+        flash("You cannot delete your own account.", "danger")
+        return redirect(url_for('users.manage_users'))
     try:
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
@@ -205,6 +227,7 @@ def delete_user(username):
                 conn.commit()
                 logger.info(f"User '{username}' deleted successfully")
                 flash(f"User '{username}' deleted.", "warning")
+                log_audit_action(session.get('username'), "Deleted user", username)
     except sqlite3.Error as e:
         logger.error(f"Database error deleting user '{username}': {str(e)}")
         flash("Database error deleting user.", "danger")
