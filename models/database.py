@@ -1,7 +1,13 @@
+import logging
+from Utils.logging_config import setup_logging
 import sqlite3
 import os
 from flask import g, current_app
 from config import Config
+
+# Configure logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 def get_db():
     if 'db' not in g:
@@ -16,7 +22,120 @@ def close_db(e=None):
         db.close()
 
 def init_db():
-    # Use DB_PATH from Flask app config
+    db_path = current_app.config['DB_PATH']
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    logger.info(f"Initializing DB at: {db_path}")
+
+    with sqlite3.connect(db_path) as conn:
+        c = conn.cursor()
+        try:
+            # Residents table
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS residents (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    mdoc TEXT UNIQUE NOT NULL,
+                    unit TEXT,
+                    housing_unit TEXT,
+                    level TEXT,
+                    photo TEXT
+                )
+            ''')
+            logger.info("Created residents table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating residents table: {e}")
+            raise
+
+        # Locations table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS locations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    prefix TEXT UNIQUE,
+                    type TEXT 
+                )
+            ''')
+            logger.info("Created locations table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating locations table: {e}")
+            raise
+
+        # Scans table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS scans (
+                    scanid INTEGER PRIMARY KEY AUTOINCREMENT,
+                    mdoc TEXT,
+                    date TEXT,
+                    time TEXT,
+                    status TEXT,
+                    location TEXT
+                )
+            ''')
+            logger.info("Created scans table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating scans table: {e}")
+            raise
+
+        # Users table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT CHECK(role IN ('admin', 'viewer')) NOT NULL
+                )
+            ''')
+            logger.info("Created users table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating users table: {e}")
+            raise
+
+        # Scans view
+        try:
+            c.execute('''
+                CREATE VIEW IF NOT EXISTS scans_with_residents AS
+                    SELECT 
+                        s.mdoc,
+                        r.name,
+                        s.date,
+                        s.time,
+                        s.status,
+                        s.location
+                    FROM scans s
+                    LEFT JOIN residents r ON s.mdoc = r.mdoc
+            ''')
+            logger.info("Created scans_with_residents view")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating scans_with_residents view: {e}")
+            raise
+
+        # Audit Log table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    target TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    details TEXT
+                )
+            ''')
+            logger.info("Created audit_log table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating audit_log table: {e}")
+            raise
+
+        conn.commit()
+        logger.info("Database initialized successfully")
+
+        # Verify tables
+        c.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = c.fetchall()
+        logger.info(f"Tables in database: {tables}")    # Use DB_PATH from Flask app config
     db_path = current_app.config['DB_PATH']
     
     # Ensure the directory for the database exists
