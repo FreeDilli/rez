@@ -1,8 +1,21 @@
+import logging
 from flask import Flask, redirect, url_for
 from config import Config
 from models.database import init_db, init_app
 import os
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Import blueprints
 try:
     from routes.residents_export import residents_export_bp
     from routes.residents_import import residents_import_bp
@@ -21,9 +34,9 @@ try:
     from routes.auth import auth_bp
     from routes.users import users_bp
     from routes.api import api_bp
-    print("All Blueprints imported successfully")
+    logger.info("All Blueprints imported successfully")
 except ImportError as e:
-    print(f"ImportError: {e}")
+    logger.error(f"ImportError: {e}")
     raise
 
 app = Flask(__name__)
@@ -31,32 +44,27 @@ app.config.from_object(Config)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-app.register_blueprint(residents_export_bp)
-app.register_blueprint(residents_import_bp)
-app.register_blueprint(scanlog_export_bp)
-app.register_blueprint(scanlog_delete_bp)
-app.register_blueprint(scanlog_bp)
-app.register_blueprint(locations_bp)
-app.register_blueprint(locations_delete_bp)
-app.register_blueprint(residents_bp)
-app.register_blueprint(residents_edit_bp)
-app.register_blueprint(residents_delete_bp)
-app.register_blueprint(residents_delete_all_bp)
-app.register_blueprint(residents_sample_bp)
-app.register_blueprint(scan_bp)
-app.register_blueprint(dashboard_bp)
-app.register_blueprint(auth_bp)
-app.register_blueprint(users_bp)
-app.register_blueprint(api_bp)
-print("All Blueprints registered successfully")
+# Register blueprints
+blueprints = [
+    residents_export_bp, residents_import_bp, scanlog_export_bp,
+    scanlog_delete_bp, scanlog_bp, locations_bp, locations_delete_bp,
+    residents_bp, residents_edit_bp, residents_delete_bp,
+    residents_delete_all_bp, residents_sample_bp, scan_bp,
+    dashboard_bp, auth_bp, users_bp, api_bp
+]
+for bp in blueprints:
+    app.register_blueprint(bp)
+    logger.info(f"Registered blueprint: {bp.name}")
 
 init_app(app)
+with app.app_context():
+    init_db()
 
 @app.route('/')
 def index():
     return redirect(url_for('scan.scan'))
 
 if __name__ == '__main__':
-    init_db()
-    print(app.url_map)  # Debug: Print all registered routes
-    app.run(debug=True, host='127.0.0.1', port=5080)
+    logger.info("Starting Flask app")
+    logger.debug(f"Registered routes: {app.url_map}")
+    app.run(host='127.0.0.1', port=5080)
