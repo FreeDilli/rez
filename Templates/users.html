@@ -54,11 +54,14 @@
                     <td>{{ user.username }}</td>
                     <td>{{ user.role }}</td>
                     <td>
-                        <form method="POST" action="{{ url_for('users.reset_password', username=user.username) }}" class="d-inline">
+                        <form method="GET" action="{{ url_for('users.edit_user', username=user.username) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-info" {% if user.username == session.username %}disabled title="Cannot edit own role"{% endif %} onclick="return confirm('Are you sure you want to change the role for {{ user.username }}?');">Change Role</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('users.reset_password', username=user.username) }}" class="d-inline ms-2">
                             <button type="submit" class="btn btn-sm btn-warning">Reset Password</button>
                         </form>
                         <form method="POST" action="{{ url_for('users.delete_user', username=user.username) }}" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            <button type="submit" class="btn btn-sm btn-danger" {% if user.username == session.username %}disabled title="Cannot delete own account"{% endif %}>Delete</button>
                         </form>
                     </td>
                 </tr>

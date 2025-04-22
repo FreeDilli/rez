@@ -88,7 +88,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-            <img src="{{ url_for('static', filename='uploads/rezscanicon.png') }}" alt="RezScan Icon" class="brand-icon">
+            <img src="{{ url_for('static', filename='Uploads/rezscanicon.png') }}" alt="RezScan Icon" class="brand-icon">
             <span class="rezscan-title">RezScan</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -142,6 +142,7 @@
                                 <li><a class="dropdown-item" href="{{ url_for('users.manage_users') }}"><i class="bi bi-person-gear me-2"></i>Users</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.change_password') }}"><i class="bi bi-key me-2"></i>Change Password</a></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </li>
@@ -173,11 +174,11 @@
 <footer class="py-3 mt-5 border-top" style="transition: background-color 0.3s, color 0.3s;">
     <div class="container d-flex flex-column flex-sm-row align-items-center justify-content-between text-center">
         <div class="d-flex align-items-center mb-2 mb-sm-0">
-            <img src="{{ url_for('static', filename='uploads/rezscanicon.png') }}" alt="RezScan Icon" class="brand-icon me-2">
+            <img src="{{ url_for('static', filename='Uploads/rezscanicon.png') }}" alt="RezScan Icon" class="brand-icon me-2">
             <span class="rezscan-title">RezScan</span>
         </div>
         <div class="small">
-            &copy; {{ now().year if now else "2025" }} | Internal Use Only
+            © {{ now().year if now else "2025" }} | Internal Use Only
         </div>
     </div>
 </footer>
