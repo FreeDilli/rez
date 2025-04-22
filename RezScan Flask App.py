@@ -54,7 +54,6 @@ init_app(app)
 with app.app_context():
     init_db()
 
-# Sets homepage to redirect to the scan page
 @app.route('/')
 def index():
     return redirect(url_for('scan.scan'))

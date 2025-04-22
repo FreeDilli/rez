@@ -3,20 +3,16 @@ from Utils.logging_config import setup_logging
 import sqlite3
 from werkzeug.security import generate_password_hash
 from config import Config
-import os
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# ✅ Use DB_PATH from config
+# Step 1: Use database path from Config
 db_path = Config.DB_PATH
-logger.info(f"📂 Using DB path: {db_path}")
+logger.debug(f"Database path set to: {db_path}")
 
-# Make sure the directory exists
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
-
-# Step 1: Create users table
+# Step 2: Create users table if needed
 try:
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
@@ -30,19 +26,19 @@ try:
         )
     ''')
     conn.commit()
-    logger.info("✅ Users table created (if not exists).")
+    logger.info("Users table created if it didn't exist.")
 except sqlite3.Error as e:
-    logger.error(f"❌ Failed to create users table: {e}")
+    logger.error(f"Failed to create users table: {e}")
     raise
 finally:
-    if 'c' in locals(): c.close()
-    if 'conn' in locals(): conn.close()
+    c.close()
+    conn.close()
 
-# Step 2: Insert admin user
+# Step 3: Insert sample admin
 username = 'admin'
 password = 'admin123'
 hashed_pw = generate_password_hash(password)
-logger.debug("🔐 Password hashed for admin.")
+logger.debug("Generated password hash for admin user")
 
 try:
     conn = sqlite3.connect(db_path)
@@ -50,12 +46,12 @@ try:
     c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
               (username, hashed_pw, 'admin'))
     conn.commit()
-    logger.info("✅ Admin user created.")
+    logger.info("Admin user created successfully.")
 except sqlite3.IntegrityError:
-    logger.warning("⚠️ Admin user already exists.")
+    logger.warning("Admin user already exists in the database.")
 except sqlite3.Error as e:
-    logger.error(f"❌ Failed to insert admin user: {e}")
+    logger.error(f"Failed to insert admin user: {e}")
     raise
 finally:
-    if 'c' in locals(): c.close()
-    if 'conn' in locals(): conn.close()
+    c.close()
+    conn.close()
