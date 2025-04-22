@@ -16,11 +16,12 @@ def close_db(e=None):
         db.close()
 
 def init_db():
-    # Explicitly place DB in the correct folder
-    app_root = os.path.dirname(os.path.abspath(__file__))  # This gives you /RezScan App/models
-    parent_dir = os.path.abspath(os.path.join(app_root, '..'))  # Go up to /RezScan App
-    db_path = os.path.join(parent_dir, 'rezscan.db')  # Final path: /RezScan App/rezscan.db
-
+    # Use DB_PATH from Flask app config
+    db_path = current_app.config['DB_PATH']
+    
+    # Ensure the directory for the database exists
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    
     print(f"🔨 Initializing DB at: {db_path}")
 
     with sqlite3.connect(db_path) as conn:
