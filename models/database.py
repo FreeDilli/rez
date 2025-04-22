@@ -16,12 +16,11 @@ def close_db(e=None):
         db.close()
 
 def init_db():
-    # Explicitly place DB in the correct folder
-    app_root = os.path.dirname(os.path.abspath(__file__))  # This gives you /RezScan App/models
-    parent_dir = os.path.abspath(os.path.join(app_root, '..'))  # Go up to /RezScan App
-    db_path = os.path.join(parent_dir, 'rezscan.db')  # Final path: /RezScan App/rezscan.db
-
+    # Use app config DB_PATH (don't redefine it here if Flask is already configured)
+    db_path = Config.DB_PATH
     print(f"🔨 Initializing DB at: {db_path}")
+
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure /data or parent folder exists
 
     with sqlite3.connect(db_path) as conn:
         c = conn.cursor()
@@ -71,7 +70,7 @@ def init_db():
             )
         ''')
 
-        # View for Scan Log with resident names
+        # View for Scan Log
         c.execute('''
             CREATE VIEW IF NOT EXISTS scans_with_residents AS
                 SELECT 
@@ -86,7 +85,7 @@ def init_db():
         ''')
 
         conn.commit()
-        
 
 def init_app(app):
     app.teardown_appcontext(close_db)
+

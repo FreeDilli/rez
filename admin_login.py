@@ -3,14 +3,15 @@ from Utils.logging_config import setup_logging
 import sqlite3
 from werkzeug.security import generate_password_hash
 from config import Config
+import os
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 # Step 1: Use database path from Config
-db_path = Config.DB_PATH
-logger.debug(f"Database path set to: {db_path}")
+app_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(app_dir, "rezscan.db")
 
 # Step 2: Create users table if needed
 try:
