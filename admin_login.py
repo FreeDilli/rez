@@ -9,11 +9,14 @@ import os
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# Step 1: Use database path from Config
-app_dir = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(app_dir, "rezscan.db")
+# ✅ Use DB_PATH from config
+db_path = Config.DB_PATH
+logger.info(f"📂 Using DB path: {db_path}")
 
-# Step 2: Create users table if needed
+# Make sure the directory exists
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+
+# Step 1: Create users table
 try:
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
@@ -27,19 +30,19 @@ try:
         )
     ''')
     conn.commit()
-    logger.info("Users table created if it didn't exist.")
+    logger.info("✅ Users table created (if not exists).")
 except sqlite3.Error as e:
-    logger.error(f"Failed to create users table: {e}")
+    logger.error(f"❌ Failed to create users table: {e}")
     raise
 finally:
-    c.close()
-    conn.close()
+    if 'c' in locals(): c.close()
+    if 'conn' in locals(): conn.close()
 
-# Step 3: Insert sample admin
+# Step 2: Insert admin user
 username = 'admin'
 password = 'admin123'
 hashed_pw = generate_password_hash(password)
-logger.debug("Generated password hash for admin user")
+logger.debug("🔐 Password hashed for admin.")
 
 try:
     conn = sqlite3.connect(db_path)
@@ -47,12 +50,12 @@ try:
     c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
               (username, hashed_pw, 'admin'))
     conn.commit()
-    logger.info("Admin user created successfully.")
+    logger.info("✅ Admin user created.")
 except sqlite3.IntegrityError:
-    logger.warning("Admin user already exists in the database.")
+    logger.warning("⚠️ Admin user already exists.")
 except sqlite3.Error as e:
-    logger.error(f"Failed to insert admin user: {e}")
+    logger.error(f"❌ Failed to insert admin user: {e}")
     raise
 finally:
-    c.close()
-    conn.close()
+    if 'c' in locals(): c.close()
+    if 'conn' in locals(): conn.close()
