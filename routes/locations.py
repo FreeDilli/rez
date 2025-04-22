@@ -1,10 +1,12 @@
 import sqlite3
 from flask import Blueprint, render_template, request
 from models.database import get_db
+from routes.auth import login_required
 
 locations_bp = Blueprint('locations', __name__)
 
 @locations_bp.route('/admin/locations', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
 def manage_locations():
     message = None
     with get_db() as conn:
