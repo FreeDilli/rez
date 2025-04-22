@@ -75,3 +75,26 @@
 2025-04-21 23:11:16,585 [INFO] 127.0.0.1 - - [21/Apr/2025 23:11:16] "POST /admin/residents/import HTTP/1.1" 200 -
 2025-04-21 23:11:31,028 [INFO] 127.0.0.1 - - [21/Apr/2025 23:11:31] "POST /admin/residents/import HTTP/1.1" 200 -
 2025-04-21 23:11:33,289 [INFO] 127.0.0.1 - - [21/Apr/2025 23:11:33] "GET /admin/residents HTTP/1.1" 200 -
+2025-04-21 23:22:03,757 [INFO] All Blueprints imported successfully
+2025-04-21 23:22:03,764 [INFO] Registered blueprint: residents_export
+2025-04-21 23:22:03,764 [INFO] Registered blueprint: residents_import
+2025-04-21 23:22:03,764 [INFO] Registered blueprint: scanlog_export
+2025-04-21 23:22:03,764 [INFO] Registered blueprint: scanlog_delete
+2025-04-21 23:22:03,773 [INFO] Registered blueprint: scanlog
+2025-04-21 23:22:03,776 [INFO] Registered blueprint: locations
+2025-04-21 23:22:03,777 [INFO] Registered blueprint: locations_delete
+2025-04-21 23:22:03,779 [INFO] Registered blueprint: residents
+2025-04-21 23:22:03,781 [INFO] Registered blueprint: residents_edit
+2025-04-21 23:22:03,781 [INFO] Registered blueprint: residents_delete
+2025-04-21 23:22:03,781 [INFO] Registered blueprint: residents_delete_all
+2025-04-21 23:22:03,781 [INFO] Registered blueprint: residents_import_sample
+2025-04-21 23:22:03,788 [INFO] Registered blueprint: scan
+2025-04-21 23:22:03,789 [INFO] Registered blueprint: dashboard
+2025-04-21 23:22:03,790 [INFO] Registered blueprint: auth
+2025-04-21 23:22:03,791 [INFO] Registered blueprint: users
+2025-04-21 23:22:03,791 [INFO] Registered blueprint: api
+2025-04-21 23:22:03,798 [INFO] Starting Flask app
+2025-04-21 23:22:03,822 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5080
+2025-04-21 23:22:03,822 [INFO] [33mPress CTRL+C to quit[0m
+2025-04-21 23:22:08,800 [INFO] 127.0.0.1 - - [21/Apr/2025 23:22:08] "GET /admin/residents HTTP/1.1" 200 -
