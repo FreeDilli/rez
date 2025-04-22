@@ -24,6 +24,8 @@ def init_db():
     
     print(f"🔨 Initializing DB at: {db_path}")
 
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure /data or parent folder exists
+
     with sqlite3.connect(db_path) as conn:
         c = conn.cursor()
 
@@ -72,7 +74,7 @@ def init_db():
             )
         ''')
 
-        # View for Scan Log with resident names
+        # View for Scan Log
         c.execute('''
             CREATE VIEW IF NOT EXISTS scans_with_residents AS
                 SELECT 
@@ -87,7 +89,7 @@ def init_db():
         ''')
 
         conn.commit()
-        
 
 def init_app(app):
     app.teardown_appcontext(close_db)
+
