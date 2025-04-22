@@ -5,7 +5,7 @@ import io
 
 residents_import_bp = Blueprint('residents_import', __name__)
 
-@residents_import_bp.route('/admin/residents/import', methods=['GET', 'POST'])
+@residents_import_bp.route('/admin/residents/import', methods=['GET', 'POST'], strict_slashes=False)
 def import_residents():
     messages = []
     import_count = 0
