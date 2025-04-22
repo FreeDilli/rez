@@ -2,10 +2,11 @@ import sqlite3
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Tuple, Union
-from config import Config  # Adjust import if config file is named differently or in another directory
+from config import Config
+from Utils.logging_config import setup_logging
 
-# Configure logging (consider making level configurable via env var)
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging
+setup_logging()
 logger = logging.getLogger(__name__)
 
 def process_scan(mdoc: str, prefix: str) -> str:
@@ -66,6 +67,7 @@ def process_scan(mdoc: str, prefix: str) -> str:
                         f"Scan recorded: 'Out' at {last_location}, 'In' at {location_name}. "
                         f"(Missed scan corrected)"
                     )
+                    logger.info(f"Processed missed scan for MDOC '{mdoc}': Out at {last_location}, In at {location_name}")
                     return _format_return_message(message, resident_not_found)
 
                 if last_location == location_name:
@@ -74,19 +76,21 @@ def process_scan(mdoc: str, prefix: str) -> str:
                     insert_scan(cursor, mdoc, scan_time, status, location_name)
                     conn.commit()
                     message = f"Scan recorded: '{status}' at {location_name}"
+                    logger.info(f"Processed scan for MDOC '{mdoc}': {status} at {location_name}")
                     return _format_return_message(message, resident_not_found)
 
             # Default: new 'In' scan
             insert_scan(cursor, mdoc, scan_time, 'In', location_name)
             conn.commit()
             message = f"Scan recorded: 'In' at {location_name}"
+            logger.info(f"Processed scan for MDOC '{mdoc}': In at {location_name}")
             return _format_return_message(message, resident_not_found)
 
     except sqlite3.Error as e:
-        logger.error(f"Database error processing scan for MDOC '{mdoc}' at '{prefix}': {e}")
+        logger.error(f"Failed to process scan for MDOC '{mdoc}' at prefix '{prefix}': {e}")
         return f"Database error: {str(e)}"
     except Exception as e:
-        logger.error(f"Unexpected error processing scan for MDOC '{mdoc}' at '{prefix}': {e}")
+        logger.error(f"Unexpected error processing scan for MDOC '{mdoc}' at prefix '{prefix}': {e}")
         return f"Unexpected error: {str(e)}"
 
 def insert_scan(cursor: sqlite3.Cursor, mdoc: str, timestamp: datetime, status: str, location: str) -> None:
@@ -128,7 +132,7 @@ def get_location_name_by_prefix(prefix: str) -> Optional[str]:
             row = cursor.fetchone()
             return row[0] if row else None
     except sqlite3.Error as e:
-        logger.error(f"Error querying location for prefix '{prefix}': {e}")
+        logger.error(f"Failed to query location for prefix '{prefix}': {e}")
         return None
 
 def _format_return_message(message: str, resident_not_found: bool) -> str:
