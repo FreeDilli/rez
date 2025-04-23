@@ -75,7 +75,7 @@ def get_users():
         with sqlite3.connect(DB_PATH) as conn:
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
-            c.execute("SELECT username, role FROM users ORDER BY username")
+            c.execute("SELECT username, role, last_login FROM users ORDER BY username")
             users = c.fetchall()
             logger.debug(f"Fetched {len(users)} users from database")
             return users

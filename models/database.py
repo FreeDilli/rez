@@ -86,7 +86,8 @@ def init_db():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     password TEXT NOT NULL,
-                    role TEXT CHECK(role IN ('admin', 'viewer')) NOT NULL
+                    role TEXT CHECK(role IN ('admin', 'viewer')) NOT NULL,
+                    last_login DATETIME
                 )
             ''')
             logger.info("Created users table")

@@ -5,13 +5,13 @@ from functools import wraps
 from config import Config
 from Utils.logging_config import setup_logging
 import logging
+from datetime import datetime
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
-
 DB_PATH = Config.DB_PATH
 
 def login_required(f):
@@ -37,23 +37,23 @@ def login():
                 c = conn.cursor()
                 c.execute("SELECT id, password, role FROM users WHERE username = ?", (username,))
                 user = c.fetchone()
+                if user and check_password_hash(user[1], password):
+                    session['user_id'] = user[0]
+                    session['username'] = username
+                    session['role'] = user[2]
+                    c.execute("UPDATE users SET last_login = ? WHERE username = ?", (datetime.now(), username))
+                    conn.commit()
+                    logger.info(f"Successful login for username: {username}, role: {user[2]}, last_login updated")
+                    logger.debug(f"Session set: user_id={user[0]}, username={username}, role={user[2]}")
+                    flash("Login successful!", "success")
+                    return redirect(url_for('dashboard.dashboard'))
+                else:
+                    logger.warning(f"Failed login attempt for username: {username}")
+                    flash("Invalid username or password", "danger")
         except sqlite3.Error as e:
             logger.error(f"Database error during login for username {username}: {str(e)}")
             flash("Database error. Please try again later.", "danger")
             return render_template('login.html')
-
-        if user and check_password_hash(user[1], password):
-            session['user_id'] = user[0]
-            session['username'] = username
-            session['role'] = user[2]
-            logger.info(f"Successful login for username: {username}, role: {user[2]}")
-            logger.debug(f"Session set: user_id={user[0]}, username={username}, role={user[2]}")
-            flash("Login successful!", "success")
-            return redirect(url_for('dashboard.dashboard'))
-        else:
-            logger.warning(f"Failed login attempt for username: {username}")
-            flash("Invalid username or password", "danger")
-
     return render_template('login.html')
 
 @auth_bp.route('/logout')
