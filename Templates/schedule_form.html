@@ -1,0 +1,106 @@
+{% extends 'layout.html' %}
+{% block title %}{{ action }} Schedule Group{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">{{ action }} Schedule Group</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" class="form-control" id="name" name="name" required value="{{ schedule[1] if schedule else '' }}">
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description">{{ schedule[2] if schedule else '' }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="category" class="form-label">Category</label>
+      <select class="form-select" id="category" name="category" required>
+        <option value="Education" {% if schedule and schedule[3] == 'Education' %}selected{% endif %}>Education 🎓</option>
+        <option value="Work" {% if schedule and schedule[3] == 'Work' %}selected{% endif %}>Work 💼</option>
+        <option value="Recreation" {% if schedule and schedule[3] == 'Recreation' %}selected{% endif %}>Recreation 🏋️</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-success">💾 Save Group Info</button>
+    <a href="{{ url_for('schedules.list_schedules') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+
+  {% if schedule %}
+  <hr class="my-5">
+  <h2 class="mb-3">Schedule Blocks</h2>
+  <form method="post" action="{{ url_for('schedules.edit_schedule', group_id=schedule[0]) }}">
+    <input type="hidden" name="block_editor" value="1">
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Day</th>
+            <th>Location</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Week</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in blocks %}
+          <tr>
+            <td><input type="text" name="day[]" class="form-control" value="{{ b[2] }}"></td>
+            <td>
+              <select name="location[]" class="form-select">
+                {% for loc in locations %}
+                  <option value="{{ loc }}" {% if b[3] == loc %}selected{% endif %}>{{ loc }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input type="time" name="start_time[]" class="form-control" value="{{ b[4] }}"></td>
+            <td><input type="time" name="end_time[]" class="form-control" value="{{ b[5] }}"></td>
+            <td>
+              <select name="week_type[]" class="form-select">
+                <option value="both" {% if b[6] == 'both' %}selected{% endif %}>Both</option>
+                <option value="A" {% if b[6] == 'A' %}selected{% endif %}>Week A</option>
+                <option value="B" {% if b[6] == 'B' %}selected{% endif %}>Week B</option>
+              </select>
+            </td>
+            <td><input type="checkbox" name="remove[]" value="{{ b[0] }}"></td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td><input type="text" name="day[]" class="form-control"></td>
+            <td>
+              <select name="location[]" class="form-select">
+                {% for loc in locations %}
+                  <option value="{{ loc }}">{{ loc }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input type="time" name="start_time[]" class="form-control"></td>
+            <td><input type="time" name="end_time[]" class="form-control"></td>
+            <td>
+              <select name="week_type[]" class="form-select">
+                <option value="both">Both</option>
+                <option value="A">Week A</option>
+                <option value="B">Week B</option>
+              </select>
+            </td>
+            <td>New</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button type="submit" class="btn btn-primary">💾 Save Schedule Blocks</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
