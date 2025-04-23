@@ -1,9 +1,9 @@
 {% extends 'layout.html' %}
 {% block title %}Schedule Groups{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <h1 class="mb-4">Schedule Groups</h1>
+<h2 class="mb-4">Schedule Groups</h2>
 
+<div class="container py-4">
   <!-- Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 import sqlite3
 from config import Config
 from werkzeug.security import generate_password_hash, check_password_hash
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 import logging
 import os
 

@@ -3,7 +3,7 @@ import sqlite3
 from werkzeug.security import check_password_hash
 from functools import wraps
 from config import Config
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 import logging
 from datetime import datetime
 

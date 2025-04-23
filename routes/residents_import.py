@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 from models.database import get_db
 import csv
 import io

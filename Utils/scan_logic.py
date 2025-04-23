@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional, Tuple, Union
 from config import Config
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 
 # Configure logging
 setup_logging()

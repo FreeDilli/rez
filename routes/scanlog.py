@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 from models.database import get_db
 from routes.auth import login_required
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 import logging
 
 # Setup logging

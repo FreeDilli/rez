@@ -2,7 +2,7 @@ import logging
 import sqlite3
 import os
 from flask import g, current_app
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 
 # Configure logging
 setup_logging()

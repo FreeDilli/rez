@@ -1,5 +1,5 @@
 import logging
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 import sqlite3
 from werkzeug.security import generate_password_hash
 from config import Config

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
-from Utils.logging_config import setup_logging
-from Utils.scan_logic import process_scan
+from utils.logging_config import setup_logging
+from utils.scan_logic import process_scan
 import logging
 
 # Setup logging

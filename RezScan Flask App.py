@@ -1,5 +1,5 @@
 import logging
-from Utils.logging_config import setup_logging
+from utils.logging_config import setup_logging
 from flask import Flask, redirect, url_for
 from config import Config
 from models.database import init_db, init_app
