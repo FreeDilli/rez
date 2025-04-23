@@ -9,12 +9,12 @@ def setup_logging():
     formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
     
     # Handler for INFO and above (app.log) with rotation
-    info_handler = RotatingFileHandler('./logs/app.log', maxBytes=10485760, backupCount=5)
+    info_handler = RotatingFileHandler('./logs/app.log', maxBytes=10485760, backupCount=2)
     info_handler.setLevel(logging.INFO)
     info_handler.setFormatter(formatter)
     
     # Handler for DEBUG and above (debug.log) with rotation
-    debug_handler = RotatingFileHandler('./logs/debug.log', maxBytes=10485760, backupCount=5)
+    debug_handler = RotatingFileHandler('./logs/debug.log', maxBytes=10485760, backupCount=2)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(formatter)
     

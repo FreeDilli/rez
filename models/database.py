@@ -1,9 +1,8 @@
 import logging
-from Utils.logging_config import setup_logging
 import sqlite3
 import os
 from flask import g, current_app
-from config import Config
+from Utils.logging_config import setup_logging
 
 # Configure logging
 setup_logging()
@@ -14,6 +13,7 @@ def get_db():
         db_path = current_app.config['DB_PATH']
         g.db = sqlite3.connect(db_path)
         g.db.row_factory = sqlite3.Row
+        g.db.execute('PRAGMA foreign_keys = ON')  # Enable foreign keys
     return g.db
 
 def close_db(e=None):
@@ -24,12 +24,13 @@ def close_db(e=None):
 def init_db():
     db_path = current_app.config['DB_PATH']
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    logger.info(f"Initializing DB at: {db_path}")
+    logger.info(f"Initializing database at: {db_path}")
 
     with sqlite3.connect(db_path) as conn:
         c = conn.cursor()
+
+        # Residents table
         try:
-            # Residents table
             c.execute('''
                 CREATE TABLE IF NOT EXISTS residents (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +54,7 @@ def init_db():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL UNIQUE,
                     prefix TEXT UNIQUE,
-                    type TEXT 
+                    type TEXT
                 )
             ''')
             logger.info("Created locations table")
@@ -67,8 +68,8 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS scans (
                     scanid INTEGER PRIMARY KEY AUTOINCREMENT,
                     mdoc TEXT,
-                    date TEXT,
-                    time TEXT,
+                    date DATE,
+                    time TIME,
                     status TEXT,
                     location TEXT
                 )
@@ -97,15 +98,15 @@ def init_db():
         try:
             c.execute('''
                 CREATE VIEW IF NOT EXISTS scans_with_residents AS
-                    SELECT 
-                        s.mdoc,
-                        r.name,
-                        s.date,
-                        s.time,
-                        s.status,
-                        s.location
-                    FROM scans s
-                    LEFT JOIN residents r ON s.mdoc = r.mdoc
+                SELECT 
+                    s.mdoc,
+                    r.name,
+                    s.date,
+                    s.time,
+                    s.status,
+                    s.location
+                FROM scans s
+                LEFT JOIN residents r ON s.mdoc = r.mdoc
             ''')
             logger.info("Created scans_with_residents view")
         except sqlite3.Error as e:
@@ -129,96 +130,63 @@ def init_db():
             logger.error(f"Error creating audit_log table: {e}")
             raise
 
+        # Schedule Groups table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS schedule_groups (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    category TEXT NOT NULL
+                )
+            ''')
+            logger.info("Created schedule_groups table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating schedule_groups table: {e}")
+            raise
+
+        # Schedule Blocks table
+        try:
+            c.execute('''
+            CREATE TABLE IF NOT EXISTS schedule_blocks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                day_of_week TEXT NOT NULL,
+                location TEXT NOT NULL,
+                start_time TEXT NOT NULL,
+                end_time TEXT NOT NULL,
+                week_type TEXT DEFAULT 'both',
+                FOREIGN KEY (group_id) REFERENCES schedule_groups(id) ON DELETE CASCADE
+                )
+            ''')
+            logger.info("Created schedule_blocks table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating schedule_blocks table: {e}")
+            raise
+
+        # Resident Schedule Assignments table
+        try:
+            c.execute('''
+            CREATE TABLE IF NOT EXISTS resident_schedules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mdoc TEXT NOT NULL,
+                group_id INTEGER NOT NULL,
+                FOREIGN KEY (group_id) REFERENCES schedule_groups(id) ON DELETE CASCADE
+    )
+            ''')
+            logger.info("Created resident_schedules table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating resident_schedules table: {e}")
+            raise
+
+        # Commit changes
         conn.commit()
         logger.info("Database initialized successfully")
 
         # Verify tables
         c.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = c.fetchall()
-        logger.info(f"Tables in database: {tables}")    # Use DB_PATH from Flask app config
-    db_path = current_app.config['DB_PATH']
-    
-    # Ensure the directory for the database exists
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    
-    print(f"🔨 Initializing DB at: {db_path}")
-
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure /data or parent folder exists
-
-    with sqlite3.connect(db_path) as conn:
-        c = conn.cursor()
-
-        # Residents table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS residents (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                mdoc TEXT UNIQUE NOT NULL,
-                unit TEXT,
-                housing_unit TEXT,
-                level TEXT,
-                photo TEXT
-            )
-        ''')
-
-        # Locations table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS locations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                prefix TEXT UNIQUE,
-                type TEXT 
-            )
-        ''')
-
-        # Scans table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS scans (
-                scanid INTEGER PRIMARY KEY AUTOINCREMENT,
-                mdoc TEXT,
-                date TEXT,
-                time TEXT,
-                status TEXT,
-                location TEXT
-            )
-        ''')
-
-        # Users table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT CHECK(role IN ('admin', 'viewer')) NOT NULL
-            )
-        ''')
-
-        # View for Scan Log
-        c.execute('''
-            CREATE VIEW IF NOT EXISTS scans_with_residents AS
-                SELECT 
-                    s.mdoc,
-                    r.name,
-                    s.date,
-                    s.time,
-                    s.status,
-                    s.location
-                FROM scans s
-                LEFT JOIN residents r ON s.mdoc = r.mdoc
-        ''')
-
-        # Audit Log Table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS audit_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                action TEXT NOT NULL,
-                target TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                details TEXT
-            )
-        ''')
-        conn.commit()
+        logger.info(f"Tables in database: {tables}")
 
 def init_app(app):
     app.teardown_appcontext(close_db)

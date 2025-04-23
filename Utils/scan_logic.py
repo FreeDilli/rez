@@ -104,7 +104,7 @@ def insert_scan(cursor: sqlite3.Cursor, mdoc: str, timestamp: datetime, status: 
         status: The scan status ('In' or 'Out').
         location: The location name.
     """
-    date_str = timestamp.strftime('%Y-%m-%d')
+    date_str = timestamp.strftime('%m-%d-%Y')
     time_str = timestamp.strftime('%H:%M:%S')
     cursor.execute("""
         INSERT INTO scans (mdoc, date, time, status, location)
