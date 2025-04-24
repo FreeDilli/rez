@@ -1,8 +1,8 @@
 {% extends 'layout.html' %}
 {% block title %}Manage Users{% endblock %}
 {% block content %}
-<h2 class="mb-4">User Management</h2>
 <div class="container">
+    <h2 class="mb-4">User Management</h2>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -46,7 +46,7 @@
                 <tr>
                     <td>{{ user.username }}</td>
                     <td>{{ user.role }}</td>
-                    <td>{{ user.last_login if user.last_login else 'Never' }}</td>
+                    <td>{{ user.last_login | datetimeformat if user.last_login else 'Never' }}</td>
                     <td>
                         <form method="GET" action="{{ url_for('users.edit_user', username=user.username) }}" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-info" {% if user.username == session.username %}disabled title="Cannot edit own role"{% endif %} onclick="return confirm('Are you sure you want to change the role for {{ user.username }}?');">Change Role</button>
