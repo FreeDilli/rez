@@ -173,11 +173,51 @@ def init_db():
                 mdoc TEXT NOT NULL,
                 group_id INTEGER NOT NULL,
                 FOREIGN KEY (group_id) REFERENCES schedule_groups(id) ON DELETE CASCADE
-    )
+            )
             ''')
             logger.info("Created resident_schedules table")
         except sqlite3.Error as e:
             logger.error(f"Error creating resident_schedules table: {e}")
+            raise
+
+        # Import History table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS import_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    username TEXT NOT NULL,
+                    added INTEGER DEFAULT 0,
+                    updated INTEGER DEFAULT 0,
+                    deleted INTEGER DEFAULT 0,
+                    failed INTEGER DEFAULT 0,
+                    total INTEGER DEFAULT 0,
+                    csv_content TEXT
+                )
+            ''')
+            logger.info("Created import_history table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating import_history table: {e}")
+            raise
+        
+        # Resident Backups table
+        try:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS resident_backups (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    import_id INTEGER,
+                    mdoc TEXT,
+                    name TEXT,
+                    unit TEXT,
+                    housing_unit TEXT,
+                    level TEXT,
+                    photo TEXT,
+                    FOREIGN KEY (import_id) REFERENCES import_history(id) ON DELETE CASCADE
+                )
+            ''')
+            logger.info("Created resident_backups table")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating resident_backups table: {e}")
             raise
 
         # Commit changes

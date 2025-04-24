@@ -1,87 +1,201 @@
-{% extends 'layout.html' %}
-
+{% extends "layout.html" %}
 {% block title %}Import Residents{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Import Residents from CSV</h2>
+<div class="container mt-4">
+    <h2>📥 Import Residents</h2>
+    <div class="alert alert-secondary">
+        <h5 class="mb-1">📄 CSV Import Guidelines</h5>
+        <ul class="mb-1">
+            <li><strong>Required headers:</strong> <code>mdoc</code>, <code>name</code>, <code>unit</code>, <code>housing_unit</code>, <code>level</code></li>
+            <li><strong>Optional header:</strong> <code>photo</code></li>
+            <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
+            <li>Rows without a valid <code>mdoc</code> will be skipped</li>
+        </ul>
+        <a href="/static/residents_template.csv" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+            📥 Download CSV Template
+        </a>
+    </div>
+    <!-- Upload Form -->
+    <form id="uploadForm" class="mb-4">
+        <div class="mb-3">
+            <label for="csv_file" class="form-label">Upload CSV File</label>
+            <input class="form-control" type="file" name="csv_file" id="csv_file" accept=".csv" required>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="dry_run" value="yes" id="dry_run">
+            <label class="form-check-label" for="dry_run">🔍 Dry Run (Preview without saving)</label>
+        </div>
+        <button type="submit" class="btn btn-primary" title="Preview the changes before committing">Submit</button>
+    </form>
 
-<div class="mb-3">
-    <a href="{{ url_for('residents_import_sample.sample_csv') }}" class="btn btn-outline-secondary">📄 Download CSV Template</a>
-    <a href="{{ url_for('residents.manage_residents') }}" class="btn btn-outline-primary float-end">← Back to Residents</a>
-</div>
-<!-- Start CSV File Layout Guideline-->
-<div class="card p-3 mb-4">
-    <h5 class="card-title" data-bs-toggle="collapse" data-bs-target="#csvLayout" style="cursor: pointer;">
-        CSV File Layout
-        <span class="float-end">▼</span>
-    </h5>
-    <div id="csvLayout" class="collapse">
-        <p>The CSV file must include the following headers and corresponding data:</p>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Header</th>
-                    <th>Description</th>
-                    <th>Example</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>name</td>
-                    <td>Full name of the resident, last name first (required)</td>
-                    <td>SMITH, JOHN</td>
-                </tr>
-                <tr>
-                    <td>mdoc</td>
-                    <td>The resident's MDOC ID number (required)</td>
-                    <td>166978</td>
-                </tr>
-                <tr>
-                    <td>unit</td>
-                    <td>The unit where the resident is located (required)</td>
-                    <td>Unit 1</td>
-                </tr>
-                <tr>
-                    <td>housing_unit</td>
-                    <td>Specific housing unit (required)</td>
-                    <td>Foxtrot</td>
-                </tr>
-                <tr>
-                    <td>level</td>
-                    <td>Behavior level of the resident (required)</td>
-                    <td>4</td>
-                </tr>
-                <tr>
-                    <td>photo</td>
-                    <td>File path or URL to the resident's photo (optional)</td>
-                    <td>/photos/johndoe.jpg</td>
-                </tr>
-            </tbody>
-        </table>
-        <p><strong>Note:</strong> Ensure all required fields are included in the CSV. The <code>photo</code> field is optional but, if provided, should reference a valid file path or URL.</p>
+    <!-- Progress Bar -->
+    <div class="mb-4 d-none" id="progressContainer">
+        <label class="form-label">Upload Progress</label>
+        <div class="progress">
+            <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+        </div>
     </div>
+
+    <!-- Output Preview / Results -->
+    <div id="output" class="mt-4 fade"></div>
 </div>
-<!-- End CSV File Guideline-->
- <!--Start CSV import form-->
-<form method="POST" enctype="multipart/form-data" class="card p-4 mb-4">
-    <div class="mb-3">
-        <label for="csv_file" class="form-label">Select CSV File</label>
-        <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-white border-secondary shadow-lg rounded-4">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title" id="confirmModalLabel">Confirm Import</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to commit these changes to the database?
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+        <button id="modalConfirmBtn" type="button" class="btn btn-success">
+          <span class="spinner-border spinner-border-sm d-none me-2" id="confirmSpinner" role="status" aria-hidden="true"></span>
+          ✅ Confirm Changes
+        </button>
+      </div>
     </div>
-    <div class="d-grid">
-        <button type="submit" class="btn btn-success">Import Residents</button>
-    </div>
-</form>
-<!--End CSV import form-->
-{% if messages %}
-<div class="card p-3">
-    <h5 class="card-title">Import Results</h5>
-    <p><strong>Total Residents Imported: {{ import_count }}</strong></p>
-    <ul class="list-group list-group-flush">
-        {% for m in messages %}
-        <li class="list-group-item {% if '✔' in m %}text-success{% elif '✘' in m %}text-danger{% endif %}">{{ m }}</li>
-        {% endfor %}
-    </ul>
+  </div>
 </div>
-{% endif %}
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+  <div id="toast" class="toast align-items-center text-white bg-primary border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="toastBody">Processing...</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom CSS for fade-in -->
+<style>
+.fade {
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+}
+.fade.show {
+    opacity: 1;
+}
+</style>
+
+<!-- JS Logic -->
+<script>
+let lastFormData = null;
+
+function showToast(message, type = 'primary') {
+    const toastEl = document.getElementById('toast');
+    const toastBody = document.getElementById('toastBody');
+    toastEl.className = `toast align-items-center text-white bg-${type} border-0 shadow rounded-3`;
+    toastEl.setAttribute('data-bs-delay', '5000');
+    toastBody.innerText = message;
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+}
+
+document.getElementById('uploadForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('csv_file');
+    const dryRun = document.getElementById('dry_run').checked;
+    const formData = new FormData();
+    formData.append('csv_file', fileInput.files[0]);
+    formData.append('dry_run', dryRun ? 'yes' : 'no');
+    lastFormData = formData;
+    submitFormData(formData, true);
+});
+
+document.getElementById('modalConfirmBtn').addEventListener('click', function () {
+    if (!lastFormData) return;
+    lastFormData.set('dry_run', 'no');
+    document.getElementById('confirmSpinner').classList.remove('d-none');
+    submitFormData(lastFormData, false);
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+    modal.hide();
+});
+
+function submitFormData(formData, isDryRun) {
+    const xhr = new XMLHttpRequest();
+    const progressBar = document.getElementById('uploadProgress');
+    const progressContainer = document.getElementById('progressContainer');
+    const output = document.getElementById('output');
+
+    output.classList.remove('show');
+    output.innerHTML = '';
+    progressContainer.classList.remove('d-none');
+    progressBar.classList.add('progress-bar-animated');
+    progressBar.style.width = '0%';
+    progressBar.innerText = '0%';
+
+    xhr.upload.addEventListener('progress', function (e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressBar.innerText = percent + '%';
+        }
+    });
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            document.getElementById('confirmSpinner')?.classList.add('d-none');
+            progressBar.classList.remove('progress-bar-animated');
+            const res = JSON.parse(xhr.responseText);
+            if (xhr.status === 200 && res.success) {
+                let html = `<div class="alert alert-success">${res.messages.join('<br>')}</div>`;
+                html += `<div class="row text-center g-2 mb-3">
+                    <div class="col"><span class="badge text-bg-secondary">Processed: ${res.stats.processed}</span></div>
+                    <div class="col"><span class="badge text-bg-success">Added: ${res.stats.added}</span></div>
+                    <div class="col"><span class="badge text-bg-warning">Updated: ${res.stats.updated}</span></div>
+                    <div class="col"><span class="badge text-bg-danger">Deleted: ${res.stats.deleted}</span></div>
+                    <div class="col"><span class="badge text-bg-dark">Failed: ${res.stats.failed}</span></div>
+                </div>`;
+                if (res.preview_changes.length) {
+                    html += `<div class="accordion mb-3" id="previewAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePreview">🔍 Preview Changes</button>
+                            </h2>
+                            <div id="collapsePreview" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <ul class="list-group">`;
+                    for (const change of res.preview_changes) {
+                        let icon = change.includes('Add') ? '🟢' : change.includes('Delete') ? '🔴' : '🟡';
+                        html += `<li class="list-group-item">${icon} ${change}</li>`;
+                    }
+                    html += `</ul></div></div></div></div>`;
+                }
+                if (res.update_diffs.length) {
+                    html += `<div class="card mb-3"><div class="card-header">📝 Update Differences</div><div class="card-body">`;
+                    for (const upd of res.update_diffs) {
+                        html += `<h5>${upd.name} (MDOC: ${upd.mdoc})</h5><ul class="list-group mb-3">`;
+                        for (const field in upd.diffs) {
+                            const from = upd.diffs[field].from;
+                            const to = upd.diffs[field].to;
+                            html += `<li class="list-group-item"><strong>${field}</strong>: <s>${from}</s> ➡️ <strong>${to}</strong></li>`;
+                        }
+                        html += `</ul>`;
+                    }
+                    html += `</div></div>`;
+                }
+                if (isDryRun) {
+                    html += `<button id="confirmBtn" class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">✅ Confirm Changes</button>`;
+                } else {
+                    showToast("✅ Changes committed to the database.", 'success');
+                }
+                output.innerHTML = html;
+                setTimeout(() => output.classList.add('show'), 10);
+            } else {
+                output.innerHTML = `<div class="alert alert-danger">❌ ${res.message || 'Something went wrong.'}</div>`;
+                showToast(res.message || 'Import failed.', 'danger');
+            }
+        }
+    };
+    xhr.open('POST', '/admin/residents/import/upload');
+    xhr.send(formData);
+}
+</script>
 {% endblock %}

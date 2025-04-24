@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block title %}Import History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📜 Import History</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div class="toast align-items-center text-white bg-{{ category }} border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+              <div class="d-flex">
+                <div class="toast-body fw-semibold">{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Timestamp</th>
+                <th scope="col">User</th>
+                <th scope="col">Added</th>
+                <th scope="col">Updated</th>
+                <th scope="col">Deleted</th>
+                <th scope="col">Failed</th>
+                <th scope="col">Total</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in history %}
+            {% set is_rollback = row['csv_content'] and 'ROLLBACK' in row['csv_content'] %}
+            <tr class="{% if is_rollback %}table-warning{% endif %}">
+                <td>{{ row['id'] }}</td>
+                <td>{{ row['timestamp'] }}</td>
+                <td>{{ row['username'] }}</td>
+                <td><span class="badge bg-success">{{ row['added'] }}</span></td>
+                <td><span class="badge bg-warning text-dark">{{ row['updated'] }}</span></td>
+                <td><span class="badge bg-danger">{{ row['deleted'] }}</span></td>
+                <td><span class="badge bg-dark">{{ row['failed'] }}</span></td>
+                <td><span class="badge bg-secondary">{{ row['total'] }}</span></td>
+                <td>
+                    {% if is_rollback %}
+                        <span class="badge bg-warning text-dark">↩️ Rollback</span>
+                    {% else %}
+                        <a href="{{ url_for('import_history.view_import_snapshot', id=row['id']) }}" class="btn btn-sm btn-outline-primary">🔍 View</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmUndoModal{{ row['id'] }}">
+                            ↩️ Undo
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="confirmUndoModal{{ row['id'] }}" tabindex="-1" aria-labelledby="confirmUndoLabel{{ row['id'] }}" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="confirmUndoLabel{{ row['id'] }}">Confirm Rollback</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                Are you sure you want to rollback import <strong>#{{ row['id'] }}</strong>? This will reverse any added/updated/deleted residents.
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form method="POST" action="{{ url_for('import_history.rollback_import', id=row['id']) }}">
+                                    <button type="submit" class="btn btn-danger">↩️ Confirm Undo</button>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="9" class="text-center text-muted">No import history yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    toastElList.map(function (toastEl) {
+      return new bootstrap.Toast(toastEl).show();
+    });
+  });
+</script>
+{% endblock %}
