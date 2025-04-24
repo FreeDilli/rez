@@ -5,6 +5,7 @@ import csv
 import io
 from werkzeug.utils import secure_filename
 import logging
+from routes.auth import login_required, role_required
 
 # Setup logging
 setup_logging()
@@ -17,6 +18,8 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @residents_import_bp.route('/admin/residents/import', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
+@role_required('admin')
 def import_residents():
     logger.debug(f"Accessing /admin/residents/import route with method: {request.method}")
     messages = []

@@ -1,10 +1,13 @@
 from flask import Blueprint, send_file
 import csv
 import io
+from routes.auth import login_required, role_required
 
 residents_sample_bp = Blueprint('residents_import_sample', __name__)
 
 @residents_sample_bp.route('/admin/residents/sample', strict_slashes=False)
+@login_required
+@role_required('admin')
 def sample_csv():
     sample = io.StringIO()
     writer = csv.writer(sample)

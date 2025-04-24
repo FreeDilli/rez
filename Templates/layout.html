@@ -87,7 +87,7 @@
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'residents.manage_residents' %}active{% endif %}" href="{{ url_for('residents.manage_residents') }}"><i class="bi bi-people-fill me-1"></i>Residents</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'scanlog.scanlog' %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}"><i class="bi bi-journal-text me-1"></i>Scan Log</a></li>
-                    {% if session.get('role') == 'admin' %}
+                    {% if session.role == 'admin' %}
                         <li class="nav-item"><a class="nav-link {% if request.endpoint == 'locations.manage_locations' %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}"><i class="bi bi-geo-alt-fill me-1"></i>Locations</a></li>
                         <li class="nav-item"><a class="nav-link {% if request.endpoint == 'users.manage_users' %}active{% endif %}" href="{{ url_for('users.manage_users') }}"><i class="bi bi-person-gear me-1"></i>Users</a></li>
                         <li class="nav-item"><a class="nav-link {% if request.endpoint == 'schedules.list_schedules' %}active{% endif %}" href="{{ url_for('schedules.list_schedules') }}"><i class="bi bi-calendar-week me-1"></i>Schedules</a></li>
@@ -109,10 +109,10 @@
                             <li><a class="dropdown-item" href="{{ url_for('scan.scan') }}"><i class="bi bi-upc-scan me-2"></i>Scan</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('residents.manage_residents') }}"><i class="bi bi-people-fill me-2"></i>Residents</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('scanlog.scanlog') }}"><i class="bi bi-journal-text me-2"></i>Scan Log</a></li>
-                            {% if session.get('role') == 'admin' %}
-                                <li><a class="dropdown-item" href="{{ url_for('locations.manage_locations') }}"><i class="bi bi-geo-alt-fill me-2"></i>Locations</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('users.manage_users') }}"><i class="bi bi-person-gear me-2"></i>Users</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('schedules.list_schedules') }}"><i class="bi bi-calendar-week me-2"></i>Schedules</a></li>
+                            {% if session.role == 'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('locations.manage_locations') }}"><i class="bi bi-geo-alt-fill me-2"></i>Locations</a></li>
+                             <li><a class="dropdown-item" href="{{ url_for('users.manage_users') }}"><i class="bi bi-person-gear me-2"></i>Users</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('schedules.list_schedules') }}"><i class="bi bi-calendar-week me-2"></i>Schedules</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('users.change_password') }}"><i class="bi bi-key me-2"></i>Change Password</a></li>

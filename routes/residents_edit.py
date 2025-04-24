@@ -3,10 +3,13 @@ from config import Config
 import sqlite3
 from werkzeug.utils import secure_filename
 import os
+from routes.auth import login_required, role_required
 
 residents_edit_bp = Blueprint('residents_edit', __name__)
 
 @residents_edit_bp.route('/admin/residents/edit/<int:mdoc>', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
+@role_required('admin')
 def edit_resident(mdoc):
     unit_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
     housing_options = [
