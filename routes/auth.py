@@ -44,7 +44,7 @@ def role_required(*allowed_roles):
                 )
                 db.commit()
                 flash("You do not have permission to access this page.", "danger")
-                return render_template('error.html', message='Access Denied'), 403
+                return render_template('403.html', message='Access Denied'), 403
             return f(*args, **kwargs)
         return decorated_function
     return decorator
