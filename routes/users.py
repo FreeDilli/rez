@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from utils.logging_config import setup_logging
 import logging
 import os
+from routes.auth import login_required, role_required
 
 # Setup logging
 setup_logging()
@@ -30,6 +31,8 @@ def log_audit_action(username, action, target, details=None):
         logger.error(f"Failed to log audit action for '{username}' on '{target}': {str(e)}")
 
 @users_bp.route('/admin/users', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
 def manage_users():
     logger.debug(f"Accessing /admin/users route with method: {request.method}")
     message = None
@@ -85,6 +88,8 @@ def get_users():
         return []
 
 @users_bp.route('/admin/users/edit/<username>', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
 def edit_user(username):
     logger.debug(f"Accessing /admin/users/edit/{username} route with method: {request.method}")
     if request.method == 'POST':
@@ -137,6 +142,7 @@ def edit_user(username):
     return render_template('edit_user.html', user=user)
 
 @users_bp.route('/profile/change_password', methods=['GET', 'POST'])
+@login_required
 def change_password():
     logger.debug(f"Accessing /profile/change_password route with method: {request.method}")
     if 'username' not in session:
@@ -189,6 +195,8 @@ def change_password():
     return render_template('change_password.html')
 
 @users_bp.route('/admin/users/reset/<username>', methods=['POST'])
+@login_required
+@role_required('admin')
 def reset_password(username):
     logger.debug(f"Accessing /admin/users/reset/{username} route")
     new_password = generate_password_hash("temp1234")
@@ -210,6 +218,8 @@ def reset_password(username):
     return redirect(url_for('users.manage_users'))
 
 @users_bp.route('/admin/users/delete/<username>', methods=['POST'])
+@login_required
+@role_required('admin')
 def delete_user(username):
     logger.debug(f"Accessing /admin/users/delete/{username} route")
     if username == session.get('username'):

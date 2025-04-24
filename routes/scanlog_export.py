@@ -2,10 +2,13 @@ from flask import Blueprint, send_file
 from models.database import get_db
 import csv
 import io
+from routes.auth import login_required, role_required
 
 scanlog_export_bp = Blueprint('scanlog_export', __name__)
 
 @scanlog_export_bp.route('/admin/scanlog/export')
+@login_required
+@role_required('admin')
 def export_scanlog():
     output = io.StringIO()
     writer = csv.writer(output)

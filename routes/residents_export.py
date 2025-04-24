@@ -2,10 +2,13 @@ from flask import Blueprint, send_file
 from models.database import get_db
 import csv
 import io
+from routes.auth import login_required, role_required
 
 residents_export_bp = Blueprint('residents_export', __name__)
 
 @residents_export_bp.route('/admin/residents/export')
+@login_required
+@role_required('admin')
 def export_residents():
     output = io.StringIO()
     writer = csv.writer(output)

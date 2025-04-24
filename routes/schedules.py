@@ -3,6 +3,7 @@ from models.database import get_db  # Updated import from database.py
 import logging
 import sqlite3
 import jinja2
+from routes.auth import login_required, role_required
 
 # Configure logging (consistent with database.py)
 logger = logging.getLogger(__name__)
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 schedules_bp = Blueprint('schedules', __name__, url_prefix='/admin/schedules')
 
 @schedules_bp.route('/')
+@login_required
 def list_schedules():
     category_filter = request.args.get('category')
     try:
@@ -48,6 +50,7 @@ def list_schedules():
         return render_template('schedules.html', groups=[], category_filter=category_filter, categories=[])
 
 @schedules_bp.route('/create', methods=['GET', 'POST'])
+@login_required
 def create_schedule():
     try:
         if request.method == 'POST':
@@ -85,6 +88,7 @@ def create_schedule():
         return render_template('schedule_form.html', action='Create', schedule={})
 
 @schedules_bp.route('/<int:group_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_schedule(group_id):
     try:
         db = get_db()
@@ -409,6 +413,7 @@ def edit_schedule(group_id):
         return redirect(url_for('schedules.list_schedules'))
 
 @schedules_bp.route('/<int:group_id>/delete')
+@login_required
 def delete_schedule(group_id):
     try:
         db = get_db()
@@ -426,6 +431,7 @@ def delete_schedule(group_id):
         return redirect(url_for('schedules.list_schedules'))
 
 @schedules_bp.route('/<int:group_id>/assign', methods=['GET', 'POST'])
+@login_required
 def assign_schedule(group_id):
     try:
         db = get_db()
