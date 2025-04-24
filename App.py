@@ -1,6 +1,6 @@
 import logging
 from utils.logging_config import setup_logging
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, render_template
 from config import Config
 from models.database import init_db, init_app
 from datetime import datetime
@@ -47,13 +47,14 @@ blueprints = [
     residents_bp, residents_edit_bp, residents_delete_bp,
     residents_delete_all_bp, residents_sample_bp, scan_bp,
     dashboard_bp, auth_bp, users_bp, api_bp, schedules_bp
+    
 
 ]
 
 for bp in blueprints:
     app.register_blueprint(bp)
     logger.info(f"Registered blueprint: {bp.name}")
-
+    
 init_app(app)
 with app.app_context():
     init_db()
@@ -65,6 +66,19 @@ def index():
 @app.template_filter('datetimeformat')
 def datetimeformat(value):
     return datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f').strftime('%m-%d-%Y %I:%M %p')
+
+# Error handlers
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template("403.html"), 403
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
+
+@app.errorhandler(504)
+def gateway_timeout(e):
+    return render_template("504.html"), 504
 
 if __name__ == '__main__':
     logger.info("Starting Flask app")

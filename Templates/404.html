@@ -16,10 +16,18 @@
             width: 100px;
             filter: drop-shadow(0 0 10px #00f2ff);
         }
+        .brand-name {
+            color: #00f2ff;
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-top: 0.5rem;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body class="d-flex flex-column justify-content-center align-items-center vh-100 text-center">
-    <img src="/static/RezScanicon.png" alt="RezScan Logo" class="logo mb-4">
+    <img src="{{ url_for('static', filename='Uploads/RezScanicon.png') }}" alt="RezScan Logo" class="logo mb-2">
+    <div class="brand-name">RezScan</div>
     <h1 class="display-1 fw-bold">404</h1>
     <p class="fs-3">Oops! Page not found.</p>
     <p class="lead">The page you're looking for doesn't exist or has been moved.</p>
