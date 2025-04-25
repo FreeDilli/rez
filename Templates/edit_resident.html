@@ -3,79 +3,79 @@
 {% block title %}Edit Resident{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Edit Resident</h2>
-<form method="POST" enctype="multipart/form-data" class="card p-4">
+<div class="container mt-4">
+  <h2 class="mb-4">Edit Resident</h2>
+  <form method="POST" enctype="multipart/form-data" class="card p-4">
     <div class="row g-3">
-        <div class="col-md-6">
-            <input type="text" name="name" class="form-control" placeholder="Resident Name" value="{{ resident[1] }}" required>
-        </div>
-        <div class="col-md-6">
-            <input type="text" name="mdoc" class="form-control" placeholder="MDOC" value="{{ resident[2] }}" required>
-        </div>
+      <div class="col-md-6">
+        <input type="text" name="name" class="form-control" placeholder="Resident Name" value="{{ resident[1] }}" required>
+      </div>
+      <div class="col-md-6">
+        <input type="text" name="mdoc" class="form-control" placeholder="MDOC" value="{{ resident[2] }}" required>
+      </div>
 
-        <div class="col-md-4">
-            <label class="form-label">Select Area</label>
-            <select name="unit" class="form-select" required>
-                {% for option in unit_options %}
-                <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Select Housing Unit</label>
-            <select name="housing_unit" class="form-select" required>
-                {% for option in housing_options %}
-                <option value="{{ option }}" {% if option == resident[4] %}selected{% endif %}>{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Select Level</label>
-            <select name="level" class="form-select" required>
-                {% for option in level_options %}
-                <option value="{{ option }}" {% if option == resident[5] %}selected{% endif %}>{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
+      <div class="col-md-4">
+        <label class="form-label">Select Area</label>
+        <select name="unit" class="form-select" required>
+          {% for option in unit_options %}
+          <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Select Housing Unit</label>
+        <select name="housing_unit" class="form-select" required>
+          {% for option in housing_options %}
+          <option value="{{ option }}" {% if option == resident[4] %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Select Level</label>
+        <select name="level" class="form-select" required>
+          {% for option in level_options %}
+          <option value="{{ option }}" {% if option == resident[5] %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <div class="col-md-12">
-            <label for="photo" class="form-label">Upload New Photo (optional)</label>
-            <input type="file" name="photo" class="form-control" onchange="previewPhoto(event)">
-            <input type="hidden" name="existing_photo" value="{{ resident[6] }}">
+      <div class="col-md-12">
+        <label for="photo" class="form-label">Upload New Photo (optional)</label>
+        <input type="file" name="photo" class="form-control" onchange="previewPhoto(event)">
+        <input type="hidden" name="existing_photo" value="{{ resident[6] }}">
 
-            {% if resident[6] %}
-            <div class="mt-3">
-                <label class="form-label">Current Photo:</label><br>
-                <img id="currentPhoto" src="{{ url_for('static', filename=resident[6].replace('static/', '').replace('\\', '/')) }}" alt="Current Photo" width="120">
-            </div>
-            {% endif %}
-
-            <div class="mt-3" id="previewContainer" style="display:none;">
-                <label class="form-label">New Photo Preview:</label><br>
-                <img id="photoPreview" src="#" alt="New Photo" width="120">
-            </div>
+        {% if resident[6] %}
+        <div class="mt-3">
+          <label class="form-label">Current Photo:</label><br>
+          <img id="currentPhoto" src="{{ url_for('static', filename=resident[6].replace('static/', '').replace('\\', '/')) }}" alt="Current Photo" width="120">
         </div>
+        {% endif %}
 
-        <div class="col-12 d-flex justify-content-between mt-3">
-            <a href="{{ url_for('residents.manage_residents') }}" class="btn btn-outline-secondary">Cancel</a>
-            <button class="btn btn-primary" type="submit">Update Resident</button>
+        <div class="mt-3" id="previewContainer" style="display:none;">
+          <label class="form-label">New Photo Preview:</label><br>
+          <img id="photoPreview" src="#" alt="New Photo" width="120">
         </div>
+      </div>
+
+      <div class="col-12 d-flex justify-content-between mt-3">
+        <a href="{{ url_for('residents.manage_residents') }}" class="btn btn-secondary">Cancel</a>
+        <button class="btn btn-primary" type="submit">Update Resident</button>
+      </div>
     </div>
-</form>
+  </form>
+</div>
 
 <script>
-    function previewPhoto(event) {
-        const reader = new FileReader();
-        reader.onload = function(){
-            const preview = document.getElementById('photoPreview');
-            preview.src = reader.result;
-            document.getElementById('previewContainer').style.display = 'block';
-        };
-        if (event.target.files.length > 0) {
-            reader.readAsDataURL(event.target.files[0]);
-        }
-    }
+function previewPhoto(event) {
+  const reader = new FileReader();
+  reader.onload = function(){
+    const preview = document.getElementById('photoPreview');
+    preview.src = reader.result;
+    document.getElementById('previewContainer').style.display = 'block';
+  };
+  if (event.target.files.length > 0) {
+    reader.readAsDataURL(event.target.files[0]);
+  }
+}
 </script>
 {% endblock %}
-
-

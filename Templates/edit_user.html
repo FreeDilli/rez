@@ -2,18 +2,18 @@
 {% block title %}Edit User{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">Edit User: {{ user.username }}</h2>
-    <form method="POST" action="{{ url_for('users.edit_user', username=user.username) }}">
-        <div class="form-group mb-3">
-            <label for="role" class="form-label">Role</label>
-            <select name="role" id="role" class="form-select" required>
-                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                <option value="viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-success">Update Role</button>
-        <a href="{{ url_for('users.manage_users') }}" class="btn btn-secondary">Cancel</a>
-    </form>
+<div class="container mt-4">
+  <h2 class="mb-4">Edit User: {{ user.username }}</h2>
+  <form method="POST" action="{{ url_for('users.edit_user', username=user.username) }}">
+    <div class="form-group mb-3">
+      <label for="role" class="form-label">Role</label>
+      <select name="role" id="role" class="form-select" required>
+        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+        <option value="viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Role</button>
+    <a href="{{ url_for('users.manage_users') }}" class="btn btn-secondary">Cancel</a>
+  </form>
 </div>
 {% endblock %}
