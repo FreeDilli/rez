@@ -3,19 +3,16 @@ from utils.logging_config import setup_logging
 from models.database import get_db
 import csv
 import io
-from werkzeug.utils import secure_filename
 import logging
 from datetime import datetime
 from routes.auth import login_required, role_required
+from utils.file_utils import allowed_file
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 residents_import_bp = Blueprint('residents_import', __name__)
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'csv'
 
 @residents_import_bp.route('/admin/residents/import', methods=['GET'], strict_slashes=False)
 @login_required
@@ -160,4 +157,3 @@ def upload_residents():
     except Exception as e:
         logger.error(f"Error reading CSV: {str(e)}")
         return jsonify({'success': False, 'message': f"Error reading CSV: {str(e)}"}), 500
-

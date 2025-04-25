@@ -1,6 +1,5 @@
 from flask import Blueprint, redirect, url_for, flash
-from config import Config
-import sqlite3
+from models.database import get_db
 from routes.auth import login_required, role_required
 
 residents_delete_all_bp = Blueprint('residents_delete_all', __name__)
@@ -9,7 +8,7 @@ residents_delete_all_bp = Blueprint('residents_delete_all', __name__)
 @login_required
 @role_required('admin')
 def delete_all_residents():
-    with sqlite3.connect(Config.DB_PATH) as conn:
+    with get_db() as conn:
         c = conn.cursor()
         c.execute("DELETE FROM residents")
         conn.commit()
