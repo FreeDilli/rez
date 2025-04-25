@@ -12,7 +12,7 @@ residents_export_bp = Blueprint('residents_export', __name__)
 def export_residents():
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Name', 'mdoc', 'unit', 'Housing Unit', 'Level', 'Photo'])
+    writer.writerow(['ID', 'Name', 'MDOC', 'Unit', 'Housing Unit', 'Level', 'Photo'])
     db = get_db()
     c = db.cursor()
     c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")

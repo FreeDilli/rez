@@ -1,12 +1,12 @@
 {% extends 'layout.html' %}
 {% block title %}Assign Residents - {{ group_name }}{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <h1 class="mb-4">Assign Residents to <span class="text-primary">{{ group_name }}</span></h1>
+<div class="container mt-4">
+  <h2 class="mb-4">Assign Residents to <span class="text-primary">{{ group_name }}</span></h2>
   <form method="post" action="">
     <div class="table-responsive">
-      <table class="table table-striped table-bordered align-middle">
-        <thead class="table-light">
+      <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
           <tr>
             <th>Select</th>
             <th>MDOC</th>
@@ -31,8 +31,8 @@
       </table>
     </div>
     <div class="mt-3">
-      <button type="submit" class="btn btn-success">💾 Save Assignments</button>
-      <a href="{{ url_for('schedules.list_schedules') }}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">💾 Save Assignments</button>
+      <a href="{{ url_for('schedules.list_schedules') }}" class="btn btn-outline-secondary">Cancel</a>
     </div>
   </form>
 </div>

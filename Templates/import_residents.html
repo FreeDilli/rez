@@ -3,43 +3,42 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>📥 Import Residents</h2>
-    <div class="alert alert-secondary" id="instructionsBox">
-        <h5 class="mb-1">📄 CSV Import Guidelines</h5>
-        <ul class="mb-1">
-            <li><strong>Required headers:</strong> <code>mdoc</code>, <code>name</code>, <code>unit</code>, <code>housing_unit</code>, <code>level</code></li>
-            <li><strong>Optional header:</strong> <code>photo</code></li>
-            <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
-            <li>Rows without a valid <code>mdoc</code> will be skipped</li>
-        </ul>
-        <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm">📄 Download Sample CSV</a>
-
-            📥 Download CSV Template
-        </a>
+  <h2 class="mb-4">📥 Import Residents</h2>
+  <div class="alert alert-secondary" id="instructionsBox">
+    <h5 class="mb-1">📄 CSV Import Guidelines</h5>
+    <ul class="mb-1">
+      <li><strong>Required headers:</strong> <code>mdoc</code>, <code>name</code>, <code>unit</code>, <code>housing_unit</code>, <code>level</code></li>
+      <li><strong>Optional header:</strong> <code>photo</code></li>
+      <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
+      <li>Rows without a valid <code>mdoc</code> will be skipped</li>
+    </ul>
+    <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm">📄 Download Sample CSV</a>
+  </div>
+  <!-- Upload Form -->
+  <form id="uploadForm" class="mb-4">
+    <div class="form-group mb-3">
+      <label for="csv_file" class="form-label">Upload CSV File</label>
+      <input class="form-control" type="file" name="csv_file" id="csv_file" accept=".csv" required>
     </div>
-    <!-- Upload Form -->
-    <form id="uploadForm" class="mb-4">
-        <div class="mb-3">
-            <label for="csv_file" class="form-label">Upload CSV File</label>
-            <input class="form-control" type="file" name="csv_file" id="csv_file" accept=".csv" required>
-        </div>
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="dry_run" value="yes" id="dry_run">
-            <label class="form-check-label" for="dry_run">🔍 Dry Run (Preview without saving)</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-
-    <!-- Progress Bar -->
-    <div class="mb-4 d-none" id="progressContainer">
-        <label class="form-label">Upload Progress</label>
-        <div class="progress">
-            <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
-        </div>
+    <div class="form-group mb-3">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="dry_run" value="yes" id="dry_run">
+        <label class="form-check-label" for="dry_run">🔍 Dry Run (Preview without saving)</label>
+      </div>
     </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
 
-    <!-- Output Preview / Results -->
-    <div id="output" class="mt-4"></div>
+  <!-- Progress Bar -->
+  <div class="mb-4 d-none" id="progressContainer">
+    <label class="form-label">Upload Progress</label>
+    <div class="progress">
+      <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+    </div>
+  </div>
+
+  <!-- Output Preview / Results -->
+  <div id="output" class="mt-4"></div>
 </div>
 
 <!-- Modal -->
@@ -54,8 +53,8 @@
         Are you sure you want to commit these changes to the database?
       </div>
       <div class="modal-footer border-secondary">
-        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-        <button id="modalConfirmBtn" type="button" class="btn btn-success">✅ Confirm Changes</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="modalConfirmBtn" type="button" class="btn btn-primary">✅ Confirm Changes</button>
       </div>
     </div>
   </div>
@@ -76,111 +75,111 @@
 let lastFormData = null;
 
 function showToast(message, type = 'primary') {
-    const toastEl = document.getElementById('toast');
-    const toastBody = document.getElementById('toastBody');
-    toastEl.className = `toast align-items-center text-white bg-${type} border-0 shadow rounded-3`;
-    toastBody.innerText = message;
-    const toastInstance = bootstrap.Toast.getOrCreateInstance(toastEl, {
-        animation: true,
-        autohide: false
-    });
-    toastInstance.show();
+  const toastEl = document.getElementById('toast');
+  const toastBody = document.getElementById('toastBody');
+  toastEl.className = `toast align-items-center text-white bg-${type} border-0 shadow rounded-3`;
+  toastBody.innerText = message;
+  const toastInstance = bootstrap.Toast.getOrCreateInstance(toastEl, {
+    animation: true,
+    autohide: false
+  });
+  toastInstance.show();
 }
 
 document.getElementById('uploadForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const fileInput = document.getElementById('csv_file');
-    const dryRun = document.getElementById('dry_run').checked;
-    const formData = new FormData();
-    formData.append('csv_file', fileInput.files[0]);
-    formData.append('dry_run', dryRun ? 'yes' : 'no');
-    lastFormData = formData;
-    submitFormData(formData, true);
+  e.preventDefault();
+  const fileInput = document.getElementById('csv_file');
+  const dryRun = document.getElementById('dry_run').checked;
+  const formData = new FormData();
+  formData.append('csv_file', fileInput.files[0]);
+  formData.append('dry_run', dryRun ? 'yes' : 'no');
+  lastFormData = formData;
+  submitFormData(formData, true);
 });
 
 document.getElementById('modalConfirmBtn').addEventListener('click', function () {
-    if (!lastFormData) return;
-    lastFormData.set('dry_run', 'no');
-    submitFormData(lastFormData, false);
-    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
-    modal.hide();
+  if (!lastFormData) return;
+  lastFormData.set('dry_run', 'no');
+  submitFormData(lastFormData, false);
+  const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+  modal.hide();
 });
 
 function submitFormData(formData, isDryRun) {
-    const xhr = new XMLHttpRequest();
-    const progressBar = document.getElementById('uploadProgress');
-    const progressContainer = document.getElementById('progressContainer');
-    const output = document.getElementById('output');
+  const xhr = new XMLHttpRequest();
+  const progressBar = document.getElementById('uploadProgress');
+  const progressContainer = document.getElementById('progressContainer');
+  const output = document.getElementById('output');
 
-    output.innerHTML = '';
-    progressContainer.classList.remove('d-none');
-    progressBar.classList.add('progress-bar-animated');
-    progressBar.style.width = '0%';
-    progressBar.innerText = '0%';
+  output.innerHTML = '';
+  progressContainer.classList.remove('d-none');
+  progressBar.classList.add('progress-bar-animated');
+  progressBar.style.width = '0%';
+  progressBar.innerText = '0%';
 
-    xhr.upload.addEventListener('progress', function (e) {
-        if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            progressBar.style.width = percent + '%';
-            progressBar.innerText = percent + '%';
+  xhr.upload.addEventListener('progress', function (e) {
+    if (e.lengthComputable) {
+      const percent = Math.round((e.loaded / e.total) * 100);
+      progressBar.style.width = percent + '%';
+      progressBar.innerText = percent + '%';
+    }
+  });
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      progressBar.classList.remove('progress-bar-animated');
+      const res = JSON.parse(xhr.responseText);
+      if (xhr.status === 200 && res.success) {
+        let html = `<div class="alert alert-success">${res.messages.join('<br>')}</div>`;
+        html += `<div class="row text-center g-2 mb-3">
+          <div class="col"><span class="badge text-bg-secondary">Processed: ${res.stats.processed}</span></div>
+          <div class="col"><span class="badge text-bg-success">Added: ${res.stats.added}</span></div>
+          <div class="col"><span class="badge text-bg-warning">Updated: ${res.stats.updated}</span></div>
+          <div class="col"><span class="badge text-bg-danger">Deleted: ${res.stats.deleted}</span></div>
+          <div class="col"><span class="badge text-bg-dark">Failed: ${res.stats.failed}</span></div>
+        </div>`;
+        if (res.preview_changes.length) {
+          html += `<div class="accordion mb-3" id="previewAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePreview">🔍 Preview Changes</button>
+              </h2>
+              <div id="collapsePreview" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <ul class="list-group">`;
+          for (const change of res.preview_changes) {
+            let icon = change.includes('Add') ? '🟢' : change.includes('Delete') ? '🔴' : '🟡';
+            html += `<li class="list-group-item">${icon} ${change}</li>`;
+          }
+          html += `</ul></div></div></div></div>`;
         }
-    });
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            progressBar.classList.remove('progress-bar-animated');
-            const res = JSON.parse(xhr.responseText);
-            if (xhr.status === 200 && res.success) {
-                let html = `<div class="alert alert-success">${res.messages.join('<br>')}</div>`;
-                html += `<div class="row text-center g-2 mb-3">
-                    <div class="col"><span class="badge text-bg-secondary">Processed: ${res.stats.processed}</span></div>
-                    <div class="col"><span class="badge text-bg-success">Added: ${res.stats.added}</span></div>
-                    <div class="col"><span class="badge text-bg-warning">Updated: ${res.stats.updated}</span></div>
-                    <div class="col"><span class="badge text-bg-danger">Deleted: ${res.stats.deleted}</span></div>
-                    <div class="col"><span class="badge text-bg-dark">Failed: ${res.stats.failed}</span></div>
-                </div>`;
-                if (res.preview_changes.length) {
-                    html += `<div class="accordion mb-3" id="previewAccordion">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePreview">🔍 Preview Changes</button>
-                            </h2>
-                            <div id="collapsePreview" class="accordion-collapse collapse">
-                                <div class="accordion-body">
-                                    <ul class="list-group">`;
-                    for (const change of res.preview_changes) {
-                        let icon = change.includes('Add') ? '🟢' : change.includes('Delete') ? '🔴' : '🟡';
-                        html += `<li class="list-group-item">${icon} ${change}</li>`;
-                    }
-                    html += `</ul></div></div></div></div>`;
-                }
-                if (res.update_diffs.length) {
-                    html += `<div class="card mb-3"><div class="card-header">📝 Update Differences</div><div class="card-body">`;
-                    for (const upd of res.update_diffs) {
-                        html += `<h5>${upd.name} (MDOC: ${upd.mdoc})</h5><ul class="list-group mb-3">`;
-                        for (const field in upd.diffs) {
-                            const from = upd.diffs[field].from;
-                            const to = upd.diffs[field].to;
-                            html += `<li class="list-group-item"><strong>${field}</strong>: <s>${from}</s> ➡️ <strong>${to}</strong></li>`;
-                        }
-                        html += `</ul>`;
-                    }
-                    html += `</div></div>`;
-                }
-                if (isDryRun) {
-                    html += `<button id="confirmBtn" class="btn btn-success mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">✅ Confirm Changes</button>`;
-                } else {
-                    showToast("✅ Changes committed to the database.", 'success');
-                }
-                output.innerHTML = html;
-            } else {
-                output.innerHTML = `<div class="alert alert-danger">❌ ${res.message || 'Something went wrong.'}</div>`;
-                showToast(res.message || 'Import failed.', 'danger');
+        if (res.update_diffs.length) {
+          html += `<div class="card mb-3"><div class="card-header">📝 Update Differences</div><div class="card-body">`;
+          for (const upd of res.update_diffs) {
+            html += `<h5>${upd.name} (MDOC: ${upd.mdoc})</h5><ul class="list-group mb-3">`;
+            for (const field in upd.diffs) {
+              const from = upd.diffs[field].from;
+              const to = upd.diffs[field].to;
+              html += `<li class="list-group-item"><strong>${field}</strong>: <s>${from}</s> ➡️ <strong>${to}</strong></li>`;
             }
+            html += `</ul>`;
+          }
+          html += `</div></div>`;
         }
-    };
-    xhr.open('POST', '/admin/residents/import/upload');
-    xhr.send(formData);
+        if (isDryRun) {
+          html += `<button id="confirmBtn" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">✅ Confirm Changes</button>`;
+        } else {
+          showToast("✅ Changes committed to the database.", 'success');
+        }
+        output.innerHTML = html;
+      } else {
+        output.innerHTML = `<div class="alert alert-danger">❌ ${res.message || 'Something went wrong.'}</div>`;
+        showToast(res.message || 'Import failed.', 'danger');
+      }
+    }
+  };
+  xhr.open('POST', '/admin/residents/import/upload');
+  xhr.send(formData);
 }
 </script>
 {% endblock %}

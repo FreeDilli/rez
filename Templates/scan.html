@@ -3,20 +3,20 @@
 {% block title %}Scan In/Out{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Scan In/Out</h2>
-<form method="POST" class="card p-4">
-    <div class="mb-3">
-        <label for="mdoc" class="form-label">Scan ID</label>
-        <input type="text" name="mdoc" class="form-control" placeholder="Scan or enter MDOC" required autofocus>
+<div class="container mt-4">
+  <h2 class="mb-4">Scan In/Out</h2>
+  <form method="POST" class="mb-4">
+    <div class="form-group mb-3">
+      <label for="mdoc" class="form-label">Scan ID</label>
+      <input type="text" name="mdoc" class="form-control" placeholder="Scan or enter MDOC" required autofocus>
     </div>
     <div class="d-grid">
-        <button type="submit" class="btn btn-primary">Submit Scan</button>
+      <button type="submit" class="btn btn-primary">Submit Scan</button>
     </div>
-</form>
+  </form>
 
-{% if message %}
-<div class="alert alert-info mt-4">{{ message }}</div>
-{% endif %}
+  {% if message %}
+  <div class="alert alert-info mt-4">{{ message }}</div>
+  {% endif %}
+</div>
 {% endblock %}
-
-
