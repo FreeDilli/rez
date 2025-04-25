@@ -31,6 +31,7 @@ try:
     from routes.api import api_bp
     from routes.schedules import schedules_bp
     from routes.admin import admin_bp
+    from routes.import_history import import_history_bp
     logger.info("All Blueprints imported successfully")
 except ImportError as e:
     logger.error(f"ImportError: {e}")
@@ -48,7 +49,7 @@ blueprints = [
     residents_bp, residents_edit_bp, residents_delete_bp,
     residents_delete_all_bp, residents_sample_bp, scan_bp,
     dashboard_bp, auth_bp, users_bp, api_bp, schedules_bp,
-    admin_bp
+    admin_bp, import_history_bp
     
 
 ]
