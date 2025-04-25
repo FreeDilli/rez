@@ -1,14 +1,13 @@
 from flask import Blueprint, render_template
-from config import Config
+from models.database import get_db
 from routes.auth import login_required
-import sqlite3
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/admin/dashboard', strict_slashes=False)
 @login_required
 def dashboard():
-    with sqlite3.connect(Config.DB_PATH) as conn:
+    with get_db() as conn:
         c = conn.cursor()
         c.execute('''
             SELECT s.mdoc, MAX(s.date || ' ' || s.time) as latest_time

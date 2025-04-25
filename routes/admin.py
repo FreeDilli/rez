@@ -4,7 +4,7 @@ from routes.auth import login_required, role_required
 
 admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/admin')
+@admin_bp.route('/admin', strict_slashes=False)
 @login_required
 @role_required('admin')
 def admin_dashboard():

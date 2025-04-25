@@ -1,7 +1,7 @@
-import sqlite3
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, flash
 from models.database import get_db
 from routes.auth import login_required
+import sqlite3
 
 locations_bp = Blueprint('locations', __name__)
 
@@ -13,14 +13,19 @@ def manage_locations():
         c = conn.cursor()
         if request.method == 'POST':
             name = request.form['name'].strip()
-            prefix = request.form['prefix'].strip()
+            prefix = request.form['prefix'].strip().upper()
             location_type = request.form['type'].strip()
-            try:
-                c.execute("INSERT INTO locations (name, prefix, type) VALUES (?, ?, ?)", (name, prefix, location_type))
-                conn.commit()
-                message = f"Location '{name}' added."
-            except sqlite3.IntegrityError:
-                message = f"Location or prefix already exists."
+            if not (name and prefix and location_type):
+                message = "All fields are required."
+            elif not prefix.isalnum():
+                message = "Prefix must be alphanumeric."
+            else:
+                try:
+                    c.execute("INSERT INTO locations (name, prefix, type) VALUES (?, ?, ?)", (name, prefix, location_type))
+                    conn.commit()
+                    message = f"Location '{name}' added."
+                except sqlite3.IntegrityError:
+                    message = "Location or prefix already exists."
         c.execute("SELECT id, name, prefix, type FROM locations ORDER BY name")
         locations = c.fetchall()
     return render_template('locations.html', locations=locations, message=message)

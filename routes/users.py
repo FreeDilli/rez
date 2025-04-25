@@ -1,25 +1,22 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-import sqlite3
-from config import Config
+from models.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.logging_config import setup_logging
 import logging
-import os
 from routes.auth import login_required, role_required
+from utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
+import sqlite3
 
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 users_bp = Blueprint('users', __name__)
-DB_PATH = Config.DB_PATH
-VALID_ROLES = ['admin', 'viewer']  # Define valid roles
-MIN_PASSWORD_LENGTH = 8  # Minimum password length
 
 def log_audit_action(username, action, target, details=None):
     """Helper function to log actions to audit_log table and logger."""
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db() as conn:
             c = conn.cursor()
             c.execute(
                 "INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)",
@@ -35,8 +32,6 @@ def log_audit_action(username, action, target, details=None):
 @role_required('admin')
 def manage_users():
     logger.debug(f"Accessing /admin/users route with method: {request.method}")
-    message = None
-
     if request.method == 'POST':
         action = request.form.get('action')
         username = request.form.get('username').strip()
@@ -56,7 +51,7 @@ def manage_users():
             hashed_password = generate_password_hash(password)
             logger.debug(f"Adding user '{username}' with role '{role}'")
             try:
-                with sqlite3.connect(DB_PATH) as conn:
+                with get_db() as conn:
                     c = conn.cursor()
                     c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (username, hashed_password, role))
                     conn.commit()
@@ -69,13 +64,12 @@ def manage_users():
             except sqlite3.Error as e:
                 logger.error(f"Database error adding user '{username}': {str(e)}")
                 flash(f"Database error adding user.", "danger")
-
     return render_template('users.html', users=get_users())
 
 def get_users():
     """Helper function to fetch users."""
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db() as conn:
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
             c.execute("SELECT username, role, last_login FROM users ORDER BY username")
@@ -100,7 +94,7 @@ def edit_user(username):
             return redirect(url_for('users.manage_users'))
         logger.debug(f"Updating role for user '{username}' to '{new_role}'")
         try:
-            with sqlite3.connect(DB_PATH) as conn:
+            with get_db() as conn:
                 c = conn.cursor()
                 c.execute("UPDATE users SET role = ? WHERE username = ?", (new_role, username))
                 if c.rowcount == 0:
@@ -116,9 +110,8 @@ def edit_user(username):
             flash("Database error updating user role.", "danger")
         return redirect(url_for('users.manage_users'))
 
-    # Fetch user data for GET request
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db() as conn:
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
             c.execute("SELECT username, role FROM users WHERE username = ?", (username,))
@@ -130,13 +123,6 @@ def edit_user(username):
     except sqlite3.Error as e:
         logger.error(f"Database error fetching user '{username}': {str(e)}")
         flash("Database error fetching user.", "danger")
-        return redirect(url_for('users.manage_users'))
-
-    # Verify template existence
-    template_path = os.path.join('templates', 'edit_user.html')
-    if not os.path.exists(template_path):
-        logger.error(f"Template 'edit_user.html' not found at {template_path}")
-        flash("Template not found.", "danger")
         return redirect(url_for('users.manage_users'))
 
     return render_template('edit_user.html', user=user)
@@ -166,7 +152,7 @@ def change_password():
             return render_template('change_password.html')
 
         try:
-            with sqlite3.connect(DB_PATH) as conn:
+            with get_db() as conn:
                 conn.row_factory = sqlite3.Row
                 c = conn.cursor()
                 c.execute("SELECT password FROM users WHERE username = ?", (username,))
@@ -201,7 +187,7 @@ def reset_password(username):
     logger.debug(f"Accessing /admin/users/reset/{username} route")
     new_password = generate_password_hash("temp1234")
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db() as conn:
             c = conn.cursor()
             c.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
             if c.rowcount == 0:
@@ -227,7 +213,7 @@ def delete_user(username):
         flash("You cannot delete your own account.", "danger")
         return redirect(url_for('users.manage_users'))
     try:
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db() as conn:
             c = conn.cursor()
             c.execute("DELETE FROM users WHERE username = ?", (username,))
             if c.rowcount == 0:
