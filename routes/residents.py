@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models.database import get_db
 import sqlite3
-import os
-from werkzeug.utils import secure_filename
 from routes.auth import login_required
+from utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
+from utils.file_utils import save_uploaded_file
 
 residents_bp = Blueprint('residents', __name__)
 
@@ -11,13 +11,6 @@ residents_bp = Blueprint('residents', __name__)
 @login_required
 def manage_residents():
     message = None
-    unit_options = ["Unit 1", "Unit 2", "Unit 3", "MPU", "SMWRC"]
-    housing_options = [
-        "Delta", "Echo", "Foxtrot", "Dorm 5", "Dorm 6",
-        "Women's Center", "A Pod", "B North", "B South",
-        "B Ad North", "B Ad South", "C North", "C South", "C Center", "SMWRC"
-    ]
-    level_options = ["1", "2", "3", "4"]
     with get_db() as conn:
         c = conn.cursor()
         if request.method == 'POST':
@@ -33,14 +26,7 @@ def manage_residents():
                 housing_unit = request.form['housing_unit'].strip()
                 level = request.form['level'].strip()
                 photo_file = request.files.get('photo')
-                photo_path = ""
-                if photo_file and photo_file.filename:
-                    filename = secure_filename(photo_file.filename)
-                    filepath = os.path.join('static/uploads', filename)
-                    photo_file.save(filepath)
-                    photo_path = os.path.join('static', 'uploads', filename).replace("\\", "/")
-                else:
-                    photo_path = request.form.get('photo', '').strip()
+                photo_path = save_uploaded_file(photo_file) or request.form.get('photo', '').strip()
                 try:
                     c.execute("INSERT INTO residents (name, mdoc, unit, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
                               (name, mdoc, unit, housing_unit, level, photo_path))
@@ -51,4 +37,4 @@ def manage_residents():
         c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")
         residents = c.fetchall()
     return render_template('residents.html', residents=residents, message=message,
-                           unit_options=unit_options, housing_options=housing_options, level_options=level_options)
+                           unit_options=UNIT_OPTIONS, housing_options=HOUSING_OPTIONS, level_options=LEVEL_OPTIONS)
