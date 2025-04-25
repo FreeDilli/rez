@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+# routes/users.py
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
 from models.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.logging_config import setup_logging
-import logging
-from routes.auth import login_required, role_required
 from utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
+from routes.auth import role_required
+import logging
 import sqlite3
 
 # Setup logging
@@ -48,6 +50,7 @@ def manage_users():
                 logger.warning(f"Failed to add user '{username}': Invalid role '{role}'")
                 flash(f"Invalid role selected.", "danger")
                 return render_template('users.html', users=get_users())
+
             hashed_password = generate_password_hash(password)
             logger.debug(f"Adding user '{username}' with role '{role}'")
             try:
@@ -57,13 +60,13 @@ def manage_users():
                     conn.commit()
                     logger.info(f"User '{username}' added successfully with role '{role}'")
                     flash(f"User '{username}' added successfully.", "success")
-                    log_audit_action(session.get('username'), "Added user", username, f"Role: {role}")
+                    log_audit_action(current_user.username, "Added user", username, f"Role: {role}")
             except sqlite3.IntegrityError:
                 logger.warning(f"Failed to add user '{username}': Username already exists")
                 flash(f"User '{username}' already exists.", "danger")
             except sqlite3.Error as e:
                 logger.error(f"Database error adding user '{username}': {str(e)}")
-                flash(f"Database error adding user.", "danger")
+                flash("Database error adding user.", "danger")
     return render_template('users.html', users=get_users())
 
 def get_users():
@@ -92,6 +95,7 @@ def edit_user(username):
             logger.warning(f"Failed to update role for '{username}': Invalid role '{new_role}'")
             flash(f"Invalid role selected.", "danger")
             return redirect(url_for('users.manage_users'))
+
         logger.debug(f"Updating role for user '{username}' to '{new_role}'")
         try:
             with get_db() as conn:
@@ -104,7 +108,7 @@ def edit_user(username):
                     conn.commit()
                     logger.info(f"Role for user '{username}' updated to '{new_role}'")
                     flash(f"Role for '{username}' updated to '{new_role}'.", "success")
-                    log_audit_action(session.get('username'), "Updated role", username, f"New role: {new_role}")
+                    log_audit_action(current_user.username, "Updated role", username, f"New role: {new_role}")
         except sqlite3.Error as e:
             logger.error(f"Database error updating role for '{username}': {str(e)}")
             flash("Database error updating user role.", "danger")
@@ -131,23 +135,23 @@ def edit_user(username):
 @login_required
 def change_password():
     logger.debug(f"Accessing /profile/change_password route with method: {request.method}")
-    if 'username' not in session:
-        logger.warning("Unauthorized attempt to access change_password")
-        flash("Please log in to change your password.", "danger")
-        return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
-        current_password = request.form.get('current_password').strip()
-        new_password = request.form.get('new_password').strip()
-        confirm_password = request.form.get('confirm_password').strip()
-        username = session['username']
+        current_password = request.form.get('current_password', '').strip()
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+
+        if not current_password or not new_password or not confirm_password:
+            flash("All fields are required.", "danger")
+            return render_template('change_password.html')
 
         if new_password != confirm_password:
-            logger.warning(f"Password change failed for '{username}': Passwords do not match")
+            logger.warning(f"Password change failed for '{current_user.username}': Passwords do not match")
             flash("New passwords do not match.", "danger")
             return render_template('change_password.html')
+
         if len(new_password) < MIN_PASSWORD_LENGTH:
-            logger.warning(f"Password change failed for '{username}': Password too short")
+            logger.warning(f"Password change failed for '{current_user.username}': Password too short")
             flash(f"New password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
             return render_template('change_password.html')
 
@@ -155,27 +159,29 @@ def change_password():
             with get_db() as conn:
                 conn.row_factory = sqlite3.Row
                 c = conn.cursor()
-                c.execute("SELECT password FROM users WHERE username = ?", (username,))
+                c.execute("SELECT password FROM users WHERE username = ?", (current_user.username,))
                 user = c.fetchone()
+
                 if not user:
-                    logger.warning(f"User '{username}' not found during password change")
+                    logger.warning(f"User '{current_user.username}' not found during password change")
                     flash("User not found.", "danger")
                     return redirect(url_for('users.change_password'))
 
                 if not check_password_hash(user['password'], current_password):
-                    logger.warning(f"Password change failed for '{username}': Incorrect current password")
+                    logger.warning(f"Password change failed for '{current_user.username}': Incorrect current password")
                     flash("Current password is incorrect.", "danger")
                     return render_template('change_password.html')
 
                 hashed_new_password = generate_password_hash(new_password)
-                c.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_new_password, username))
+                c.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_new_password, current_user.username))
                 conn.commit()
-                logger.info(f"Password changed successfully for user '{username}'")
+
+                logger.info(f"Password changed successfully for user '{current_user.username}'")
                 flash("Password changed successfully.", "success")
-                log_audit_action(username, "Changed password", username)
                 return redirect(url_for('users.change_password'))
+
         except sqlite3.Error as e:
-            logger.error(f"Database error changing password for '{username}': {str(e)}")
+            logger.error(f"Database error changing password for '{current_user.username}': {str(e)}")
             flash("Database error changing password.", "danger")
 
     return render_template('change_password.html')
@@ -197,7 +203,7 @@ def reset_password(username):
                 conn.commit()
                 logger.info(f"Password reset for user '{username}' to 'temp1234'")
                 flash(f"Password for '{username}' reset to 'temp1234'.", "info")
-                log_audit_action(session.get('username'), "Reset password", username)
+                log_audit_action(current_user.username, "Reset password", username)
     except sqlite3.Error as e:
         logger.error(f"Database error resetting password for '{username}': {str(e)}")
         flash("Database error resetting password.", "danger")
@@ -208,10 +214,11 @@ def reset_password(username):
 @role_required('admin')
 def delete_user(username):
     logger.debug(f"Accessing /admin/users/delete/{username} route")
-    if username == session.get('username'):
+    if username == current_user.username:
         logger.warning(f"User '{username}' attempted to delete their own account")
         flash("You cannot delete your own account.", "danger")
         return redirect(url_for('users.manage_users'))
+
     try:
         with get_db() as conn:
             c = conn.cursor()
@@ -223,8 +230,9 @@ def delete_user(username):
                 conn.commit()
                 logger.info(f"User '{username}' deleted successfully")
                 flash(f"User '{username}' deleted.", "warning")
-                log_audit_action(session.get('username'), "Deleted user", username)
+                log_audit_action(current_user.username, "Deleted user", username)
     except sqlite3.Error as e:
         logger.error(f"Database error deleting user '{username}': {str(e)}")
         flash("Database error deleting user.", "danger")
     return redirect(url_for('users.manage_users'))
+

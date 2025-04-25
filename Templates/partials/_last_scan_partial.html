@@ -1,0 +1,30 @@
+{% if last_scan %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3">
+      {{ last_scan.name }}
+      <small class="text-muted">(MDOC: {{ last_scan.mdoc }})</small>
+    </h5>
+    <ul class="list-unstyled mb-0">
+      <li>
+        <strong>Direction:</strong>
+        {% if last_scan.direction == 'IN' %}
+          <span class="text-success">⬆️ In</span>
+        {% elif last_scan.direction == 'OUT' %}
+          <span class="text-danger">⬇️ Out</span>
+        {% else %}
+          <span class="text-muted">{{ last_scan.direction }}</span>
+        {% endif %}
+      </li>
+      <li><strong>Location:</strong> {{ last_scan.location }}</li>
+      <li><strong>Timestamp:</strong> {{ last_scan.timestamp }}</li>
+    </ul>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-secondary text-center" role="alert">
+  No recent scan found.
+</div>
+{% endif %}
+
+
