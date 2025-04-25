@@ -45,34 +45,33 @@ def manage_schedules():
         flash('An error occurred while retrieving schedules.', 'error')
         return render_template('schedules.html', groups=[], category_filter=category_filter, categories=[])
 
-@schedules_bp.route('/create', methods=['GET', 'POST'])
+@schedules_bp.route('/admin/schedules/create', methods=['GET', 'POST'])
 @login_required
 def create_schedule():
     if request.method == 'POST':
-        name = request.form['name'].strip()
-        description = request.form['description'].strip()
-        category = request.form['category'].strip()
+        name = request.form.get('name')
+        description = request.form.get('description')
+        category = request.form.get('category')
 
         if not name or not category:
-            flash('Name and category are required.', 'error')
-            return render_template('schedule_form.html', action='Create', schedule={'name': name, 'description': description, 'category': category})
+            flash('Name and category are required.', 'danger')
+            return redirect(url_for('schedules.create_schedule'))
 
         try:
-            with get_db() as db:
-                c = db.cursor()
-                c.execute(
-                    'INSERT INTO schedule_groups (name, description, category) VALUES (?, ?, ?)',
+            with get_db() as conn:
+                conn.execute(
+                    "INSERT INTO schedules (name, description, category) VALUES (?, ?, ?)",
                     (name, description, category)
                 )
-                db.commit()
-                flash('Schedule group created successfully.', 'success')
-                return redirect(url_for('schedules.manage_schedules'))
-        except sqlite3.Error as e:
-            logger.error(f"Database error creating schedule group: {e}")
-            flash('Database error while creating schedule group.', 'error')
-            return render_template('schedule_form.html', action='Create', schedule={'name': name, 'description': description, 'category': category})
+                conn.commit()
+            flash('Schedule group created successfully.', 'success')
+            return redirect(url_for('schedules.list_schedules'))
+        except Exception as e:
+            flash(f'Error creating schedule group: {e}', 'danger')
+            return redirect(url_for('schedules.create_schedule'))
 
     return render_template('schedule_form.html', action='Create', schedule={})
+
 
 @schedules_bp.route('/<int:group_id>/edit', methods=['GET', 'POST'])
 @login_required

@@ -1,5 +1,7 @@
 {% extends 'layout.html' %}
-{% block title %}Schedule Groups{% endblock %}
+
+{% block title %}Schedule Groups - RezScan{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
   <h2 class="mb-4">Schedule Groups</h2>
@@ -16,29 +18,12 @@
     {% endif %}
   {% endwith %}
 
-  <!-- Category Filter -->
-  <form method="get" class="mb-3 row g-3 align-items-center">
-    <div class="col-auto">
-      <label for="category" class="form-label">Filter by Category:</label>
-    </div>
-    <div class="col-auto">
-      <div class="form-group mb-3">
-        <select name="category" id="category" class="form-select" onchange="this.form.submit()" aria-label="Select category">
-          <option value="">All Categories</option>
-          {% for category in categories %}
-            <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>
-              {{ category }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-  </form>
+  <!-- Create New Schedule Button -->
+  <div class="mb-3">
+    <a href="{{ url_for('schedules.create_schedule') }}" class="btn btn-success">+ New Schedule Group</a>
+  </div>
 
-  <a href="{{ url_for('schedules.create_schedule') }}" class="btn btn-primary mb-3" title="Create new schedule group">
-    ➕ New Schedule Group
-  </a>
-
+  <!-- Schedules Table -->
   <div class="table-responsive">
     <table class="table table-striped table-hover align-middle">
       <thead class="table-dark">
@@ -46,77 +31,37 @@
           <th>Name</th>
           <th>Description</th>
           <th>Category</th>
-          <th>Blocks</th>
-          <th>Residents</th>
-          <th style="width: 200px">Actions</th>
+          <th class="text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
-        {% for g in groups %}
+        {% for schedule in schedules %}
         <tr>
-          <td>{{ g.name }}</td>
-          <td>{{ g.description or '' }}</td>
-          <td>{{ g.category }}</td>
-          <td>{{ g.block_count }}</td>
-          <td>{{ g.resident_count }}</td>
+          <td>{{ schedule.name }}</td>
+          <td>{{ schedule.description }}</td>
           <td>
-            <a href="{{ url_for('schedules.edit_schedule', group_id=g.id) }}" 
-               class="btn btn-outline-secondary" 
-               title="Edit schedule group">
-              ✏️ Edit
-            </a>
-            <a href="{{ url_for('schedules.delete_schedule', group_id=g.id) }}" 
-               class="btn btn-outline-secondary" 
-               data-bs-toggle="modal" 
-               data-bs-target="#deleteModal-{{ g.id }}"
-               title="Delete schedule group">
-              🗑️ Delete
-            </a>
-            <a href="{{ url_for('schedules.assign_schedule', group_id=g.id) }}" 
-               class="btn btn-outline-secondary" 
-               title="Assign residents to schedule group">
-              👥 Assign
-            </a>
-
-            <!-- Delete Confirmation Modal -->
-            <div class="modal fade" id="deleteModal-{{ g.id }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ g.id }}" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel-{{ g.id }}">Confirm Deletion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    Are you sure you want to delete the schedule group "{{ g.name }}"?
-                    {% if g.block_count > 0 or g.resident_count > 0 %}
-                      <br><strong>Warning:</strong> This group has {{ g.block_count }} schedule block(s) and {{ g.resident_count }} assigned resident(s), which will also be deleted.
-                    {% endif %}
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="{{ url_for('schedules.delete_schedule', group_id=g.id) }}" class="btn btn-danger">Delete</a>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {% if schedule.category == 'Education' %}
+              🎓 Education
+            {% elif schedule.category == 'Work' %}
+              💼 Work
+            {% elif schedule.category == 'Recreation' %}
+              🏋️ Recreation
+            {% else %}
+              {{ schedule.category }}
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <a href="{{ url_for('schedules.edit_schedule', group_id=schedule.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+            <a href="{{ url_for('schedules.delete_schedule', group_id=schedule.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this schedule group?');">Delete</a>
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="6" class="text-center">No schedule groups found.</td>
+          <td colspan="4" class="text-center text-muted">No schedule groups found.</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var modals = document.querySelectorAll('.modal');
-  modals.forEach(function (modal) {
-    new bootstrap.Modal(modal);
-  });
-});
-</script>
 {% endblock %}
