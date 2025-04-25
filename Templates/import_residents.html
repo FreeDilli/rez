@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container mt-4">
     <h2>📥 Import Residents</h2>
-    <div class="alert alert-secondary">
+    <div class="alert alert-secondary" id="instructionsBox">
         <h5 class="mb-1">📄 CSV Import Guidelines</h5>
         <ul class="mb-1">
             <li><strong>Required headers:</strong> <code>mdoc</code>, <code>name</code>, <code>unit</code>, <code>housing_unit</code>, <code>level</code></li>
@@ -26,7 +26,7 @@
             <input class="form-check-input" type="checkbox" name="dry_run" value="yes" id="dry_run">
             <label class="form-check-label" for="dry_run">🔍 Dry Run (Preview without saving)</label>
         </div>
-        <button type="submit" class="btn btn-primary" title="Preview the changes before committing">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 
     <!-- Progress Bar -->
@@ -38,7 +38,7 @@
     </div>
 
     <!-- Output Preview / Results -->
-    <div id="output" class="mt-4 fade"></div>
+    <div id="output" class="mt-4"></div>
 </div>
 
 <!-- Modal -->
@@ -54,10 +54,7 @@
       </div>
       <div class="modal-footer border-secondary">
         <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-        <button id="modalConfirmBtn" type="button" class="btn btn-success">
-          <span class="spinner-border spinner-border-sm d-none me-2" id="confirmSpinner" role="status" aria-hidden="true"></span>
-          ✅ Confirm Changes
-        </button>
+        <button id="modalConfirmBtn" type="button" class="btn btn-success">✅ Confirm Changes</button>
       </div>
     </div>
   </div>
@@ -65,24 +62,13 @@
 
 <!-- Toast -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-  <div id="toast" class="toast align-items-center text-white bg-primary border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+  <div id="toast" class="toast align-items-center text-white bg-primary border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
       <div class="toast-body fw-semibold" id="toastBody">Processing...</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
   </div>
 </div>
-
-<!-- Custom CSS for fade-in -->
-<style>
-.fade {
-    opacity: 0;
-    transition: opacity 0.4s ease-in-out;
-}
-.fade.show {
-    opacity: 1;
-}
-</style>
 
 <!-- JS Logic -->
 <script>
@@ -92,10 +78,12 @@ function showToast(message, type = 'primary') {
     const toastEl = document.getElementById('toast');
     const toastBody = document.getElementById('toastBody');
     toastEl.className = `toast align-items-center text-white bg-${type} border-0 shadow rounded-3`;
-    toastEl.setAttribute('data-bs-delay', '5000');
     toastBody.innerText = message;
-    const toast = new bootstrap.Toast(toastEl);
-    toast.show();
+    const toastInstance = bootstrap.Toast.getOrCreateInstance(toastEl, {
+        animation: true,
+        autohide: false
+    });
+    toastInstance.show();
 }
 
 document.getElementById('uploadForm').addEventListener('submit', function (e) {
@@ -112,7 +100,6 @@ document.getElementById('uploadForm').addEventListener('submit', function (e) {
 document.getElementById('modalConfirmBtn').addEventListener('click', function () {
     if (!lastFormData) return;
     lastFormData.set('dry_run', 'no');
-    document.getElementById('confirmSpinner').classList.remove('d-none');
     submitFormData(lastFormData, false);
     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
     modal.hide();
@@ -124,7 +111,6 @@ function submitFormData(formData, isDryRun) {
     const progressContainer = document.getElementById('progressContainer');
     const output = document.getElementById('output');
 
-    output.classList.remove('show');
     output.innerHTML = '';
     progressContainer.classList.remove('d-none');
     progressBar.classList.add('progress-bar-animated');
@@ -141,7 +127,6 @@ function submitFormData(formData, isDryRun) {
 
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
-            document.getElementById('confirmSpinner')?.classList.add('d-none');
             progressBar.classList.remove('progress-bar-animated');
             const res = JSON.parse(xhr.responseText);
             if (xhr.status === 200 && res.success) {
@@ -187,7 +172,6 @@ function submitFormData(formData, isDryRun) {
                     showToast("✅ Changes committed to the database.", 'success');
                 }
                 output.innerHTML = html;
-                setTimeout(() => output.classList.add('show'), 10);
             } else {
                 output.innerHTML = `<div class="alert alert-danger">❌ ${res.message || 'Something went wrong.'}</div>`;
                 showToast(res.message || 'Import failed.', 'danger');
