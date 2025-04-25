@@ -1,22 +1,85 @@
-{% extends 'layout.html' %}
-
-{% block title %}Scan In/Out{% endblock %}
+{% extends "layout.html" %}
+{% block title %}Scanner - RezScan{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2 class="mb-4">Scan In/Out</h2>
-  <form method="POST" class="mb-4">
-    <div class="form-group mb-3">
-      <label for="mdoc" class="form-label">Scan ID</label>
-      <input type="text" name="mdoc" class="form-control" placeholder="Scan or enter MDOC" required autofocus>
-    </div>
-    <div class="d-grid">
-      <button type="submit" class="btn btn-primary">Submit Scan</button>
-    </div>
-  </form>
+<h2 class="mb-4">Scanner</h2>
 
-  {% if message %}
-  <div class="alert alert-info mt-4">{{ message }}</div>
+<!-- 🔔 Flash Messages + Sound Feedback -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" id="scan-alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <script>
+        const sound = new Audio(
+          "{{ url_for('static', filename='sounds/' + ('success.mp3' if category == 'success' else 'error.mp3')) }}"
+        );
+        sound.play();
+      </script>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% if current_location %}
+<div class="mb-4">
+  <span class="badge text-bg-primary">Location: {{ current_location }}</span>
+</div>
+{% endif %}
+
+<!-- 🎯 Scan Form -->
+<form method="POST" action="{{ url_for('scan.scan') }}" autocomplete="off">
+  <div class="mb-4">
+    <label for="mdoc" class="form-label">Scan MDOC Barcode</label>
+    <input type="text" id="mdoc" name="mdoc" class="form-control form-control-lg" autofocus required>
+  </div>
+  <button type="submit" id="scan-button" class="btn btn-success btn-lg w-100">Submit Scan</button>
+</form>
+
+<!-- 👤 Last Scan Info (auto-refreshable) -->
+<div id="last-scan-section">
+  {% if last_scan %}
+  <hr class="my-5">
+  <h4>Last Scan</h4>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">{{ last_scan.name }} (MDOC: {{ last_scan.mdoc }})</h5>
+      <p class="card-text mb-1">Direction: <strong>{{ last_scan.direction }}</strong></p>
+      <p class="card-text mb-1">Location: {{ last_scan.location }}</p>
+      <p class="card-text">Timestamp: {{ last_scan.timestamp }}</p>
+    </div>
+  </div>
   {% endif %}
 </div>
+
+<!-- 🔁 Auto-refresh & ⏱ Cooldown Logic -->
+<script>
+  // Auto-refresh last scan every 10 seconds with animation
+  setInterval(() => {
+    fetch("{{ url_for('scan.last_scan_partial') }}")
+      .then(res => res.text())
+      .then(html => {
+        const section = document.getElementById("last-scan-section");
+        section.innerHTML = html;
+        section.classList.remove("fade-highlight");
+        void section.offsetWidth; // Trigger reflow
+        section.classList.add("fade-highlight");
+      });
+  }, 10000);
+  // Cooldown on scan submission
+  const scanInput = document.getElementById("mdoc");
+  const scanButton = document.getElementById("scan-button");
+  if (scanInput && scanButton) {
+    document.querySelector("form").addEventListener("submit", () => {
+      scanInput.disabled = true;
+      scanButton.disabled = true;
+      setTimeout(() => {
+        scanInput.disabled = false;
+        scanInput.focus();
+        scanButton.disabled = false;
+      }, 3000);
+    });
+  }
+</script>
 {% endblock %}

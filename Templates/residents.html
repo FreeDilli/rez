@@ -1,235 +1,98 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
 
-{% block title %}Manage Residents{% endblock %}
+{% macro sort_link(column_name, label) %}
+  {% set current_sort = request.args.get('sort', '') %}
+  {% set current_dir = request.args.get('direction', 'asc') %}
+  {% set next_dir = 'desc' if current_sort == column_name and current_dir == 'asc' else 'asc' %}
+
+  <a href="{{ url_for('residents.residents') }}?{{ request.query_string|safe }}&sort={{ column_name }}&direction={{ next_dir }}" class="text-decoration-none">
+    {{ label }}
+    {% if current_sort == column_name %}
+      {% if current_dir == 'asc' %}
+        &#9650;
+      {% else %}
+        &#9660;
+      {% endif %}
+    {% endif %}
+  </a>
+{% endmacro %}
+
+{% block title %}Residents - RezScan{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2 class="mb-4">Resident Management</h2>
-  {% if session.role == 'admin' %}
-  <div class="mb-4">
-    <a href="{{ url_for('residents_import.import_residents') }}" class="btn btn-primary">Import Residents</a>
-    <a href="{{ url_for('residents_export.export_residents') }}" class="btn btn-primary">Export Residents</a>
-    <form action="{{ url_for('residents_delete_all.delete_all_residents') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL residents?');">
-      <button type="submit" class="btn btn-danger">Delete All Residents</button>
-    </form>
-  </div>
+<h2 class="mb-4">Residents</h2>
 
-  <div class="card p-3 mb-4">
-    <h5 class="card-title" data-bs-toggle="collapse" data-bs-target="#residentForm" style="cursor: pointer;">
-      Add New Resident
-      <span class="float-end">▼</span>
-    </h5>
-    <div id="residentForm" class="collapse">
-      <form method="POST" enctype="multipart/form-data" class="p-4">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="form-group mb-3">
-              <input type="text" name="name" class="form-control" placeholder="Resident Name" required>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group mb-3">
-              <input type="text" name="mdoc" class="form-control" placeholder="MDOC" required>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="form-group mb-3">
-              <select name="unit" class="form-select" required>
-                <option value="" disabled selected>Select Area</option>
-                {% for option in unit_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="form-group mb-3">
-              <select name="housing_unit" class="form-select" required>
-                <option value="" disabled selected>Select Housing Unit</option>
-                {% for option in housing_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="form-group mb-3">
-              <select name="level" class="form-select" required>
-                <option value="" disabled selected>Select Level</option>
-                {% for option in level_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-md-12">
-            <div class="form-group mb-3">
-              <label for="photo" class="form-label">Upload Photo (optional)</label>
-              <input type="file" name="photo" class="form-control">
-            </div>
-          </div>
-          <div class="col-12 d-grid mt-3">
-            <button class="btn btn-primary" type="submit">Add Resident</button>
-          </div>
-        </div>
-      </form>
-    </div>
+<!-- 🔍 Search Bar -->
+<form method="GET" class="row g-3 mb-4">
+  <div class="col-md-4">
+    <input type="text" name="search" class="form-control" placeholder="Search by Name or MDOC" value="{{ request.args.get('search', '') }}">
+  </div>
+  <div class="col-md-auto">
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="{{ url_for('residents.residents') }}" class="btn btn-secondary">Clear</a>
+  </div>
+  {% if current_user.role in ['admin', 'officer'] %}
+  <div class="col-md-auto ms-auto">
+    <a href="{{ url_for('residents.add_resident') }}" class="btn btn-success">+ Add Resident</a>
   </div>
   {% endif %}
-  <!-- Filters -->
-  <div class="row g-2 mb-3 align-items-end">
-    <div class="col-md-3">
-      <div class="form-group mb-3">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search residents..." onkeyup="debouncedFilterTable()" autocomplete="off">
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="form-group mb-3">
-        <select id="filterArea" class="form-select" onchange="filterTable()">
-          <option value="">All Areas</option>
-          {% for option in unit_options %}
-          <option value="{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="form-group mb-3">
-        <select id="filterHousing" class="form-select" onchange="filterTable()">
-          <option value="">All Housing</option>
-          {% for option in housing_options %}
-          <option value="{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="form-group mb-3">
-        <select id="filterLevel" class="form-select" onchange="filterTable()">
-          <option value="">All Levels</option>
-          {% for option in level_options %}
-          <option value="{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="form-group mb-3">
-        <button class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
-      </div>
-    </div>
-  </div>
+</form>
 
-  <!-- Table -->
-  <div class="card p-3">
-    <h5 class="card-title mb-2">All Residents (<span id="resultCount">0</span>)</h5>
-    <div class="table-responsive">
-      <table id="residentsTable" class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th>Name</th>
-            <th>MDOC</th>
-            <th>Area</th>
-            <th>Housing Unit</th>
-            <th>Level</th>
-            <th>Photo</th>
-            {% if session.role == 'admin' %}
-            <th>Actions</th>
-            {% endif %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in residents %}
-          <tr>
-            <td>{{ r[1] }}</td>
-            <td>{{ r[2] }}</td>
-            <td>{{ r[3] }}</td>
-            <td>{{ r[4] }}</td>
-            <td>{{ r[5] }}</td>
-            <td>
-              {% if r[6] %}
-                <img src="{{ url_for('static', filename=r[6].replace('static/', '').replace('\\', '/'))|urlencode }}" alt="Photo" width="60">
-              {% else %}
-                N/A
-              {% endif %}
-            </td>
-            {% if session.role == 'admin' %}
-            <td>
-              <a href="{{ url_for('residents_edit.edit_resident', mdoc=r[0]) }}" class="btn btn-sm btn-warning">Edit</a>
-              <form action="{{ url_for('residents_delete.delete_resident', mdoc=r[0]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this resident?');">
-                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-              </form>
-            </td>
-            {% endif %}
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div id="noResults" class="text-center text-muted mt-3" style="display: none;">
-      No residents found.
-    </div>
-  </div>
+<!-- 🧍 Residents Table -->
+<div class="table-responsive">
+  <table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>{{ sort_link('name', 'Name') }}</th>
+        <th>{{ sort_link('mdoc', 'MDOC') }}</th>
+        <th>Area</th>
+        <th>Housing</th>
+        <th>{{ sort_link('level', 'Level') }}</th>
+        {% if current_user.role in ['admin', 'officer'] %}
+        <th class="text-center">Actions</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for resident in residents %}
+      <tr>
+        <td>{{ resident.name }}</td>
+        <td>{{ resident.mdoc }}</td>
+        <td>{{ resident.area }}</td>
+        <td>{{ resident.housing_unit }}</td>
+        <td>{{ resident.level }}</td>
+        {% if current_user.role in ['admin', 'officer'] %}
+        <td class="text-center">
+          <a href="{{ url_for('residents_edit.edit_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+          <a href="{{ url_for('residents_delete.delete_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this resident?');">Delete</a>
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="text-center text-muted">No residents found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
-<script>
-// Debounce function to limit filterTable calls
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+<!-- Pagination -->
+<div class="d-flex justify-content-center mt-4">
+  <nav>
+    <ul class="pagination">
+      {% if prev_page %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('residents.residents') }}?{{ request.query_string|safe }}&page={{ prev_page }}">Previous</a>
+        </li>
+      {% endif %}
+      {% if next_page %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('residents.residents') }}?{{ request.query_string|safe }}&page={{ next_page }}">Next</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
 
-function filterTable() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const area = document.getElementById("filterArea").value.toLowerCase();
-  const housing = document.getElementById("filterHousing").value.toLowerCase();
-  const level = document.getElementById("filterLevel").value.toLowerCase();
-  const rows = document.querySelectorAll("#residentsTable tbody tr");
-  const resultCount = document.getElementById("resultCount");
-  const noResults = document.getElementById("noResults");
-  let visibleRows = 0;
-
-  rows.forEach(row => {
-    const rowText = row.innerText.toLowerCase();
-    const rowArea = row.querySelector("td:nth-child(3)").innerText.toLowerCase();
-    const rowHousing = row.querySelector("td:nth-child(4)").innerText.toLowerCase();
-    const rowLevel = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
-
-    const matchSearch = rowText.includes(search);
-    const matchArea = area === "" || rowArea === area;
-    const matchHousing = housing === "" || rowHousing === housing;
-    const matchLevel = level === "" || rowLevel === level;
-
-    if (matchSearch && matchArea && matchHousing && matchLevel) {
-      row.style.display = "";
-      visibleRows++;
-    } else {
-      row.style.display = "none";
-    }
-  });
-
-  resultCount.textContent = visibleRows === 1 ? "1 Resident" : `${visibleRows} Residents`;
-  noResults.style.display = visibleRows === 0 ? "block" : "none";
-}
-
-function resetFilters() {
-  document.getElementById("searchInput").value = "";
-  document.getElementById("filterArea").value = "";
-  document.getElementById("filterHousing").value = "";
-  document.getElementById("filterLevel").value = "";
-  filterTable();
-}
-
-const debouncedFilterTable = debounce(filterTable, 300);
-
-// Initialize table and count on page load
-document.addEventListener('DOMContentLoaded', filterTable);
-</script>
 {% endblock %}

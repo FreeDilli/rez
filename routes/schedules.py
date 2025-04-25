@@ -12,7 +12,7 @@ schedules_bp = Blueprint('schedules', __name__, url_prefix='/admin/schedules')
 
 @schedules_bp.route('/')
 @login_required
-def list_schedules():
+def manage_schedules():
     category_filter = request.args.get('category')
     try:
         with get_db() as db:
@@ -66,7 +66,7 @@ def create_schedule():
                 )
                 db.commit()
                 flash('Schedule group created successfully.', 'success')
-                return redirect(url_for('schedules.list_schedules'))
+                return redirect(url_for('schedules.manage_schedules'))
         except sqlite3.Error as e:
             logger.error(f"Database error creating schedule group: {e}")
             flash('Database error while creating schedule group.', 'error')
@@ -138,17 +138,17 @@ def edit_schedule(group_id):
                     )
                     if c.rowcount == 0:
                         flash('Schedule group not found.', 'error')
-                        return redirect(url_for('schedules.list_schedules'))
+                        return redirect(url_for('schedules.manage_schedules'))
                     db.commit()
                     flash('Schedule group updated successfully.', 'success')
-                    return redirect(url_for('schedules.list_schedules'))
+                    return redirect(url_for('schedules.manage_schedules'))
 
             # GET request: Display edit form
             c.execute('SELECT * FROM schedule_groups WHERE id = ?', (group_id,))
             schedule = c.fetchone()
             if not schedule:
                 flash('Schedule group not found.', 'error')
-                return redirect(url_for('schedules.list_schedules'))
+                return redirect(url_for('schedules.manage_schedules'))
 
             c.execute('SELECT * FROM schedule_blocks WHERE group_id = ?', (group_id,))
             blocks = c.fetchall()
@@ -160,7 +160,7 @@ def edit_schedule(group_id):
     except Exception as e:
         logger.error(f"Error in edit_schedule for group_id {group_id}: {e}")
         flash('An error occurred while accessing the schedule.', 'error')
-        return redirect(url_for('schedules.list_schedules'))
+        return redirect(url_for('schedules.manage_schedules'))
 
 @schedules_bp.route('/<int:group_id>/delete')
 @login_required
@@ -174,11 +174,11 @@ def delete_schedule(group_id):
             else:
                 db.commit()
                 flash('Schedule group deleted.', 'warning')
-            return redirect(url_for('schedules.list_schedules'))
+            return redirect(url_for('schedules.manage_schedules'))
     except Exception as e:
         logger.error(f"Error deleting schedule group {group_id}: {e}")
         flash('An error occurred while deleting the schedule group.', 'error')
-        return redirect(url_for('schedules.list_schedules'))
+        return redirect(url_for('schedules.manage_schedules'))
 
 @schedules_bp.route('/<int:group_id>/assign', methods=['GET', 'POST'])
 @login_required
@@ -194,7 +194,7 @@ def assign_schedule(group_id):
                     c.execute('INSERT INTO resident_schedules (mdoc, group_id) VALUES (?, ?)', (mdoc, group_id))
                 db.commit()
                 flash('Resident assignments updated.', 'success')
-                return redirect(url_for('schedules.list_schedules'))
+                return redirect(url_for('schedules.manage_schedules'))
 
             c.execute('SELECT id, name, mdoc, unit, housing_unit, level FROM residents')
             residents = c.fetchall()
@@ -206,10 +206,10 @@ def assign_schedule(group_id):
             group = c.fetchone()
             if not group:
                 flash('Schedule group not found.', 'error')
-                return redirect(url_for('schedules.list_schedules'))
+                return redirect(url_for('schedules.manage_schedules'))
 
             return render_template('schedule_assign.html', group_id=group_id, group_name=group[0], residents=residents, assigned=assigned)
     except Exception as e:
         logger.error(f"Error in assign_schedule for group_id {group_id}: {e}")
         flash('An error occurred while accessing resident assignments.', 'error')
-        return redirect(url_for('schedules.list_schedules'))
+        return redirect(url_for('schedules.manage_schedules'))

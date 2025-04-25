@@ -1,14 +1,43 @@
 import logging
-from utils.logging_config import setup_logging
-from flask import Flask, redirect, url_for, render_template
-from config import Config
-from models.database import init_db, init_app
-from datetime import datetime
 import os
+from datetime import datetime
+from flask import Flask, redirect, url_for, render_template, request
+from flask_login import LoginManager, current_user
+from utils.logging_config import setup_logging
+from config import Config
+from models.database import init_db, init_app, get_db
+from models.User import User
 
 # Configure logging
 setup_logging()
 logger = logging.getLogger(__name__)
+
+# Create Flask app
+app = Flask(__name__, static_folder='static', template_folder='templates')
+app.config.from_object(Config)
+
+# Setup Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'auth.login'  # Where to redirect if not logged in
+
+# Provide current_user to templates
+@app.context_processor
+def inject_current_user():
+    return dict(current_user=current_user)
+
+# Load user from user ID stored in session
+@login_manager.user_loader
+def load_user(user_id):
+    db = get_db()
+    cursor = db.execute("SELECT id, username, role FROM users WHERE id = ?", (user_id,))
+    user_data = cursor.fetchone()
+    if user_data:
+        return User(id=user_data['id'], username=user_data['username'], role=user_data['role'])
+    return None
+
+# Create upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Import blueprints
 try:
@@ -37,11 +66,6 @@ except ImportError as e:
     logger.error(f"ImportError: {e}")
     raise
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
-app.config.from_object(Config)
-
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
 # Register blueprints
 blueprints = [
     residents_export_bp, residents_import_bp, scanlog_export_bp,
@@ -50,22 +74,23 @@ blueprints = [
     residents_delete_all_bp, residents_sample_bp, scan_bp,
     dashboard_bp, auth_bp, users_bp, api_bp, schedules_bp,
     admin_bp, import_history_bp
-    
-
 ]
 
 for bp in blueprints:
     app.register_blueprint(bp)
     logger.info(f"Registered blueprint: {bp.name}")
-    
+
+# Initialize database
 init_app(app)
 with app.app_context():
     init_db()
 
+# Home route
 @app.route('/')
 def index():
     return redirect(url_for('scan.scan'))
 
+# Custom datetime format filter for templates
 @app.template_filter('datetimeformat')
 def datetimeformat(value):
     return datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f').strftime('%m-%d-%Y %I:%M %p')
@@ -83,8 +108,10 @@ def page_not_found(e):
 def gateway_timeout(e):
     return render_template("504.html"), 504
 
+# Run the app
 if __name__ == '__main__':
     logger.info("Starting Flask app")
     logger.debug(f"Registered routes: {app.url_map}")
     app.run(host='127.0.0.1', port=5080)
+
     

@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Resident - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Add Resident</h2>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" name="name" id="name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="mdoc" class="form-label">MDOC Number</label>
+            <input type="text" name="mdoc" id="mdoc" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="area" class="form-label">Area</label>
+            <select name="area" id="area" class="form-select" required>
+                <option value="" disabled selected>Select Area</option>
+                {% for area in unit_options %}
+                    <option value="{{ area }}">{{ area }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="housing_unit" class="form-label">Housing Unit</label>
+            <select name="housing_unit" id="housing_unit" class="form-select" required>
+                <option value="" disabled selected>Select Housing</option>
+                {% for housing in housing_options %}
+                    <option value="{{ housing }}">{{ housing }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="level" class="form-label">Level</label>
+            <select name="level" id="level" class="form-select" required>
+                <option value="" disabled selected>Select Level</option>
+                {% for level in level_options %}
+                    <option value="{{ level }}">{{ level }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Save Resident</button>
+            <a href="{{ url_for('residents.residents') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
