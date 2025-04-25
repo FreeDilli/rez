@@ -43,11 +43,11 @@ def manage_users():
             if len(password) < MIN_PASSWORD_LENGTH:
                 logger.warning(f"Failed to add user '{username}': Password too short")
                 flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
-                return render_template('users.html', users=get_users())
+                return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
             if role not in VALID_ROLES:
                 logger.warning(f"Failed to add user '{username}': Invalid role '{role}'")
                 flash(f"Invalid role selected.", "danger")
-                return render_template('users.html', users=get_users())
+                return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
             hashed_password = generate_password_hash(password)
             logger.debug(f"Adding user '{username}' with role '{role}'")
             try:
@@ -58,13 +58,17 @@ def manage_users():
                     logger.info(f"User '{username}' added successfully with role '{role}'")
                     flash(f"User '{username}' added successfully.", "success")
                     log_audit_action(session.get('username'), "Added user", username, f"Role: {role}")
-            except sqlite3.IntegrityError:
-                logger.warning(f"Failed to add user '{username}': Username already exists")
-                flash(f"User '{username}' already exists.", "danger")
+            except sqlite3.IntegrityError as e:
+                if "UNIQUE constraint failed: users.username" in str(e):
+                    logger.warning(f"Failed to add user '{username}': Username already exists")
+                    flash(f"User '{username}' already exists.", "danger")
+                else:
+                    logger.error(f"Failed to add user '{username}': Database integrity error - {str(e)}")
+                    flash(f"Failed to add user due to database constraint violation.", "danger")
             except sqlite3.Error as e:
                 logger.error(f"Database error adding user '{username}': {str(e)}")
                 flash(f"Database error adding user.", "danger")
-    return render_template('users.html', users=get_users())
+    return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
 
 def get_users():
     """Helper function to fetch users."""
@@ -125,7 +129,7 @@ def edit_user(username):
         flash("Database error fetching user.", "danger")
         return redirect(url_for('users.manage_users'))
 
-    return render_template('edit_user.html', user=user)
+    return render_template('edit_user.html', user=user, valid_roles=VALID_ROLES)
 
 @users_bp.route('/profile/change_password', methods=['GET', 'POST'])
 @login_required

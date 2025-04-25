@@ -5,5 +5,6 @@ HOUSING_OPTIONS = [
     "B Ad North", "B Ad South", "C North", "C South", "C Center", "SMWRC"
 ]
 LEVEL_OPTIONS = ["1", "2", "3", "4"]
-VALID_ROLES = ['admin', 'viewer']
+VALID_ROLES = ['admin', 'viewer', 'editor']
+# Constants for password validation
 MIN_PASSWORD_LENGTH = 8

@@ -28,9 +28,10 @@
     <div class="col-md-2">
       <div class="form-group mb-3">
         <select name="role" class="form-select" required>
-          <option value="admin">Admin</option>
-          <option value="viewer">Viewer</option>
-        </select>
+          {% for role in valid_roles %}
+            <option value="{{ role }}">{{ role.capitalize() }}</option>
+          {% endfor %}
+        </select>        
       </div>
     </div>
     <div class="col-md-2">

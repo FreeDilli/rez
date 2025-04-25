@@ -8,8 +8,9 @@
     <div class="form-group mb-3">
       <label for="role" class="form-label">Role</label>
       <select name="role" id="role" class="form-select" required>
-        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-        <option value="viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
+        {% for role in valid_roles %}
+        <option value="{{ role }}" {% if user.role == role %}selected{% endif %}>{{ role | capitalize }}</option>
+        {% endfor %}
       </select>
     </div>
     <button type="submit" class="btn btn-primary">Update Role</button>
