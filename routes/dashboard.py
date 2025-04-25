@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, url_for
 from models.database import get_db
 from routes.auth import login_required
+from datetime import datetime
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -27,3 +28,21 @@ def dashboard():
             if result:
                 checked_in.append(result)
     return render_template('dashboard.html', data=checked_in)
+
+@dashboard_bp.route('/check_out', methods=['POST'])
+@login_required
+def check_out():
+    mdoc = request.form['mdoc']
+    date = request.form['date']
+    location = request.form['location']
+    current_time = datetime.now().strftime('%H:%M:%S')
+    
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO scans (mdoc, date, time, status, location) VALUES (?, ?, ?, ?, ?)",
+            (mdoc, date, current_time, "Out", location)
+        )
+        conn.commit()
+    
+    return redirect(url_for('dashboard.dashboard'))

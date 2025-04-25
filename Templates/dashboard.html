@@ -34,6 +34,7 @@
                 <th>Housing Unit</th>
                 <th>Level</th>
                 <th>Scanned In</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -44,7 +45,15 @@
                 <td>{{ p[2] }}</td>
                 <td>{{ p[3] }}</td>
                 <td>{{ p[4] }}</td>
-                <td>{{ p[5] }} {{ p[6] }}</td>
+                <td>{{ p[6] }} {{ p[5] }}</td>
+                <td>
+                  <form action="{{ url_for('dashboard.check_out') }}" method="POST" class="d-inline">
+                    <input type="hidden" name="mdoc" value="{{ p[1] }}">
+                    <input type="hidden" name="date" value="{{ p[5] }}">
+                    <input type="hidden" name="location" value="{{ p[7] }}">
+                    <button type="submit" class="btn btn-sm btn-danger">Check Out</button>
+                  </form>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
