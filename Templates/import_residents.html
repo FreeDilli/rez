@@ -12,7 +12,8 @@
             <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
             <li>Rows without a valid <code>mdoc</code> will be skipped</li>
         </ul>
-        <a href="/static/residents_template.csv" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+        <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm">📄 Download Sample CSV</a>
+
             📥 Download CSV Template
         </a>
     </div>

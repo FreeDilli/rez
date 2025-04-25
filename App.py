@@ -36,7 +36,7 @@ except ImportError as e:
     logger.error(f"ImportError: {e}")
     raise
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config.from_object(Config)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -86,3 +86,4 @@ if __name__ == '__main__':
     logger.info("Starting Flask app")
     logger.debug(f"Registered routes: {app.url_map}")
     app.run(host='127.0.0.1', port=5080)
+    
