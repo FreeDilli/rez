@@ -17,7 +17,10 @@ def residents():
     search = request.args.get('search', '').strip()
     sort = request.args.get('sort', 'name')
     direction = request.args.get('direction', 'asc')
-    page = int(request.args.get('page', 1))
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
     per_page = 10
 
     query = "SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents"
@@ -32,7 +35,13 @@ def residents():
     if direction not in ['asc', 'desc']:
         direction = 'asc'
 
-    query += f" ORDER BY {sort} {direction} LIMIT ? OFFSET ?"
+    # Handle sorting for mdoc numerically
+    if sort == 'mdoc':
+        query += f" ORDER BY CAST(mdoc AS INTEGER) {direction}"
+    else:
+        query += f" ORDER BY {sort} {direction}"
+
+    query += " LIMIT ? OFFSET ?"
     params += [per_page, (page - 1) * per_page]
 
     with get_db() as conn:
