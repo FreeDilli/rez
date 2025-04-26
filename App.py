@@ -1,7 +1,8 @@
 import logging
 import os
+import importlib
 from datetime import datetime
-from flask import Flask, redirect, url_for, render_template, request
+from flask import Flask, redirect, url_for, render_template, request, Blueprint
 from flask_login import LoginManager, current_user
 from utils.logging_config import setup_logging
 from config import Config
@@ -39,56 +40,54 @@ def load_user(user_id):
 # Create upload folder
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Import blueprints
-try:
-    from routes.residents_export import residents_export_bp
-    from routes.residents_import import residents_import_bp
-    from routes.scanlog_export import scanlog_export_bp
-    from routes.scanlog_delete import scanlog_delete_bp
-    from routes.scanlog import scanlog_bp
-    from routes.locations import locations_bp
-    from routes.locations_delete import locations_delete_bp
-    from routes.residents import residents_bp
-    from routes.residents_edit import residents_edit_bp
-    from routes.residents_delete import residents_delete_bp
-    from routes.residents_delete_all import residents_delete_all_bp
-    from routes.residents_import_sample import residents_sample_bp
-    from routes.scan import scan_bp
-    from routes.dashboard import dashboard_bp
-    from routes.auth import auth_bp
-    from routes.users import users_bp
-    from routes.api import api_bp
-    from routes.schedules import schedules_bp
-    from routes.admin import admin_bp
-    from routes.import_history import import_history_bp
-    logger.info("All Blueprints imported successfully")
-except ImportError as e:
-    logger.error(f"ImportError: {e}")
-    raise
-
-# Register blueprints
-blueprints = [
-    residents_export_bp, residents_import_bp, scanlog_export_bp,
-    scanlog_delete_bp, scanlog_bp, locations_bp, locations_delete_bp,
-    residents_bp, residents_edit_bp, residents_delete_bp,
-    residents_delete_all_bp, residents_sample_bp, scan_bp,
-    dashboard_bp, auth_bp, users_bp, api_bp, schedules_bp,
-    admin_bp, import_history_bp
-]
-
-for bp in blueprints:
-    app.register_blueprint(bp)
-    logger.info(f"Registered blueprint: {bp.name}")
+# Dynamic blueprint registration
+def register_blueprints(app):
+    routes_dir = os.path.join(os.path.dirname(__file__), 'routes')
+    logger.debug(f"Scanning routes directory: {routes_dir}")
+    for filename in os.listdir(routes_dir):
+        if filename.endswith('.py') and filename != '__init__.py':
+            module_name = filename[:-3]
+            logger.debug(f"Attempting to import module: routes.{module_name}")
+            try:
+                module = importlib.import_module(f'routes.{module_name}')
+                for attr in dir(module):
+                    obj = getattr(module, attr)
+                    # Check if the object is a Flask blueprint
+                    if isinstance(obj, Blueprint):
+                        app.register_blueprint(obj)
+                        logger.info(f"Registered blueprint: {obj.name}")
+            except ImportError as e:
+                logger.error(f"Failed to import blueprint {module_name}: {e}")
+                continue
+            except Exception as e:
+                logger.error(f"Error processing blueprint {module_name}: {e}")
+                continue
 
 # Initialize database
 init_app(app)
 with app.app_context():
     init_db()
 
+# Register blueprints after app and database initialization
+register_blueprints(app)
+logger.info("Completed blueprint registration")
+
 # Home route
 @app.route('/')
 def index():
     return redirect(url_for('scan.scan'))
+
+# Health check route
+@app.route('/health')
+def health():
+    try:
+        db = get_db()
+        db.execute('SELECT 1')  # Simple query to test SQLite connection
+        logger.debug("Health check passed")
+        return {'status': 'healthy'}, 200
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return {'status': 'unhealthy'}, 500
 
 # Custom datetime format filter for templates
 @app.template_filter('datetimeformat')
@@ -113,5 +112,3 @@ if __name__ == '__main__':
     logger.info("Starting Flask app")
     logger.debug(f"Registered routes: {app.url_map}")
     app.run(host='127.0.0.1', port=5080)
-
-    
