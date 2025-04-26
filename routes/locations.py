@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash
 from models.database import get_db
 from routes.auth import login_required
 import sqlite3
+from utils.constants import LOCATION_TYPES  # Import the constant
 
 locations_bp = Blueprint('locations', __name__)
 
@@ -28,4 +29,4 @@ def manage_locations():
                     message = "Location or prefix already exists."
         c.execute("SELECT id, name, prefix, type FROM locations ORDER BY name")
         locations = c.fetchall()
-    return render_template('locations.html', locations=locations, message=message)
+    return render_template('locations.html', locations=locations, message=message, LOCATION_TYPES=LOCATION_TYPES)

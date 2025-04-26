@@ -14,7 +14,7 @@ LEVEL_OPTIONS = ["1", "2", "3", "4"]
 VALID_ROLES = ['admin', 'officer', 'scheduling', 'viewer']
 
 # Location Types
-LOCATION_TYPES = ["Housing", "Education", "Recreation", "Visits", "Work"]
+LOCATION_TYPES = ['Housing', 'Education', 'Recreation', 'Visits', 'Work']
 
 # Location Categories
 SCHEDULE_CATEGORIES = ["Education", "Work", "Recreation"]
