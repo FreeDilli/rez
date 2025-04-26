@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config.from_object(Config)
 
-# Setup Flask-Login
+# Setup Flask-Login 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'  # Where to redirect if not logged in
