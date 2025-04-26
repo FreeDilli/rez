@@ -7,34 +7,34 @@
 
   <!-- Quick Stats -->
   <div class="row mb-4 g-3">
-    <div class="col-md-3">
+    <div class="col-sm-6 col-md-3">
       <div class="card border-primary text-center">
         <div class="card-body">
-          <h6 class="card-title">👥 Total Residents</h6>
+          <h6 class="card-title" title="Total residents in the system">👥 Total Residents</h6>
           <h3 class="fw-bold text-primary">{{ stats.total_residents }}</h3>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-sm-6 col-md-3">
       <div class="card border-success text-center">
         <div class="card-body">
-          <h6 class="card-title">🕒 Scans Today</h6>
+          <h6 class="card-title" title="Scans performed today">🕒 Scans Today</h6>
           <h3 class="fw-bold text-success">{{ stats.scans_today }}</h3>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-sm-6 col-md-3">
       <div class="card border-warning text-center">
         <div class="card-body">
-          <h6 class="card-title">📍 Checked In Now</h6>
+          <h6 class="card-title" title="Residents currently checked in">📍 Checked In Now</h6>
           <h3 class="fw-bold text-warning">{{ stats.checked_in }}</h3>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-sm-6 col-md-3">
       <div class="card border-dark text-center">
         <div class="card-body">
-          <h6 class="card-title">🏢 Top Location Today</h6>
+          <h6 class="card-title" title="Most active location today">🏢 Top Location Today</h6>
           <h3 class="fw-bold text-dark">{{ stats.top_location or '—' }}</h3>
         </div>
       </div>
@@ -48,9 +48,9 @@
         <div class="card-body">
           <h5 class="card-title">📋 Manage Residents</h5>
           <p class="card-text">Add, update, or import resident data.</p>
-          <a href="/admin/residents" class="btn btn-primary">Open</a>
-          <a href="/admin/residents/import" class="btn btn-outline-secondary btn-sm mt-2">Import Residents</a>
-          <a href="/admin/residents/import/history" class="btn btn-outline-secondary btn-sm mt-1">View History</a>
+          <a href="/admin/residents" class="btn btn-primary" aria-label="Manage Residents">Open</a>
+          <a href="/admin/residents/import" class="btn btn-outline-secondary btn-sm mt-2" aria-label="Import Residents">Import Residents</a>
+          <a href="/admin/residents/import/history" class="btn btn-outline-secondary btn-sm mt-1" aria-label="View Import History">View History</a>
         </div>
       </div>
     </div>
@@ -60,7 +60,7 @@
         <div class="card-body">
           <h5 class="card-title">🧾 Scan Logs</h5>
           <p class="card-text">View recent scan activity and export data.</p>
-          <a href="/admin/scanlog" class="btn btn-primary">View Logs</a>
+          <a href="/admin/scanlog" class="btn btn-primary" aria-label="View Scan Logs">View Logs</a>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
         <div class="card-body">
           <h5 class="card-title">🏠 Locations</h5>
           <p class="card-text">Add or edit scan locations by area or unit.</p>
-          <a href="/admin/locations" class="btn btn-primary">Manage</a>
+          <a href="/admin/locations" class="btn btn-primary" aria-label="Manage Locations">Manage</a>
         </div>
       </div>
     </div>
@@ -80,7 +80,7 @@
         <div class="card-body">
           <h5 class="card-title">📆 Scheduling</h5>
           <p class="card-text">Manage schedule groups, blocks, and assignments.</p>
-          <a href="/admin/schedules" class="btn btn-primary">Manage</a>
+          <a href="/admin/schedules" class="btn btn-primary" aria-label="Manage Scheduling">Manage</a>
         </div>
       </div>
     </div>
@@ -90,7 +90,7 @@
         <div class="card-body">
           <h5 class="card-title">👥 User Management</h5>
           <p class="card-text">Add or manage admin and viewer accounts.</p>
-          <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+          <a href="/admin/users" class="btn btn-primary" aria-label="Manage Users">Manage Users</a>
         </div>
       </div>
     </div>
@@ -100,7 +100,7 @@
         <div class="card-body">
           <h5 class="card-title">📅 Live Schedule</h5>
           <p class="card-text">See which groups are active right now.</p>
-          <a href="/admin/schedules" class="btn btn-primary">View Schedule</a>
+          <a href="/admin/schedules" class="btn btn-primary" aria-label="View Live Schedule">View Schedule</a>
         </div>
       </div>
     </div>

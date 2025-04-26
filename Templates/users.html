@@ -19,30 +19,34 @@
 <!-- Add User Form -->
 <div class="card p-4 mb-5">
   <h5 class="card-title mb-3">Add New User</h5>
-  <form method="POST" class="row g-3">
+  <form method="POST" class="row g-3 align-items-end">
     <input type="hidden" name="action" value="add">
+    
     <div class="col-md-4">
       <label class="form-label">Username</label>
       <input type="text" name="username" class="form-control" required>
     </div>
+    
     <div class="col-md-4">
       <label class="form-label">Password</label>
       <input type="password" name="password" class="form-control" required minlength="8">
     </div>
+    
     <div class="col-md-2">
-      <div class="form-group mb-3">
-        <select name="role" class="form-select" required>
-          {% for role in valid_roles %}
-            <option value="{{ role }}">{{ role.capitalize() }}</option>
-          {% endfor %}
-        </select>        
-      </div>
+      <label class="form-label">Role</label>
+      <select name="role" class="form-select" required>
+        {% for role in valid_roles %}
+          <option value="{{ role }}">{{ role.capitalize() }}</option>
+        {% endfor %}
+      </select>
     </div>
-    <div class="col-12 text-end">
-      <button type="submit" class="btn btn-success">Add User</button>
+    
+    <div class="col-md-2 text-end">
+      <button type="submit" class="btn btn-success w-100">Add User</button>
     </div>
   </form>
 </div>
+
 
 <!-- Users Table -->
 <h4>Existing Users</h4>
@@ -64,12 +68,25 @@
         <td>{{ user.last_login or 'Never' }}</td>
         <td class="text-center">
           <div class="d-flex justify-content-center gap-2">
-            <a href="{{ url_for('users.edit_user', username=user.username) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-            <form action="{{ url_for('users.reset_password', username=user.username) }}" method="post" class="d-inline">
-              <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('Reset password for {{ user.username }} to temp1234?');">Reset</button>
+            <form method="GET" action="{{ url_for('users.edit_user', username=user.username) }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-primary"
+                {% if user.username == current_user.username %}disabled title="Cannot edit your own role"{% endif %}>
+                Edit
+              </button>
             </form>
-            <form action="{{ url_for('users.delete_user', username=user.username) }}" method="post" class="d-inline">
-              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete {{ user.username }}?');">Delete</button>
+            <form method="POST" action="{{ url_for('users.reset_password', username=user.username) }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-warning"
+                onclick="return confirm('Reset password for {{ user.username }} to temp1234?');"
+                {% if user.username == current_user.username %}disabled title="Cannot reset your own password"{% endif %}>
+                Reset
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('users.delete_user', username=user.username) }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-danger"
+                onclick="return confirm('Are you sure you want to delete {{ user.username }}?');"
+                {% if user.username == current_user.username %}disabled title="Cannot delete your own account"{% endif %}>
+                Delete
+              </button>
             </form>
           </div>
         </td>
@@ -82,4 +99,5 @@
     </tbody>
   </table>
 </div>
+
 {% endblock %}

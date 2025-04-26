@@ -10,7 +10,10 @@ residents_delete_bp = Blueprint('residents_delete', __name__)
 def delete_resident(mdoc):
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("DELETE FROM residents WHERE id = ?", (mdoc,))
-        conn.commit()
-        flash("Resident deleted successfully.", "success")
-    return redirect(url_for('residents.manage_residents'))
+        c.execute("DELETE FROM residents WHERE mdoc = ?", (mdoc,))
+        if c.rowcount == 0:
+            flash("Resident not found.", "error")
+        else:
+            conn.commit()
+            flash("Resident deleted successfully.", "success")
+    return redirect(url_for('residents.residents'))

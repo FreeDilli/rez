@@ -7,33 +7,34 @@
   <div class="alert alert-secondary" id="instructionsBox">
     <h5 class="mb-1">📄 CSV Import Guidelines</h5>
     <ul class="mb-1">
-      <li><strong>Required headers:</strong> <code>mdoc</code>, <code>name</code>, <code>unit</code>, <code>housing_unit</code>, <code>level</code></li>
-      <li><strong>Optional header:</strong> <code>photo</code></li>
+      <li><strong>Required headers:</strong> <code>{{ CSV_REQUIRED_HEADERS|join(', ') }}</code></li>
+      <li><strong>Optional header:</strong> <code>{{ CSV_OPTIONAL_HEADERS|join(', ') }}</code></li>
       <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
       <li>Rows without a valid <code>mdoc</code> will be skipped</li>
     </ul>
-    <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm">📄 Download Sample CSV</a>
+    <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm" aria-label="Download Sample CSV">📄 Download Sample CSV</a>
   </div>
   <!-- Upload Form -->
   <form id="uploadForm" class="mb-4">
     <div class="form-group mb-3">
       <label for="csv_file" class="form-label">Upload CSV File</label>
-      <input class="form-control" type="file" name="csv_file" id="csv_file" accept=".csv" required>
+      <input class="form-control" type="file" name="csv_file" id="csv_file" accept=".csv" required aria-label="Upload CSV File">
+      <div id="fileError" class="invalid-feedback"></div>
     </div>
     <div class="form-group mb-3">
       <div class="form-check">
-        <input class="form-check-input" type="checkbox" name="dry_run" value="yes" id="dry_run">
+        <input class="form-check-input" type="checkbox" name="dry_run" value="yes" id="dry_run" aria-label="Dry Run">
         <label class="form-check-label" for="dry_run">🔍 Dry Run (Preview without saving)</label>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" class="btn btn-primary" aria-label="Submit CSV">Submit</button>
   </form>
 
   <!-- Progress Bar -->
   <div class="mb-4 d-none" id="progressContainer">
     <label class="form-label">Upload Progress</label>
     <div class="progress">
-      <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+      <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
     </div>
   </div>
 
@@ -42,27 +43,27 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-describedby="confirmModalDesc" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content bg-dark text-white border-secondary shadow-lg rounded-4">
       <div class="modal-header border-secondary">
         <h5 class="modal-title" id="confirmModalLabel">Confirm Import</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" id="confirmModalDesc">
         Are you sure you want to commit these changes to the database?
       </div>
       <div class="modal-footer border-secondary">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button id="modalConfirmBtn" type="button" class="btn btn-primary">✅ Confirm Changes</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
+        <button id="modalConfirmBtn" type="button" class="btn btn-primary" aria-label="Confirm Import">✅ Confirm Changes</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Toast -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-  <div id="toast" class="toast align-items-center text-white bg-primary border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+  <div id="toast" class="toast align-items-center text-white bg-primary border-0 shadow rounded-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
     <div class="d-flex">
       <div class="toast-body fw-semibold" id="toastBody">Processing...</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -81,7 +82,7 @@ function showToast(message, type = 'primary') {
   toastBody.innerText = message;
   const toastInstance = bootstrap.Toast.getOrCreateInstance(toastEl, {
     animation: true,
-    autohide: false
+    delay: 5000
   });
   toastInstance.show();
 }
@@ -89,7 +90,18 @@ function showToast(message, type = 'primary') {
 document.getElementById('uploadForm').addEventListener('submit', function (e) {
   e.preventDefault();
   const fileInput = document.getElementById('csv_file');
+  const fileError = document.getElementById('fileError');
   const dryRun = document.getElementById('dry_run').checked;
+
+  // Validate file type
+  if (!fileInput.files[0]?.name.endsWith('.csv')) {
+    fileInput.classList.add('is-invalid');
+    fileError.textContent = 'Please upload a CSV file.';
+    return;
+  }
+  fileInput.classList.remove('is-invalid');
+  fileInput.classList.add('is-valid');
+
   const formData = new FormData();
   formData.append('csv_file', fileInput.files[0]);
   formData.append('dry_run', dryRun ? 'yes' : 'no');
@@ -116,12 +128,14 @@ function submitFormData(formData, isDryRun) {
   progressBar.classList.add('progress-bar-animated');
   progressBar.style.width = '0%';
   progressBar.innerText = '0%';
+  progressBar.setAttribute('aria-valuenow', '0');
 
   xhr.upload.addEventListener('progress', function (e) {
     if (e.lengthComputable) {
       const percent = Math.round((e.loaded / e.total) * 100);
       progressBar.style.width = percent + '%';
       progressBar.innerText = percent + '%';
+      progressBar.setAttribute('aria-valuenow', percent);
     }
   });
 
@@ -142,7 +156,7 @@ function submitFormData(formData, isDryRun) {
           html += `<div class="accordion mb-3" id="previewAccordion">
             <div class="accordion-item">
               <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePreview">🔍 Preview Changes</button>
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePreview" aria-expanded="false" aria-controls="collapsePreview">🔍 Preview Changes</button>
               </h2>
               <div id="collapsePreview" class="accordion-collapse collapse">
                 <div class="accordion-body">
@@ -167,7 +181,7 @@ function submitFormData(formData, isDryRun) {
           html += `</div></div>`;
         }
         if (isDryRun) {
-          html += `<button id="confirmBtn" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">✅ Confirm Changes</button>`;
+          html += `<button id="confirmBtn" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal" aria-label="Confirm Changes">✅ Confirm Changes</button>`;
         } else {
           showToast("✅ Changes committed to the database.", 'success');
         }

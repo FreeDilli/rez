@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models.database import get_db
 from flask_login import login_required, current_user
-from utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
+from utils.constants import (
+    UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS, VALID_ROLES, MIN_PASSWORD_LENGTH,
+    IMPORT_HISTORY_TABLE_HEADERS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
+)
 from utils.file_utils import save_uploaded_file
 import sqlite3
 
@@ -90,4 +93,7 @@ def add_resident():
         except Exception as e:
             flash(f'Error adding resident: {e}', 'danger')
 
-    return render_template('add_resident.html', unit_options=UNIT_OPTIONS, housing_options=HOUSING_OPTIONS, level_options=LEVEL_OPTIONS)
+    return render_template('add_resident.html', 
+                          UNIT_OPTIONS=UNIT_OPTIONS, 
+                          HOUSING_OPTIONS=HOUSING_OPTIONS, 
+                          LEVEL_OPTIONS=LEVEL_OPTIONS)
