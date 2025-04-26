@@ -1,17 +1,13 @@
 {% extends "layout.html" %}
 
 {% macro sort_link(column_name, label) %}
-  {% set current_sort = request.args.get('sort', 'name') %}
-  {% set current_dir = request.args.get('direction', 'asc') %}
+  {% set current_sort = sort %}
+  {% set current_dir = direction %}
   {% set next_dir = 'desc' if current_sort == column_name and current_dir == 'asc' else 'asc' %}
-  <a href="{{ url_for('residents.residents', search=request.args.get('search', ''), sort=column_name, direction=next_dir, page=request.args.get('page', 1)) }}" class="text-decoration-none">
+  <a href="{{ url_for('residents.residents', search=search, sort=column_name, direction=next_dir, page=page, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}" class="text-decoration-none">
     {{ label }}
     {% if current_sort == column_name %}
-      {% if current_dir == 'asc' %}
-        ▲
-      {% else %}
-        ▼
-      {% endif %}
+      {% if current_dir == 'asc' %}▲{% else %}▼{% endif %}
     {% endif %}
   </a>
 {% endmacro %}
@@ -21,42 +17,52 @@
 {% block content %}
 <h2 class="mb-4">Residents</h2>
 
-<!-- 🔍 Search and Filters -->
-<div class="row row-cols-1 row-cols-md-5 g-3 align-items-end mb-4">
-  <div class="col">
-    <input type="text" id="searchInput" class="form-control" placeholder="Search by Name or MDOC..." onkeyup="filterTable()" value="">
+<!-- Search and Filters -->
+<form id="filterForm" action="{{ url_for('residents.residents') }}" method="GET">
+  <div class="row row-cols-1 row-cols-md-5 g-3 align-items-end mb-4">
+    <div class="col">
+      <input type="text" id="searchInput" name="search" class="form-control" placeholder="Search by Name or MDOC..." value="{{ search }}">
+    </div>
+    <div class="col">
+      <select id="filterUnit" name="filterUnit" class="form-select">
+        <option value="">All Units</option>
+        {% for unit in UNIT_OPTIONS %}
+          <option value="{{ unit }}" {% if filterUnit == unit %}selected{% endif %}>{{ unit }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col">
+      <select id="filterHousing" name="filterHousing" class="form-select">
+        <option value="">All Housing</option>
+        {% for housing in HOUSING_OPTIONS %}
+          <option value="{{ housing }}" {% if filterHousing == housing %}selected{% endif %}>{{ housing }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col">
+      <select id="filterLevel" name="filterLevel" class="form-select">
+        <option value="">All Levels</option>
+        {% for level in LEVEL_OPTIONS %}
+          <option value="{{ level }}" {% if filterLevel == level %}selected{% endif %}>{{ level }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col">
+      <button type="button" class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
+    </div>
   </div>
-  <div class="col">
-    <select id="filterUnit" class="form-select" onchange="filterTable()">
-      <option value="">All Units</option>
-      {% for unit in UNIT_OPTIONS %}
-      <option value="{{ unit }}">{{ unit }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col">
-    <select id="filterHousing" class="form-select" onchange="filterTable()">
-      <option value="">All Housing</option>
-      {% for housing in HOUSING_OPTIONS %}
-      <option value="{{ housing }}">{{ housing }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col">
-    <select id="filterLevel" class="form-select" onchange="filterTable()">
-      <option value="">All Levels</option>
-      {% for level in LEVEL_OPTIONS %}
-      <option value="{{ level }}">{{ level }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="col">
-    <button class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
-  </div>
-</div>
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <input type="hidden" name="direction" value="{{ direction }}">
+  <input type="hidden" name="page" value="{{ page }}">
+</form>
 
+<!-- Resident Count -->
+<p class="mb-3">
+  Showing {{ filtered_count }} of {{ total_count }} residents
+  {% if search or filterUnit or filterHousing or filterLevel %}(filtered){% endif %}
+</p>
 
-<!-- 🧍 Residents Table -->
+<!-- Residents Table -->
 <div class="table-responsive">
   <table id="residentsTable" class="table table-bordered table-hover align-middle">
     <thead class="table-light">
@@ -67,35 +73,34 @@
         <th>Housing</th>
         <th>{{ sort_link('level', 'Level') }}</th>
         {% if current_user.role in ['admin', 'officer'] %}
-        <th class="text-center">Actions</th>
+          <th class="text-center">Actions</th>
         {% endif %}
       </tr>
     </thead>
     <tbody>
       {% for resident in residents %}
-      <tr>
-        <td>{{ resident.name }}</td>
-        <td>{{ resident.mdoc }}</td>
-        <td>{{ resident.unit }}</td>
-        <td>{{ resident.housing_unit }}</td>
-        <td>{{ resident.level }}</td>
-        {% if current_user.role in ['admin', 'officer'] %}
-        <td class="text-center">
-          <a href="{{ url_for('residents_edit.edit_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-          <form action="{{ url_for('residents_delete.delete_resident', mdoc=resident.mdoc) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {{ resident.name }}?');">
-            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete resident {{ resident.name }}">Delete</button>
-          </form>
-        </td>
-        {% endif %}
-      </tr>
+        <tr>
+          <td>{{ resident.name }}</td>
+          <td>{{ resident.mdoc }}</td>
+          <td>{{ resident.unit }}</td>
+          <td>{{ resident.housing_unit }}</td>
+          <td>{{ resident.level }}</td>
+          {% if current_user.role in ['admin', 'officer'] %}
+            <td class="text-center">
+              <a href="{{ url_for('residents_edit.edit_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <form action="{{ url_for('residents_delete.delete_resident', mdoc=resident.mdoc) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {{ resident.name }}?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete resident {{ resident.name }}">Delete</button>
+              </form>
+            </td>
+          {% endif %}
+        </tr>
       {% else %}
-      <tr>
-        <td colspan="6" class="text-center text-muted">No residents found.</td>
-      </tr>
+        <tr>
+          <td colspan="{% if current_user.role in ['admin', 'officer'] %}6{% else %}5{% endif %}" class="text-center text-muted">No residents found.</td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>
-  <div id="noResults" class="text-center text-muted mt-3" style="display: none;">No results found.</div>
 </div>
 
 <!-- Pagination -->
@@ -104,12 +109,12 @@
     <ul class="pagination">
       {% if prev_page %}
         <li class="page-item">
-          <a class="page-link" href="{{ url_for('residents.residents', search=request.args.get('search', ''), sort=request.args.get('sort', 'name'), direction=request.args.get('direction', 'asc'), page=prev_page) }}">Previous</a>
+          <a class="page-link" href="{{ url_for('residents.residents', page=prev_page, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Previous</a>
         </li>
       {% endif %}
       {% if next_page %}
         <li class="page-item">
-          <a class="page-link" href="{{ url_for('residents.residents', search=request.args.get('search', ''), sort=request.args.get('sort', 'name'), direction=request.args.get('direction', 'asc'), page=next_page) }}">Next</a>
+          <a class="page-link" href="{{ url_for('residents.residents', page=next_page, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Next</a>
         </li>
       {% endif %}
     </ul>
@@ -117,46 +122,32 @@
 </div>
 
 <script>
-  function filterTable() {
-    const search = document.getElementById("searchInput").value.toLowerCase().trim();
-    const unit = document.getElementById("filterUnit").value.toLowerCase();
-    const housing = document.getElementById("filterHousing").value.toLowerCase();
-    const level = document.getElementById("filterLevel").value.toLowerCase();
-    const rows = document.querySelectorAll("#residentsTable tbody tr");
-    const noResults = document.getElementById("noResults");
-    let visibleRows = 0;
-  
-    rows.forEach(row => {
-      const name = row.children[0]?.innerText.toLowerCase();
-      const mdoc = row.children[1]?.innerText.toLowerCase();
-      const rowUnit = row.children[2]?.innerText.toLowerCase();
-      const rowHousing = row.children[3]?.innerText.toLowerCase();
-      const rowLevel = row.children[4]?.innerText.toLowerCase();
-  
-      const matchSearch = !search || name.includes(search) || mdoc.includes(search);
-      const matchUnit = !unit || rowUnit.includes(unit);
-      const matchHousing = !housing || rowHousing.includes(housing);
-      const matchLevel = !level || rowLevel.includes(level);
-  
-      if (matchSearch && matchUnit && matchHousing && matchLevel) {
-        row.style.display = "";
-        visibleRows++;
-      } else {
-        row.style.display = "none";
-      }
-    });
-  
-    noResults.style.display = visibleRows === 0 ? "block" : "none";
-  }
-  
   function resetFilters() {
-    document.getElementById("searchInput").value = "";
-    document.getElementById("filterUnit").value = "";
-    document.getElementById("filterHousing").value = "";
-    document.getElementById("filterLevel").value = "";
-    filterTable();
+    window.location = "{{ url_for('residents.residents', sort=sort, direction=direction, page=1) }}";
   }
-  </script>
-  
-  
+
+  // Debounce function to delay execution
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  // Auto-submit form on filter changes
+  const form = document.getElementById("filterForm");
+  document.getElementById("searchInput").addEventListener('input', debounce(() => {
+    form.submit();
+  }, 500));
+  document.getElementById("filterUnit").addEventListener('change', () => {
+    form.submit();
+  });
+  document.getElementById("filterHousing").addEventListener('change', () => {
+    form.submit();
+  });
+  document.getElementById("filterLevel").addEventListener('change', () => {
+    form.submit();
+  });
+</script>
 {% endblock %}
