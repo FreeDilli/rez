@@ -12,7 +12,7 @@
   {% if data %}
     {% set grouped = {} %}
     {% for row in data %}
-      {% set location = row[7] %}
+      {% set location = row[6] %}
       {% if location not in grouped %}
         {% set _ = grouped.update({location: []}) %}
       {% endif %}
@@ -45,12 +45,11 @@
                 <td>{{ p[2] }}</td>
                 <td>{{ p[3] }}</td>
                 <td>{{ p[4] }}</td>
-                <td>{{ p[6] }} {{ p[5] }}</td>
+                <td>{{ p[5] | timeformat }}</td>
                 <td>
                   <form action="{{ url_for('dashboard.check_out') }}" method="POST" class="d-inline">
                     <input type="hidden" name="mdoc" value="{{ p[1] }}">
-                    <input type="hidden" name="date" value="{{ p[5] }}">
-                    <input type="hidden" name="location" value="{{ p[7] }}">
+                    <input type="hidden" name="location" value="{{ p[6] }}">
                     <button type="submit" class="btn btn-sm btn-danger" aria-label="Check out resident">Check Out</button>
                   </form>
                 </td>

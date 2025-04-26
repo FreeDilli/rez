@@ -15,9 +15,9 @@ scanlog_bp = Blueprint('scanlog', __name__)
 def scanlog():
     logger.debug("Accessing /admin/scanlog route")
     try:
-        with get_db() as db:
-            c = db.cursor()
-            c.execute('SELECT * FROM scans_with_residents ORDER BY time DESC')
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute('SELECT * FROM scans_with_residents ORDER BY timestamp DESC')
             data = c.fetchall()
             logger.debug(f"Fetched {len(data)} scan records")
             

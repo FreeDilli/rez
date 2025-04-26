@@ -21,25 +21,44 @@
 {% block content %}
 <h2 class="mb-4">Residents</h2>
 
-<!-- 🔍 Search Bar -->
-<form method="GET" class="row g-3 mb-4">
-  <div class="col-md-4">
-    <input type="text" name="search" class="form-control" placeholder="Search by Name or MDOC" value="{{ request.args.get('search', '') }}">
+<!-- 🔍 Search and Filters -->
+<div class="row row-cols-1 row-cols-md-5 g-3 align-items-end mb-4">
+  <div class="col">
+    <input type="text" id="searchInput" class="form-control" placeholder="Search by Name or MDOC..." onkeyup="filterTable()" value="">
   </div>
-  <div class="col-md-auto">
-    <button type="submit" class="btn btn-primary">Search</button>
-    <a href="{{ url_for('residents.residents') }}" class="btn btn-secondary">Clear</a>
+  <div class="col">
+    <select id="filterUnit" class="form-select" onchange="filterTable()">
+      <option value="">All Units</option>
+      {% for unit in UNIT_OPTIONS %}
+      <option value="{{ unit }}">{{ unit }}</option>
+      {% endfor %}
+    </select>
   </div>
-  {% if current_user.role in ['admin', 'officer'] %}
-  <div class="col-md-auto ms-auto">
-    <a href="{{ url_for('residents.add_resident') }}" class="btn btn-success">+ Add Resident</a>
+  <div class="col">
+    <select id="filterHousing" class="form-select" onchange="filterTable()">
+      <option value="">All Housing</option>
+      {% for housing in HOUSING_OPTIONS %}
+      <option value="{{ housing }}">{{ housing }}</option>
+      {% endfor %}
+    </select>
   </div>
-  {% endif %}
-</form>
+  <div class="col">
+    <select id="filterLevel" class="form-select" onchange="filterTable()">
+      <option value="">All Levels</option>
+      {% for level in LEVEL_OPTIONS %}
+      <option value="{{ level }}">{{ level }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col">
+    <button class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
+  </div>
+</div>
+
 
 <!-- 🧍 Residents Table -->
 <div class="table-responsive">
-  <table class="table table-bordered table-hover align-middle">
+  <table id="residentsTable" class="table table-bordered table-hover align-middle">
     <thead class="table-light">
       <tr>
         <th>{{ sort_link('name', 'Name') }}</th>
@@ -76,6 +95,7 @@
       {% endfor %}
     </tbody>
   </table>
+  <div id="noResults" class="text-center text-muted mt-3" style="display: none;">No results found.</div>
 </div>
 
 <!-- Pagination -->
@@ -96,4 +116,47 @@
   </nav>
 </div>
 
+<script>
+  function filterTable() {
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+    const unit = document.getElementById("filterUnit").value.toLowerCase();
+    const housing = document.getElementById("filterHousing").value.toLowerCase();
+    const level = document.getElementById("filterLevel").value.toLowerCase();
+    const rows = document.querySelectorAll("#residentsTable tbody tr");
+    const noResults = document.getElementById("noResults");
+    let visibleRows = 0;
+  
+    rows.forEach(row => {
+      const name = row.children[0]?.innerText.toLowerCase();
+      const mdoc = row.children[1]?.innerText.toLowerCase();
+      const rowUnit = row.children[2]?.innerText.toLowerCase();
+      const rowHousing = row.children[3]?.innerText.toLowerCase();
+      const rowLevel = row.children[4]?.innerText.toLowerCase();
+  
+      const matchSearch = !search || name.includes(search) || mdoc.includes(search);
+      const matchUnit = !unit || rowUnit.includes(unit);
+      const matchHousing = !housing || rowHousing.includes(housing);
+      const matchLevel = !level || rowLevel.includes(level);
+  
+      if (matchSearch && matchUnit && matchHousing && matchLevel) {
+        row.style.display = "";
+        visibleRows++;
+      } else {
+        row.style.display = "none";
+      }
+    });
+  
+    noResults.style.display = visibleRows === 0 ? "block" : "none";
+  }
+  
+  function resetFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("filterUnit").value = "";
+    document.getElementById("filterHousing").value = "";
+    document.getElementById("filterLevel").value = "";
+    filterTable();
+  }
+  </script>
+  
+  
 {% endblock %}

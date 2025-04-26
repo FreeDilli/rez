@@ -42,10 +42,10 @@ def process_scan(mdoc: str, prefix: str) -> str:
                 logger.warning(f"Resident with MDOC '{mdoc}' not found, but scan will be recorded")
 
             cursor.execute("""
-                SELECT location, status, date || ' ' || time AS timestamp
+                SELECT location, status, timestamp
                 FROM scans
                 WHERE mdoc = ?
-                ORDER BY datetime(date || ' ' || time) DESC
+                ORDER BY timestamp DESC
                 LIMIT 1
             """, (mdoc,))
             last_scan = cursor.fetchone()
@@ -55,8 +55,8 @@ def process_scan(mdoc: str, prefix: str) -> str:
             out_time = now - timedelta(seconds=1)
 
             if last_scan:
-                last_location, last_status, last_timestamp_str = last_scan
-                last_timestamp = datetime.strptime(last_timestamp_str, "%Y-%m-%d %H:%M:%S")
+                last_location, last_status, last_timestamp = last_scan
+                last_timestamp = datetime.strptime(last_timestamp, "%Y-%m-%d %H:%M:%S")
 
                 if (now - last_timestamp).total_seconds() < TOO_SOON_SECONDS:
                     logger.info(f"Ignored rapid scan for MDOC '{mdoc}' at {location_name}")
@@ -105,13 +105,12 @@ def insert_scan(cursor: sqlite3.Cursor, mdoc: str, timestamp: datetime, status: 
         status: The scan status ('In' or 'Out').
         location: The location name.
     """
-    date_str = timestamp.strftime('%Y-%m-%d')  # ISO for DB consistency
-    time_str = timestamp.strftime('%H:%M:%S')
+    timestamp_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute("""
-        INSERT INTO scans (mdoc, date, time, status, location)
-        VALUES (?, ?, ?, ?, ?)
-    """, (mdoc, date_str, time_str, status, location))
-    logger.debug(f"Inserted scan: {mdoc=} {status=} {location=} {date_str=} {time_str=}")
+        INSERT INTO scans (mdoc, timestamp, status, location)
+        VALUES (?, ?, ?, ?)
+    """, (mdoc, timestamp_str, status, location))
+    logger.debug(f"Inserted scan: {mdoc=} {status=} {location=} {timestamp_str=}")
 
 def get_location_name_by_prefix(prefix: str) -> Optional[str]:
     """

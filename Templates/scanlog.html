@@ -67,10 +67,10 @@
           <tr>
             <td>{{ scan[0] }}</td>
             <td>{{ scan[1] }}</td>
-            <td>{{ scan[2] }}</td>
+            <td>{{ scan[2] | dateformat }}</td>
+            <td>{{ scan[2] | timeformat }}</td>
             <td>{{ scan[3] }}</td>
             <td>{{ scan[4] }}</td>
-            <td>{{ scan[5] }}</td>
           </tr>
           {% endfor %}
         </tbody>

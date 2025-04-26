@@ -2,8 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models.database import get_db
 from flask_login import login_required, current_user
 from utils.constants import (
-    UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS, VALID_ROLES, MIN_PASSWORD_LENGTH,
-    IMPORT_HISTORY_TABLE_HEADERS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
+    UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
 )
 from utils.file_utils import save_uploaded_file
 import sqlite3
@@ -70,7 +69,10 @@ def residents():
         next_page=next_page,
         search=search,
         sort=sort,
-        direction=direction
+        direction=direction,
+        UNIT_OPTIONS=UNIT_OPTIONS,
+        HOUSING_OPTIONS=HOUSING_OPTIONS,
+        LEVEL_OPTIONS=LEVEL_OPTIONS
     )
 
 @residents_bp.route('/admin/residents/add', methods=['GET', 'POST'])

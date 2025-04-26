@@ -11,7 +11,7 @@ def dashboard():
     with get_db() as conn:
         c = conn.cursor()
         c.execute('''
-            SELECT s.mdoc, MAX(s.date || ' ' || s.time) as latest_time
+            SELECT s.mdoc, MAX(s.timestamp) as latest_time
             FROM scans s
             GROUP BY s.mdoc
         ''')
@@ -19,10 +19,10 @@ def dashboard():
         checked_in = []
         for mdoc, latest_time in latest_scans:
             c.execute('''
-                SELECT r.name, r.mdoc, r.unit, r.housing_unit, r.level, s.date, s.time, s.location
+                SELECT r.name, r.mdoc, r.unit, r.housing_unit, r.level, s.timestamp, s.location
                 FROM scans s
                 JOIN residents r ON s.mdoc = r.mdoc
-                WHERE s.mdoc = ? AND (s.date || ' ' || s.time) = ? AND s.status = 'In'
+                WHERE s.mdoc = ? AND s.timestamp = ? AND s.status = 'In'
             ''', (mdoc, latest_time))
             result = c.fetchone()
             if result:
@@ -33,15 +33,14 @@ def dashboard():
 @login_required
 def check_out():
     mdoc = request.form['mdoc']
-    date = request.form['date']
     location = request.form['location']
-    current_time = datetime.now().strftime('%H:%M:%S')
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO scans (mdoc, date, time, status, location) VALUES (?, ?, ?, ?, ?)",
-            (mdoc, date, current_time, "Out", location)
+            "INSERT INTO scans (mdoc, timestamp, status, location) VALUES (?, ?, ?, ?)",
+            (mdoc, current_timestamp, "Out", location)
         )
         conn.commit()
     

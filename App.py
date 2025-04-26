@@ -92,7 +92,56 @@ def health():
 # Custom datetime format filter for templates
 @app.template_filter('datetimeformat')
 def datetimeformat(value):
-    return datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f').strftime('%m-%d-%Y %I:%M %p')
+    """
+    Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%m-%d-%Y %I:%M %p'.
+
+    Args:
+        value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+    Returns:
+        A formatted string in the format 'MM-DD-YYYY HH:MM AM/PM'.
+    """
+    try:
+        return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%m-%d-%Y %I:%M %p')
+    except ValueError as e:
+        logging.error(f"Failed to parse datetime '{value}': {e}")
+        return value
+
+# Custom time format filter for templates
+@app.template_filter('timeformat')
+def timeformat(value):
+    """
+    Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%I:%M %p'.
+
+    Args:
+        value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+    Returns:
+        A formatted string in the format 'HH:MM AM/PM'.
+    """
+    try:
+        return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S')
+    except ValueError as e:
+        logging.error(f"Failed to parse time '{value}': {e}")
+        return value
+    
+# Custom date format filter for templates
+@app.template_filter('dateformat')
+def timeformat(value):
+    """
+    Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%I:%M %p'.
+
+    Args:
+        value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+    Returns:
+        A formatted string in the format 'HH:MM AM/PM'.
+    """
+    try:
+        return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%m-%d-%Y')
+    except ValueError as e:
+        logging.error(f"Failed to parse time '{value}': {e}")
+        return value
 
 # Error handlers
 @app.errorhandler(403)

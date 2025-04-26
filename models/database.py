@@ -68,8 +68,7 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS scans (
                     scanid INTEGER PRIMARY KEY AUTOINCREMENT,
                     mdoc TEXT NOT NULL,
-                    date DATE,
-                    time TIME,
+                    timestamp DATETIME,
                     status TEXT,
                     location TEXT
                 )
@@ -102,8 +101,7 @@ def init_db():
                 SELECT 
                     s.mdoc,
                     r.name,
-                    s.date,
-                    s.time,
+                    s.timestamp,
                     s.status,
                     s.location
                 FROM scans s

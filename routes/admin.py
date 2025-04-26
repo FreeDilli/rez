@@ -14,7 +14,7 @@ def admin_dashboard():
     c.execute("SELECT COUNT(*) FROM residents")
     total_residents = c.fetchone()[0]
 
-    c.execute("SELECT COUNT(*) FROM scans WHERE date = date('now')")
+    c.execute("SELECT COUNT(*) FROM scans WHERE DATE(timestamp) = date('now')")
     active_today = c.fetchone()[0]
 
     stats = {
