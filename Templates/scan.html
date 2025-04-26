@@ -4,7 +4,7 @@
 {% block content %}
 <h2 class="mb-4">Scanner</h2>
 
-<!-- 🔔 Flash Messages + Sound Feedback -->
+<!-- 🔔 Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     {% for category, message in messages %}
@@ -12,12 +12,6 @@
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-      <script>
-        const sound = new Audio(
-          "{{ url_for('static', filename='sounds/' + ('success.mp3' if category == 'success' else 'error.mp3')) }}"
-        );
-        sound.play();
-      </script>
     {% endfor %}
   {% endif %}
 {% endwith %}
@@ -29,7 +23,7 @@
 {% endif %}
 
 <!-- 🎯 Scan Form -->
-<form method="POST" action="{{ url_for('scan.scan') }}" autocomplete="off">
+<form method="POST" action="{{ url_for('scan.scan') }}" autocomplete="off" id="scan-form">
   <div class="mb-4">
     <label for="mdoc" class="form-label">Scan MDOC Barcode</label>
     <input type="text" id="mdoc" name="mdoc" class="form-control form-control-lg" autofocus required>
@@ -38,22 +32,6 @@
 </form>
 
 <!-- 👤 Last Scan Info (auto-refreshable) -->
-<div id="last-scan-section">
-  {% if last_scan %}
-  <hr class="my-5">
-  <h4>Last Scan</h4>
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title">{{ last_scan.name }} (MDOC: {{ last_scan.mdoc }})</h5>
-      <p class="card-text mb-1">Direction: <strong>{{ last_scan.direction }}</strong></p>
-      <p class="card-text mb-1">Location: {{ last_scan.location }}</p>
-      <p class="card-text">Timestamp: {{ last_scan.timestamp }}</p>
-    </div>
-  </div>
-  {% endif %}
-</div>
-
-<!-- 🔁 Auto-refresh & ⏱ Cooldown Logic -->
 <script>
   // Auto-refresh last scan every 10 seconds with animation
   setInterval(() => {
@@ -65,20 +43,27 @@
         section.classList.remove("fade-highlight");
         void section.offsetWidth; // Trigger reflow
         section.classList.add("fade-highlight");
-      });
+      })
+      .catch(err => console.error("Error refreshing last scan:", err));
   }, 10000);
-  // Cooldown on scan submission
-  const scanInput = document.getElementById("mdoc");
-  const scanButton = document.getElementById("scan-button");
-  if (scanInput && scanButton) {
-    document.querySelector("form").addEventListener("submit", () => {
-      scanInput.disabled = true;
-      scanButton.disabled = true;
-      setTimeout(() => {
-        scanInput.disabled = false;
-        scanInput.focus();
-        scanButton.disabled = false;
-      }, 3000);
+
+  // Prevent empty form submission
+  const scanForm = document.getElementById("scan-form");
+  if (scanForm) {
+    scanForm.addEventListener("submit", (event) => {
+      const scanInput = document.getElementById("mdoc");
+      if (!scanInput.value.trim()) {
+        event.preventDefault();
+        const alertDiv = document.createElement("div");
+        alertDiv.className = "alert alert-danger alert-dismissible fade show";
+        alertDiv.role = "alert";
+        alertDiv.innerHTML = `
+          Please enter a barcode.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector(".mb-4")?.before(alertDiv);
+        setTimeout(() => alertDiv.remove(), 5000);
+      }
     });
   }
 </script>
