@@ -51,6 +51,9 @@
           <a href="/admin/residents" class="btn btn-primary" aria-label="Manage Residents">Open</a>
           <a href="/admin/residents/import" class="btn btn-outline-secondary btn-sm mt-2" aria-label="Import Residents">Import Residents</a>
           <a href="/admin/residents/import/history" class="btn btn-outline-secondary btn-sm mt-1" aria-label="View Import History">View History</a>
+          <form action="/admin/residents/delete_all" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL residents? This action cannot be undone.');">
+            <button type="submit" class="btn btn-danger btn-sm mt-2" aria-label="Delete All Residents">Delete All Residents</button>
+          </form>
         </div>
       </div>
     </div>

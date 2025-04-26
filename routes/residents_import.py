@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 from routes.auth import login_required, role_required
 from utils.file_utils import allowed_file
-from utils.constants import CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS  # Import constants
+from utils.constants import CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
 
 # Setup logging
 setup_logging()
@@ -60,6 +60,15 @@ def upload_residents():
                 stats['failed'] += 1
                 messages.append(f"✘ Missing MDOC for row: {raw_row}")
                 continue
+
+            # Replace multiple phrases in housing_unit
+            housing_unit = row.get('housing_unit', '')
+            replacements = {
+                'women ctr': "Women's Center",
+                'swmrc': "smwrc"
+            }
+            if housing_unit in replacements:
+                row['housing_unit'] = replacements[housing_unit]
 
             csv_data[row['mdoc']] = row
 
