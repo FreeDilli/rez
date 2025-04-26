@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models.database import get_db
 from flask_login import login_required, current_user
 from utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
-from utils.file_utils import save_uploaded_file
+from routes.auth import role_required
 import sqlite3
 
 residents_bp = Blueprint('residents', __name__)
@@ -138,3 +138,18 @@ def add_resident():
         HOUSING_OPTIONS=HOUSING_OPTIONS,
         LEVEL_OPTIONS=LEVEL_OPTIONS
     )
+
+@residents_bp.route('/admin/residents/delete/<int:mdoc>', methods=['POST'], strict_slashes=False)
+@login_required
+@role_required('admin')
+def delete_resident(mdoc):
+    """Delete a resident by MDOC."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM residents WHERE mdoc = ?", (mdoc,))
+        if c.rowcount == 0:
+            flash("Resident not found.", "error")
+        else:
+            conn.commit()
+            flash("Resident deleted successfully.", "success")
+    return redirect(url_for('residents.residents'))
