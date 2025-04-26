@@ -92,6 +92,13 @@
 
             <ul class="nav flex-column">
                 {% if current_user.is_authenticated %}
+                {% if current_user.role in ['admin'] %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">
+                        Admin Dashboard
+                    </a>
+                </li>
+            {% endif %}
                     {% if current_user.role in ['admin', 'officer', 'scheduling', 'viewer'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/admin/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">
