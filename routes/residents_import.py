@@ -65,10 +65,15 @@ def upload_residents():
             housing_unit = row.get('housing_unit', '')
             replacements = {
                 'women ctr': "Women's Center",
-                'swmrc': "smwrc"
+                'a walk': "SMWRC",
+                'b walk': "SMWRC",
+                'c walk': "SMWRC",
+                'd walk': "SMWRC",
             }
-            if housing_unit in replacements:
-                row['housing_unit'] = replacements[housing_unit]
+            for key, value in replacements.items():
+                if housing_unit.lower() == key:
+                    row['housing_unit'] = value
+                    break
 
             csv_data[row['mdoc']] = row
 
