@@ -4,7 +4,10 @@ from flask_login import login_required, current_user
 from models.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.logging_config import setup_logging
-from utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
+from utils.constants import (
+    VALID_ROLES, MIN_PASSWORD_LENGTH, UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS,
+    IMPORT_HISTORY_TABLE_HEADERS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
+)
 from routes.auth import role_required
 import logging
 import sqlite3
@@ -59,7 +62,7 @@ def manage_users():
                     conn.commit()
                     logger.info(f"User '{username}' added successfully with role '{role}'")
                     flash(f"User '{username}' added successfully.", "success")
-                    log_audit_action(session.get('username'), "Added user", username, f"Role: {role}")
+                    log_audit_action(current_user.username, "Added user", username, f"Role: {role}")
             except sqlite3.IntegrityError as e:
                 if "UNIQUE constraint failed: users.username" in str(e):
                     logger.warning(f"Failed to add user '{username}': Username already exists")
@@ -146,17 +149,17 @@ def change_password():
 
         if not current_password or not new_password or not confirm_password:
             flash("All fields are required.", "danger")
-            return render_template('change_password.html')
+            return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
         if new_password != confirm_password:
             logger.warning(f"Password change failed for '{current_user.username}': Passwords do not match")
             flash("New passwords do not match.", "danger")
-            return render_template('change_password.html')
+            return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
         if len(new_password) < MIN_PASSWORD_LENGTH:
             logger.warning(f"Password change failed for '{current_user.username}': Password too short")
             flash(f"New password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
-            return render_template('change_password.html')
+            return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
         try:
             with get_db() as conn:
@@ -173,7 +176,7 @@ def change_password():
                 if not check_password_hash(user['password'], current_password):
                     logger.warning(f"Password change failed for '{current_user.username}': Incorrect current password")
                     flash("Current password is incorrect.", "danger")
-                    return render_template('change_password.html')
+                    return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
                 hashed_new_password = generate_password_hash(new_password)
                 c.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_new_password, current_user.username))
@@ -187,7 +190,7 @@ def change_password():
             logger.error(f"Database error changing password for '{current_user.username}': {str(e)}")
             flash("Database error changing password.", "danger")
 
-    return render_template('change_password.html')
+    return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
 @users_bp.route('/admin/users/reset/<username>', methods=['POST'])
 @login_required
@@ -238,4 +241,3 @@ def delete_user(username):
         logger.error(f"Database error deleting user '{username}': {str(e)}")
         flash("Database error deleting user.", "danger")
     return redirect(url_for('users.manage_users'))
-

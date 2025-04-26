@@ -34,18 +34,17 @@
     <div class="col-md-3">
       <label class="form-label">Time Block</label>
       <select name="block" class="form-select" required>
-        <option value="Morning">Morning</option>
-        <option value="Afternoon">Afternoon</option>
-        <option value="Evening">Evening</option>
+        {% for block in TIME_BLOCKS %}
+          <option value="{{ block }}">{{ block }}</option>
+        {% endfor %}
       </select>
     </div>
     <div class="col-md-3">
       <label class="form-label">Program</label>
       <select name="program" class="form-select" required>
-        <option value="Education">Education</option>
-        <option value="Work">Work</option>
-        <option value="Gym">Gym</option>
-        <option value="Other">Other</option>
+        {% for program in PROGRAMS %}
+          <option value="{{ program }}">{{ program }}</option>
+        {% endfor %}
       </select>
     </div>
     <div class="col-12 text-end">
@@ -103,8 +102,9 @@
 
         {% if current_user.role in ['admin', 'scheduling'] %}
         <td class="text-center">
-          <a href="{{ url_for('schedule.delete', id=entry.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this schedule entry?');">Remove</a>
-        </td>
+          <form action="{{ url_for('schedule.delete', id=entry.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove this schedule entry?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+          </form>        </td>
         {% endif %}
       </tr>
       {% else %}

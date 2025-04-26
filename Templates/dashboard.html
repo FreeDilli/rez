@@ -6,7 +6,7 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-4">Live Dashboard</h2>
-    <a href="{{ url_for('residents.residents') }}" class="btn btn-secondary">← Back to Admin</a>
+    <a href="{{ url_for('residents.residents') }}" class="btn btn-secondary" aria-label="Back to Admin">← Back to Admin</a>
   </div>
 
   {% if data %}
@@ -51,7 +51,7 @@
                     <input type="hidden" name="mdoc" value="{{ p[1] }}">
                     <input type="hidden" name="date" value="{{ p[5] }}">
                     <input type="hidden" name="location" value="{{ p[7] }}">
-                    <button type="submit" class="btn btn-sm btn-danger">Check Out</button>
+                    <button type="submit" class="btn btn-sm btn-danger" aria-label="Check out resident">Check Out</button>
                   </form>
                 </td>
               </tr>

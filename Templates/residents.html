@@ -9,9 +9,9 @@
     {{ label }}
     {% if current_sort == column_name %}
       {% if current_dir == 'asc' %}
-        &#9650;
+        ▲
       {% else %}
-        &#9660;
+        ▼
       {% endif %}
     {% endif %}
   </a>
@@ -45,7 +45,7 @@
       <tr>
         <th>{{ sort_link('name', 'Name') }}</th>
         <th>{{ sort_link('mdoc', 'MDOC') }}</th>
-        <th>Area</th>
+        <th>Unit</th>
         <th>Housing</th>
         <th>{{ sort_link('level', 'Level') }}</th>
         {% if current_user.role in ['admin', 'officer'] %}
@@ -58,13 +58,15 @@
       <tr>
         <td>{{ resident.name }}</td>
         <td>{{ resident.mdoc }}</td>
-        <td>{{ resident.area }}</td>
+        <td>{{ resident.unit }}</td>
         <td>{{ resident.housing_unit }}</td>
         <td>{{ resident.level }}</td>
         {% if current_user.role in ['admin', 'officer'] %}
         <td class="text-center">
           <a href="{{ url_for('residents_edit.edit_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-          <a href="{{ url_for('residents_delete.delete_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this resident?');">Delete</a>
+          <form action="{{ url_for('residents_delete.delete_resident', mdoc=resident.mdoc) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {{ resident.name }}?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete resident {{ resident.name }}">Delete</button>
+          </form>
         </td>
         {% endif %}
       </tr>

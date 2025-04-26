@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from routes.auth import login_required, role_required
 from utils.file_utils import allowed_file
+from utils.constants import CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS  # Import constants
 
 # Setup logging
 setup_logging()
@@ -18,7 +19,9 @@ residents_import_bp = Blueprint('residents_import', __name__)
 @login_required
 @role_required('admin')
 def import_residents():
-    return render_template('import_residents.html')
+    return render_template('import_residents.html', 
+                          CSV_REQUIRED_HEADERS=CSV_REQUIRED_HEADERS, 
+                          CSV_OPTIONAL_HEADERS=CSV_OPTIONAL_HEADERS)
 
 @residents_import_bp.route('/admin/residents/import/upload', methods=['POST'], strict_slashes=False)
 @login_required

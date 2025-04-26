@@ -11,7 +11,7 @@
             <th>Select</th>
             <th>MDOC</th>
             <th>Name</th>
-            <th>Area</th>
+            <th>Unit</th>
             <th>Housing</th>
             <th>Level</th>
           </tr>
@@ -36,4 +36,12 @@
     </div>
   </form>
 </div>
+<script>
+  document.querySelector('form').addEventListener('submit', (e) => {
+    if (!document.querySelector('input[name="assign[]"]:checked')) {
+      e.preventDefault();
+      alert('Please select at least one resident.');
+    }
+  });
+</script>
 {% endblock %}

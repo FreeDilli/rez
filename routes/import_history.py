@@ -5,6 +5,7 @@ import csv
 import io
 from datetime import datetime
 from utils.file_utils import allowed_file
+from utils.constants import IMPORT_HISTORY_TABLE_HEADERS  # Import constant
 
 import_history_bp = Blueprint('import_history', __name__)
 
@@ -20,7 +21,7 @@ def view_import_history():
             ORDER BY timestamp DESC
         ''')
         history = c.fetchall()
-    return render_template('import_history.html', history=history)
+    return render_template('import_history.html', history=history, IMPORT_HISTORY_TABLE_HEADERS=IMPORT_HISTORY_TABLE_HEADERS)
 
 @import_history_bp.route('/admin/residents/import/history/<int:id>/view', methods=['GET'], strict_slashes=False)
 @login_required
@@ -45,7 +46,9 @@ def view_import_snapshot(id):
             flash(f"Error reading CSV content: {str(e)}", "danger")
             return redirect(url_for('import_history.view_import_history'))
 
-        return render_template('import_snapshot.html', headers=headers, rows=rows, timestamp=row['timestamp'], user=row['username'])
+        return render_template('import_snapshot.html', headers=headers, rows=rows, 
+                              timestamp=row['timestamp'], user=row['username'], 
+                              IMPORT_HISTORY_TABLE_HEADERS=IMPORT_HISTORY_TABLE_HEADERS)
 
 @import_history_bp.route('/admin/residents/import/history/<int:id>/rollback', methods=['POST'], strict_slashes=False)
 @login_required
