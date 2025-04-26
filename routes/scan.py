@@ -65,11 +65,11 @@ def last_scan_partial():
         with get_db() as conn:
             c = conn.cursor()
             c.execute("""
-                SELECT s.mdoc, s.status AS direction, s.timestamp, r.name, l.name as location
+                SELECT s.mdoc, s.status AS direction, s.date || ' ' || s.time AS timestamp, r.name, l.name AS location
                 FROM scans s
                 LEFT JOIN residents r ON s.mdoc = r.mdoc
                 LEFT JOIN locations l ON s.location = l.prefix
-                ORDER BY s.timestamp DESC
+                ORDER BY s.date DESC, s.time DESC
                 LIMIT 1
             """)
             scan = c.fetchone()

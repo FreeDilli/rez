@@ -67,7 +67,7 @@ def init_db():
             c.execute('''
                 CREATE TABLE IF NOT EXISTS scans (
                     scanid INTEGER PRIMARY KEY AUTOINCREMENT,
-                    mdoc TEXT,
+                    mdoc TEXT NOT NULL,
                     date DATE,
                     time TIME,
                     status TEXT,
