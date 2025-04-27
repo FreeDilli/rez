@@ -7,8 +7,8 @@
   <h2 class="mb-4">Scan Log</h2>
   {% if current_user.role == 'admin' %}
     <div class="mb-4">
-    <a href="{{ url_for('scanlog_export.export_scanlog') }}" class="btn btn-primary">Export Scan Log</a>
-    <form action="{{ url_for('scanlog_delete.delete_scanlog') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete the scan log?');">
+    <a href="{{ url_for('scanlog.export_scanlog') }}" class="btn btn-primary">Export Scan Log</a>
+    <form action="{{ url_for('scanlog.delete_scanlog') }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete the scan log?');">
       <button type="submit" class="btn btn-danger">Delete Scan Log</button>
     </form>
   </div>
