@@ -5,7 +5,7 @@ class User(UserMixin):
     def __init__(self, id, username, password, role):
         self.id = id
         self.username = username
-        self.password = password
+        self.password = password  # ✅ ADD this line
         self.role = role
 
     def get_id(self):
@@ -14,20 +14,19 @@ class User(UserMixin):
     @staticmethod
     def get(user_id):
         db = get_db()
-        c = db.cursor()
-        c.execute('SELECT id, username, password, role FROM users WHERE id = ?', (user_id,))
-        user = c.fetchone()
+        cursor = db.cursor()
+        cursor.execute("SELECT id, username, password, role FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
         if user:
-            return User(user['id'], user['username'], user['password'], user['role'])
+            return User(id=user['id'], username=user['username'], password=user['password'], role=user['role'])
         return None
 
     @staticmethod
     def get_by_username(username):
         db = get_db()
-        c = db.cursor()
-        c.execute('SELECT id, username, password, role FROM users WHERE username = ?', (username,))
-        user = c.fetchone()
+        cursor = db.cursor()
+        cursor.execute("SELECT id, username, password, role FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
         if user:
-            return User(user['id'], user['username'], user['password'], user['role'])
+            return User(id=user['id'], username=user['username'], password=user['password'], role=user['role'])
         return None
-
