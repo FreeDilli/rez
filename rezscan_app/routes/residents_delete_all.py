@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, flash
 from flask_login import current_user  # Import from flask_login
-from models.database import get_db
-from routes.auth import login_required, role_required
+from rezscan_app.models.database import get_db
+from rezscan_app.routes.auth import login_required, role_required
 import logging
 
 residents_delete_all_bp = Blueprint('residents_delete_all', __name__)

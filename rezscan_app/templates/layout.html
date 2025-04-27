@@ -92,20 +92,22 @@
 
             <ul class="nav flex-column">
                 {% if current_user.is_authenticated %}
-                {% if current_user.role in ['admin'] %}
-                <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">
-                        Admin Dashboard
-                    </a>
-                </li>
-            {% endif %}
+                    {% if current_user.role in ['admin'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+                                Admin Dashboard
+                            </a>
+                        </li>
+                    {% endif %}
+
                     {% if current_user.role in ['admin', 'officer', 'scheduling', 'viewer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">
+                            <a class="nav-link {% if request.path.startswith('/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">
                                 Residents
                             </a>
                         </li>
                     {% endif %}
+
                     {% if current_user.role in ['admin', 'officer', 'scheduling'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">
@@ -113,25 +115,23 @@
                             </a>
                         </li>
                     {% endif %}
+
                     {% if current_user.role in ['admin', 'officer', 'scheduling', 'viewer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">
+                            <a class="nav-link {% if request.path.startswith('/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">
                                 Scan History
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
-                                Dashboard
-                            </a>
-                        </li>
                     {% endif %}
+
                     {% if current_user.role in ['admin', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">
+                            <a class="nav-link {% if request.path.startswith('/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">
                                 Scheduling
                             </a>
                         </li>
                     {% endif %}
+
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">
@@ -216,7 +216,6 @@
             const next = current === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-bs-theme', next);
             localStorage.setItem('theme', next);
-            document.cookie = `theme=${next};path=/;max-age=31536000`;
             const toggle = document.querySelector('.theme-toggle');
             toggle.textContent = '🌙 / ☀️';
         }

@@ -1,14 +1,14 @@
 # routes/users.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models.database import get_db
+from rezscan_app.models.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
-from utils.logging_config import setup_logging
-from utils.constants import (
+from rezscan_app.utils.logging_config import setup_logging
+from rezscan_app.utils.constants import (
     VALID_ROLES, MIN_PASSWORD_LENGTH, UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS,
     IMPORT_HISTORY_TABLE_HEADERS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
 )
-from routes.auth import role_required
+from rezscan_app.routes.auth import role_required
 import logging
 import sqlite3
 

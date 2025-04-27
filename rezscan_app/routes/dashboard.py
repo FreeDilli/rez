@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from models.database import get_db
-from routes.auth import login_required
+from rezscan_app.models.database import get_db
+from rezscan_app.routes.auth import login_required
 from datetime import datetime
 
 dashboard_bp = Blueprint('dashboard', __name__)

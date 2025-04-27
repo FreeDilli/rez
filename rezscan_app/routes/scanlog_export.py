@@ -1,8 +1,8 @@
 from flask import Blueprint, send_file
-from models.database import get_db
+from rezscan_app.models.database import get_db
 import csv
 import io
-from routes.auth import login_required, role_required
+from rezscan_app.routes.auth import login_required, role_required
 
 scanlog_export_bp = Blueprint('scanlog_export', __name__)
 

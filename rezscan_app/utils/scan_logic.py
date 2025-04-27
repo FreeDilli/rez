@@ -2,8 +2,8 @@ import sqlite3
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
-from config import Config
-from utils.logging_config import setup_logging
+from rezscan_app.config import Config
+from rezscan_app.utils.logging_config import setup_logging
 
 # Configure logging
 setup_logging()

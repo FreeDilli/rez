@@ -3,11 +3,11 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from functools import wraps
-from utils.logging_config import setup_logging
+from rezscan_app.utils.logging_config import setup_logging
 from utils.constants import ROLE_REDIRECTS
-from models.database import get_db
-from models.User import User
-from utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
+from rezscan_app.models.database import get_db
+from rezscan_app.models.User import User
+from rezscan_app.utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
 import logging
 from datetime import datetime
 import sqlite3
@@ -62,36 +62,36 @@ def login():
             return render_template('login.html')
 
         try:
-            with get_db() as db:
-                cursor = db.execute("SELECT id, username, password, role FROM users WHERE username = ?", (username,))
-                user_data = cursor.fetchone()
+            user = User.get_by_username(username)
 
-                if user_data and check_password_hash(user_data['password'], password):
-                    user_obj = User(id=user_data['id'], username=user_data['username'], role=user_data['role'])
-                    login_user(user_obj)
+            if user and user.password and check_password_hash(user.password, password):
+                login_user(user)
 
+                with get_db() as db:
                     db.execute("UPDATE users SET last_login = ? WHERE username = ?", (datetime.utcnow(), username))
                     db.execute(
                         'INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)',
-                        (username, 'login_success', 'login', f'Successful login, role: {user_data["role"]}')
+                        (username, 'login_success', 'login', f'Successful login, role: {user.role}')
                     )
                     db.commit()
 
-                    flash("Login successful!", "success")
-                    logger.info(f"Successful login for username: {username}, role: {user_data['role']}")
+                flash("Login successful!", "success")
+                logger.info(f"Successful login for username: {username}, role: {user.role}")
                     # Redirect based on user role
                     redirect_endpoint = ROLE_REDIRECTS.get(user_data['role'], 'dashboard.dashboard')  # Fallback to default
-                    return redirect(url_for(redirect_endpoint))
-                else:
-                    flash("Invalid username or password", "danger")
-                    _log_audit(username, 'login_failed', 'Invalid username or password')
+                return redirect(url_for(redirect_endpoint))
+            else:
+                flash("Invalid username or password", "danger")
+                _log_audit(username, 'login_failed', 'Invalid username or password')
 
         except sqlite3.Error as e:
             flash("Database error. Please try again later.", "danger")
             logger.error(f"Database error during login for username {username}: {str(e)}")
-            _log_audit(username or 'Unknown', 'login_failed', f'Database error: {str(e)}')
+            _log_audit(username or 'Unknown', 'login_failed', f"Database error: {str(e)}")
+
 
     return render_template('login.html')
+
 
 @auth_bp.route('/logout')
 @login_required

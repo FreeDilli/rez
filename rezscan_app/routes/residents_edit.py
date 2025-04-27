@@ -1,12 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models.database import get_db
+from rezscan_app.models.database import get_db
 import sqlite3
-from routes.auth import login_required, role_required
-from utils.constants import (
+from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.utils.constants import (
     UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS, VALID_ROLES, MIN_PASSWORD_LENGTH,
     IMPORT_HISTORY_TABLE_HEADERS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
 )
-from utils.file_utils import save_uploaded_file
+from rezscan_app.utils.file_utils import save_uploaded_file
 
 residents_edit_bp = Blueprint('residents_edit', __name__)
 

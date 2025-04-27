@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, flash
-from models.database import get_db
-from routes.auth import login_required
+from rezscan_app.models.database import get_db
+from rezscan_app.routes.auth import login_required
 import sqlite3
-from utils.constants import LOCATION_TYPES  # Import the constant
+from rezscan_app.utils.constants import LOCATION_TYPES  # Import the constant
 
 locations_bp = Blueprint('locations', __name__)
 

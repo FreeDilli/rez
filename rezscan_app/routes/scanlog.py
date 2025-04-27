@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
-from models.database import get_db
-from routes.auth import login_required
-from utils.logging_config import setup_logging
+from rezscan_app.models.database import get_db
+from rezscan_app.routes.auth import login_required
+from rezscan_app.utils.logging_config import setup_logging
 import logging
 
 # Setup logging

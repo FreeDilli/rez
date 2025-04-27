@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models.database import get_db
+from rezscan_app.models.database import get_db
 from flask_login import login_required, current_user
-from utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
-from routes.auth import role_required
+from rezscan_app.utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
+from rezscan_app.routes.auth import role_required
 import sqlite3
 
 residents_bp = Blueprint('residents', __name__)

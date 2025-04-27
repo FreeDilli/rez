@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, abort, redirect, url_for, flash, g
-from models.database import get_db
-from routes.auth import login_required, role_required
+from rezscan_app.models.database import get_db
+from rezscan_app.routes.auth import login_required, role_required
 import csv
 import io
 from datetime import datetime
-from utils.file_utils import allowed_file
-from utils.constants import IMPORT_HISTORY_TABLE_HEADERS  # Import constant
+from rezscan_app.utils.file_utils import allowed_file
+from rezscan_app.utils.constants import IMPORT_HISTORY_TABLE_HEADERS  # Import constant
 
 import_history_bp = Blueprint('import_history', __name__)
 

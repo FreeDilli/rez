@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, flash
 from flask_login import login_required, current_user
-from utils.logging_config import setup_logging
-from utils.scan_logic import process_scan
-from models.database import get_db
+from rezscan_app.utils.logging_config import setup_logging
+from rezscan_app.utils.scan_logic import process_scan
+from rezscan_app.models.database import get_db
 import logging
 
 setup_logging()
