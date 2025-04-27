@@ -42,4 +42,4 @@ ROLE_REDIRECTS = {
 }
 
 DATEFORMAT = '%m-%d-%Y'  # Matches dateformat filter output
-TIMEFORMAT = '%I:%M %p'  # Matches timeformat filter output
+TIMEFORMAT = '%H:%M:%S'  # Matches timeformat filter output

@@ -79,7 +79,7 @@ def create_app(config_class=None):
             A formatted string in the format 'HH:MM AM/PM'.
         """
         try:
-            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%I:%M %p')
+            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S')
         except ValueError as e:
             logger.error(f"Failed to parse time '{value}': {e}")
             return value
