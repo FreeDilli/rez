@@ -7,6 +7,7 @@ import importlib.util
 import sys
 from pathlib import Path
 import logging
+from datetime import datetime
 
 load_dotenv()
 
@@ -49,24 +50,55 @@ def create_app(config_class=None):
         raise
 
     # Register Jinja2 filters
-    @app.template_filter('timeformat')
-    def timeformat_filter(value):
+    @app.template_filter('datetimeformat')
+    def datetimeformat(value):
+        """
+        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%m-%d-%Y %I:%M %p'.
+
+        Args:
+            value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+        Returns:
+            A formatted string in the format 'MM-DD-YYYY HH:MM AM/PM'.
+        """
         try:
-            result = value.strftime('%I:%M %p') if value else ''
-            logger.debug(f"Formatted time: {value} -> {result}")
-            return result
-        except Exception as e:
-            logger.error(f"Error in timeformat filter: {str(e)}")
+            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%m-%d-%Y %I:%M %p')
+        except ValueError as e:
+            logger.error(f"Failed to parse datetime '{value}': {e}")
             return value
 
-    @app.template_filter('dateformat')
-    def dateformat_filter(value):
+    @app.template_filter('timeformat')
+    def timeformat(value):
+        """
+        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%I:%M %p'.
+
+        Args:
+            value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+        Returns:
+            A formatted string in the format 'HH:MM AM/PM'.
+        """
         try:
-            result = value.strftime('%m/%d/%Y') if value else ''
-            logger.debug(f"Formatted date: {value} -> {result}")
-            return result
-        except Exception as e:
-            logger.error(f"Error in dateformat filter: {str(e)}")
+            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%I:%M %p')
+        except ValueError as e:
+            logger.error(f"Failed to parse time '{value}': {e}")
+            return value
+    
+    @app.template_filter('dateformat')
+    def dateformat(value):
+        """
+        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%m-%d-%Y'.
+
+        Args:
+            value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+        Returns:
+            A formatted string in the format 'MM-DD-YYYY'.
+        """
+        try:
+            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%m-%d-%Y')
+        except ValueError as e:
+            logger.error(f"Failed to parse date '{value}': {e}")
             return value
 
     # Initialize Database
