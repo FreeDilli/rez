@@ -36,9 +36,9 @@ CSV_OPTIONAL_HEADERS = ['photo']
 
 ROLE_REDIRECTS = {
     'admin': 'admin.admin_dashboard',
-    'viewer': 'dashboard.dashboard',
-    'manager': 'manager.overview',
-    # Add other roles as needed
+    'officer': 'user_dashboard.dashboard',
+    'viewer': 'user_dashboard.dashboard',
+    'scheduling': 'user_dashboard.dashboard',
 }
 
 DATEFORMAT = '%m-%d-%Y'  # Matches dateformat filter output
