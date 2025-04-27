@@ -1,46 +1,26 @@
-{% extends 'layout.html' %}
-
+{% extends "layout.html" %}
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 500px; width: 90%; padding: 0 15px;">
-  <h2 class="mb-4 text-center">Login</h2>
+<div class="container mt-5" style="max-width: 400px;">
+    <h2 class="text-center mb-4">🔒 Login</h2>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+    <form method="POST">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" id="username" name="username" class="form-control" placeholder="Enter username" required>
+        </div>
 
-  <form method="POST" action="{{ url_for('auth.login') }}" class="d-grid gap-3">
-    <div>
-      <label for="username" class="form-label">Username</label>
-      <input 
-        type="text" 
-        class="form-control" 
-        id="username" 
-        name="username" 
-        placeholder="Enter your username" 
-        required
-        autofocus
-      >
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <small>© 2025 RezScan - Internal Use Only</small>
     </div>
-    <div>
-      <label for="password" class="form-label">Password</label>
-      <input 
-        type="password" 
-        class="form-control" 
-        id="password" 
-        name="password" 
-        placeholder="Enter your password" 
-        required
-      >
-    </div>
-    <button type="submit" class="btn btn-primary w-100">
-      Login
-    </button>
-  </form>
 </div>
 {% endblock %}

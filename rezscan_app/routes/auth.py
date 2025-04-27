@@ -111,10 +111,8 @@ def login():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    username = current_user.username
-    logger.debug(f"User {username} accessing /logout route")
-    log_audit_action(username, 'logout', 'logout', 'User logged out')
-    logger.info(f"User {username} logged out")
+    logger.debug("Accessing /logout route")
+    logger.info(f"User {current_user.username} logged out")
     logout_user()
     flash("Logged out successfully.", "info")
     return redirect(url_for('auth.login'))

@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}My Account{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>👤 My Account</h2>
+
+    <form method="POST" class="mt-4">
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Role</label>
+            <input type="text" class="form-control" value="{{ user.role | capitalize }}" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label for="theme" class="form-label">Theme Preference</label>
+            <select class="form-select" id="theme" name="theme">
+                <option value="dark" {% if user.theme == 'dark' %}selected{% endif %}>Dark</option>
+                <option value="light" {% if user.theme == 'light' %}selected{% endif %}>Light</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="new_password" class="form-label">Change Password</label>
+            <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Leave blank to keep current password">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Account</button>
+    </form>
+</div>
+{% endblock %}
