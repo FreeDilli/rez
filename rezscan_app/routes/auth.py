@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from functools import wraps
 from rezscan_app.utils.logging_config import setup_logging
-from rezscan_app.utils.constants import ROLE_REDIRECTS, VALID_ROLES, MIN_PASSWORD_LENGTH
+from rezscan_app.utils.constants import ROLE_REDIRECTS, MIN_PASSWORD_LENGTH
 from rezscan_app.models.database import get_db
 from rezscan_app.models.User import User
 import logging

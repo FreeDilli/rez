@@ -4,8 +4,7 @@ from rezscan_app.models.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.utils.constants import (
-    VALID_ROLES, MIN_PASSWORD_LENGTH, UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS,
-    IMPORT_HISTORY_TABLE_HEADERS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
+    VALID_ROLES, MIN_PASSWORD_LENGTH
 )
 from rezscan_app.routes.auth import role_required
 import logging

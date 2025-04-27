@@ -163,6 +163,7 @@ def edit_schedule(group_id):
 
 @schedules_bp.route('/<int:group_id>/delete')
 @login_required
+@role_required('admin')
 def delete_schedule(group_id):
     try:
         with get_db() as db:
