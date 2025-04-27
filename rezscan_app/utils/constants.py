@@ -33,3 +33,10 @@ IMPORT_HISTORY_TABLE_HEADERS = [
 # CSV Import Headers
 CSV_REQUIRED_HEADERS = ['mdoc', 'name', 'unit', 'housing_unit', 'level']
 CSV_OPTIONAL_HEADERS = ['photo']
+
+ROLE_REDIRECTS = {
+    'admin': 'admin.admin_dashboard',
+    'viewer': 'dashboard.dashboard',
+    'manager': 'manager.overview',
+    # Add other roles as needed
+}
