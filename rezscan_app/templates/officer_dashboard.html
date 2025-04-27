@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block title %}Officer Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">👮 Officer Dashboard</h2>
+
+  <!-- Quick Stats -->
+  <div class="row mb-4 g-3">
+    <div class="col-sm-6 col-md-4">
+      <div class="card border-primary text-center">
+        <div class="card-body">
+          <h6 class="card-title" title="Residents currently checked in">📍 Checked In Now</h6>
+          <h3 class="fw-bold text-primary">{{ stats.checked_in }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="card border-success text-center">
+        <div class="card-body">
+          <h6 class="card-title" title="Scans performed today">🕒 Scans Today</h6>
+          <h3 class="fw-bold text-success">{{ stats.scans_today }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="card border-info text-center">
+        <div class="card-body">
+          <h6 class="card-title" title="Top active location today">🏢 Top Location</h6>
+          <h3 class="fw-bold text-info">{{ stats.top_location or '—' }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="col">
+      <div class="card h-100 shadow-sm border-primary">
+        <div class="card-body text-center">
+          <h5 class="card-title">🔎 Scan Residents</h5>
+          <p class="card-text">Access the scanner to check residents in and out.</p>
+          <a href="{{ url_for('scan.scan') }}" class="btn btn-primary">Open Scanner</a>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 shadow-sm border-primary">
+        <div class="card-body text-center">
+          <h5 class="card-title">📋 View Scan Log</h5>
+          <p class="card-text">Review recent scan activity and statuses.</p>
+          <a href="{{ url_for('scanlog.scanlog') }}" class="btn btn-primary">View Logs</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

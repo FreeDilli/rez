@@ -1,13 +1,11 @@
-# routes/auth.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from functools import wraps
 from rezscan_app.utils.logging_config import setup_logging
-from utils.constants import ROLE_REDIRECTS
+from rezscan_app.utils.constants import ROLE_REDIRECTS, VALID_ROLES, MIN_PASSWORD_LENGTH
 from rezscan_app.models.database import get_db
 from rezscan_app.models.User import User
-from rezscan_app.utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
 import logging
 from datetime import datetime
 import sqlite3
@@ -77,8 +75,9 @@ def login():
 
                 flash("Login successful!", "success")
                 logger.info(f"Successful login for username: {username}, role: {user.role}")
-                    # Redirect based on user role
-                    redirect_endpoint = ROLE_REDIRECTS.get(user_data['role'], 'dashboard.dashboard')  # Fallback to default
+
+                # Redirect based on user role
+                redirect_endpoint = ROLE_REDIRECTS.get(user.role, 'dashboard.dashboard')
                 return redirect(url_for(redirect_endpoint))
             else:
                 flash("Invalid username or password", "danger")
@@ -89,9 +88,7 @@ def login():
             logger.error(f"Database error during login for username {username}: {str(e)}")
             _log_audit(username or 'Unknown', 'login_failed', f"Database error: {str(e)}")
 
-
     return render_template('login.html')
-
 
 @auth_bp.route('/logout')
 @login_required
