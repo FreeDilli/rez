@@ -40,3 +40,6 @@ ROLE_REDIRECTS = {
     'manager': 'manager.overview',
     # Add other roles as needed
 }
+
+DATEFORMAT = '%m-%d-%Y'  # Matches dateformat filter output
+TIMEFORMAT = '%I:%M %p'  # Matches timeformat filter output
