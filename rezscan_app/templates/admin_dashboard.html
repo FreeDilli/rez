@@ -45,65 +45,85 @@
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     <div class="col">
       <div class="card h-100 shadow border-primary">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">📋 Manage Residents</h5>
-          <p class="card-text">Add, update, or import resident data.</p>
-          <a href="/admin/residents" class="btn btn-primary" aria-label="Manage Residents">Open</a>
-          <a href="/admin/residents/import" class="btn btn-outline-secondary btn-sm mt-2" aria-label="Import Residents">Import Residents</a>
-          <a href="/admin/residents/import/history" class="btn btn-outline-secondary btn-sm mt-1" aria-label="View Import History">View History</a>
-          <form action="/admin/residents/delete_all" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL residents? This action cannot be undone.');">
-            <button type="submit" class="btn btn-danger btn-sm mt-2" aria-label="Delete All Residents">Delete All Residents</button>
-          </form>
+          <p class="card-text mb-3">Add, update, or import resident data.</p>
+          <div class="mt-auto">
+            <a href="/admin/residents" class="btn btn-primary btn-sm w-100 mb-2" aria-label="View Residents">View Residents</a>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="/admin/residents/import" class="btn btn-outline-info btn-sm flex-grow-1" aria-label="Import Residents">Import Residents</a>
+              <a href="/admin/residents/import/history" class="btn btn-outline-info btn-sm flex-grow-1" aria-label="Import History">Import History</a>
+            </div>
+            <form action="/admin/residents/delete_all" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL residents? This action cannot be undone.');" class="mt-2">
+              <button type="submit" class="btn btn-outline-danger btn-sm w-100" aria-label="Delete All Residents">Delete All Residents</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col">
       <div class="card h-100 shadow border-primary">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">🧾 Scan Logs</h5>
-          <p class="card-text">View recent scan activity and export data.</p>
-          <a href="/admin/scanlog" class="btn btn-primary" aria-label="View Scan Logs">View Logs</a>
+          <p class="card-text mb-3">View recent scan activity and export data.</p>
+          <div class="mt-auto">
+            <a href="{{ url_for('scanlog.scanlog') }}" class="btn btn-primary btn-sm w-100 mb-2" aria-label="View Scan Logs">View Logs</a>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{{ url_for('scanlog.export_scanlog') }}" class="btn btn-outline-info btn-sm flex-grow-1" aria-label="Export Scan Logs">Export Scan Logs</a>
+              <form action="{{ url_for('scanlog.delete_scanlog') }}" method="post" onsubmit="return confirm('Are you sure you want to delete the scan log?');" class="flex-grow-1">
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100" aria-label="Delete Scan Logs">Delete Scan Logs</button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col">
       <div class="card h-100 shadow border-primary">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">🏠 Locations</h5>
-          <p class="card-text">Add or edit scan locations by area or unit.</p>
-          <a href="/admin/locations" class="btn btn-primary" aria-label="Manage Locations">Manage</a>
+          <p class="card-text mb-3">Add or edit scan locations by area or unit.</p>
+          <div class="mt-auto">
+            <a href="/admin/locations" class="btn btn-primary btn-sm w-100" aria-label="Manage Locations">Manage</a>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col">
       <div class="card h-100 shadow border-primary">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">📆 Scheduling</h5>
-          <p class="card-text">Manage schedule groups, blocks, and assignments.</p>
-          <a href="/admin/schedules" class="btn btn-primary" aria-label="Manage Scheduling">Manage</a>
+          <p class="card-text mb-3">Manage schedule groups, blocks, and assignments.</p>
+          <div class="mt-auto">
+            <a href="/admin/schedules" class="btn btn-primary btn-sm w-100" aria-label="Manage Scheduling">Manage</a>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col">
       <div class="card h-100 shadow border-primary">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">👥 User Management</h5>
-          <p class="card-text">Add or manage admin and viewer accounts.</p>
-          <a href="/admin/users" class="btn btn-primary" aria-label="Manage Users">Manage Users</a>
+          <p class="card-text mb-3">Add or manage admin and viewer accounts.</p>
+          <div class="mt-auto">
+            <a href="/admin/users" class="btn btn-primary btn-sm w-100" aria-label="Manage Users">Manage Users</a>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col">
       <div class="card h-100 shadow border-primary">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
           <h5 class="card-title">📅 Live Schedule</h5>
-          <p class="card-text">See which groups are active right now.</p>
-          <a href="/admin/schedules" class="btn btn-primary" aria-label="View Live Schedule">View Schedule</a>
+          <p class="card-text mb-3">See which groups are active right now.</p>
+          <div class="mt-auto">
+            <a href="/admin/schedules" class="btn btn-primary btn-sm w-100" aria-label="View Live Schedule">View Schedule</a>
+          </div>
         </div>
       </div>
     </div>

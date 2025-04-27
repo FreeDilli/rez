@@ -4,22 +4,39 @@ from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.utils.scan_logic import process_scan
 from rezscan_app.models.database import get_db
 import logging
+import sqlite3
 
+# Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 scan_bp = Blueprint('scan', __name__)
 
+def log_audit_action(username, action, target, details=None):
+    """Insert an audit log entry into the audit_log table."""
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(
+                'INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)',
+                (username, action, target, details)
+            )
+            conn.commit()
+            logger.debug(f"Audit log created: {username} - {action} - {target}")
+    except sqlite3.Error as e:
+        logger.error(f"Failed to log audit action for {username}: {str(e)}")
+
 @scan_bp.route('/scan', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 def scan():
-    logger.debug(f"Accessing /scan route with method: {request.method}")
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /scan route with method: {request.method}")
     logger.debug(f"Request headers: {request.headers}")
     logger.debug(f"Request referrer: {request.referrer}")
 
     clear_input = False
     if request.method == 'POST':
-        logger.debug(f"Form data received: {request.form}")
+        logger.debug(f"User {username} submitted form data: {request.form}")
         logger.debug(f"Raw POST data: {request.data}")
 
         raw_input = None
@@ -28,39 +45,78 @@ def scan():
         elif request.data:
             try:
                 raw_input = request.data.decode('utf-8').strip()
-                logger.debug(f"Raw POST data received: {raw_input}")
+                logger.debug(f"User {username} submitted raw POST data: {raw_input}")
             except Exception as e:
-                logger.error(f"Error decoding raw POST data: {e}")
+                logger.error(f"Error decoding raw POST data for user {username}: {str(e)}")
+                log_audit_action(
+                    username=username,
+                    action='error',
+                    target='scan',
+                    details=f"Error decoding POST data: {str(e)}"
+                )
                 flash("Invalid POST data received.", "danger")
                 return render_template('scan.html')
 
         if not raw_input:
-            logger.warning("No MDOC provided in scan form or POST body.")
+            logger.warning(f"User {username} submitted scan with no MDOC")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details='No MDOC provided'
+            )
             flash("No barcode scanned.", "danger")
             return render_template('scan.html')
 
         if '-' not in raw_input:
-            logger.warning("Invalid scan format. Expected format: PREFIX-MDOC")
+            logger.warning(f"User {username} submitted invalid scan format: {raw_input}")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details='Invalid scan format (missing prefix-MDOC separator)'
+            )
             flash("Invalid scan format. Expected format: PREFIX-MDOC", "danger")
             return render_template('scan.html')
 
         prefix, mdoc = raw_input.split('-', 1)
-        logger.debug(f"Parsed prefix: {prefix}, mdoc: {mdoc}")
+        logger.debug(f"User {username} parsed prefix: {prefix}, mdoc: {mdoc}")
 
         try:
             message = process_scan(mdoc.strip(), prefix.strip().upper())
-            logger.info(f"Successfully processed scan for mdoc: {mdoc}")
+            logger.info(f"User {username} successfully processed scan for MDOC: {mdoc}")
+            log_audit_action(
+                username=username,
+                action='scan',
+                target='scan',
+                details=f"Processed scan for MDOC: {mdoc}, Prefix: {prefix}"
+            )
             flash(message, "success")
             clear_input = True
         except Exception as e:
-            logger.error(f"Error processing scan for mdoc {mdoc}: {str(e)}")
+            logger.error(f"Error processing scan for MDOC {mdoc} by user {username}: {str(e)}")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details=f"Error processing scan for MDOC {mdoc}: {str(e)}"
+            )
             flash(f"Error processing scan: {str(e)}", "danger")
 
+    log_audit_action(
+        username=username,
+        action='view',
+        target='scan',
+        details='Accessed scan page'
+    )
     return render_template('scan.html', clear_input=clear_input)
 
 @scan_bp.route('/_last_scan_partial')
 @login_required
 def last_scan_partial():
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /_last_scan_partial route")
+    
     try:
         with get_db() as conn:
             c = conn.cursor()
@@ -73,8 +129,21 @@ def last_scan_partial():
                 LIMIT 1
             """)
             scan = c.fetchone()
-    except Exception as e:
-        logger.error(f"Error fetching last scan: {e}")
+            logger.debug(f"User {username} fetched last scan: {'found' if scan else 'none'}")
+            log_audit_action(
+                username=username,
+                action='view',
+                target='last_scan_partial',
+                details=f"Fetched last scan: {'found' if scan else 'none'}"
+            )
+    except sqlite3.Error as e:
+        logger.error(f"Error fetching last scan for user {username}: {str(e)}")
+        log_audit_action(
+            username=username,
+            action='error',
+            target='last_scan_partial',
+            details=f"Database error fetching last scan: {str(e)}"
+        )
         scan = None
 
     return render_template('partials/_last_scan_partial.html', last_scan=scan)
