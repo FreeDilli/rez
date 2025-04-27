@@ -87,7 +87,7 @@
           <td>{{ resident.level }}</td>
           {% if current_user.role in ['admin', 'officer'] %}
             <td class="text-center">
-              <a href="{{ url_for('residents_edit.edit_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+              <a href="{{ url_for('residents.edit_resident', mdoc=resident.mdoc) }}" class="btn btn-sm btn-outline-primary">Edit</a>
               <form action="{{ url_for('residents.delete_resident', mdoc=resident.mdoc) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {{ resident.name }}?');">
                 <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete resident {{ resident.name }}">Delete</button>
               </form>
