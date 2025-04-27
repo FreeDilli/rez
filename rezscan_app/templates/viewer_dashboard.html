@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Viewer Dashboard - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+  <h2 class="mb-4">👋 Welcome, {{ current_user.username }}!</h2>
+  <p class="lead mb-5">Ready to scan residents in and out?</p>
+
+  <div class="d-grid gap-3 col-6 mx-auto">
+    <a href="{{ url_for('scan.scan') }}" class="btn btn-primary btn-lg" aria-label="Go to Scanner">
+      🚀 Go to Scanner
+    </a>
+    <a href="{{ url_for('scanlog.scanlog') }}" class="btn btn-outline-secondary btn-lg" aria-label="View Scan History">
+      📄 View Scan History
+    </a>
+  </div>
+</div>
+{% endblock %}
