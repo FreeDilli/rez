@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, g
 from flask_login import login_required, current_user
 from rezscan_app.models.database import get_db
 from rezscan_app.routes.auth import login_required, role_required
-from rezscan_app.utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS
-from rezscan_app.utils.file_utils import save_uploaded_file
+from rezscan_app.utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
+from rezscan_app.utils.file_utils import save_uploaded_file, allowed_file
 from rezscan_app.utils.logging_config import setup_logging
+from datetime import datetime
 import sqlite3
 import logging
 import csv
@@ -414,17 +415,296 @@ def delete_all_residents():
     
     return redirect(url_for('residents.residents'))
 
-@residents_bp.route('/admin/residents/export')
+@residents_bp.route('/admin/residents/export', strict_slashes=False)
 @login_required
 @role_required('admin')
 def export_residents():
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(['ID', 'Name', 'MDOC', 'Unit', 'Housing Unit', 'Level', 'Photo'])
-    db = get_db()
-    c = db.cursor()
-    c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")
-    for row in c.fetchall():
-        writer.writerow(row)
-    output.seek(0)
-    return send_file(io.BytesIO(output.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='residents.csv')
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /admin/residents/export route")
+    
+    try:
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', 'Name', 'MDOC', 'Unit', 'Housing Unit', 'Level', 'Photo'])
+        
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents ORDER BY name")
+            rows = c.fetchall()
+            
+            for row in rows:
+                writer.writerow(row)
+            
+            logger.info(f"User {username} exported {len(rows)} resident records to CSV")
+            log_audit_action(
+                username=username,
+                action='export',
+                target='residents',
+                details=f"Exported {len(rows)} resident records to CSV"
+            )
+        
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode()),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='residents.csv'
+        )
+    
+    except sqlite3.Error as e:
+        logger.error(f"Database error for user {username} during resident export: {str(e)}")
+        log_audit_action(
+            username=username,
+            action='error',
+            target='residents_export',
+            details=f"Database error during export: {str(e)}"
+        )
+        flash("Error exporting residents.", "error")
+        return redirect(url_for('residents.residents'))
+    except Exception as e:
+        logger.error(f"Unexpected error for user {username} during resident export: {str(e)}")
+        log_audit_action(
+            username=username,
+            action='error',
+            target='residents_export',
+            details=f"Unexpected error during export: {str(e)}"
+        )
+        flash("Error exporting residents.", "error")
+        return redirect(url_for('residents.residents'))
+
+@residents_bp.route('/admin/residents/import', methods=['GET'], strict_slashes=False)
+@login_required
+@role_required('admin')
+def import_residents():
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /admin/residents/import route")
+    
+    log_audit_action(
+        username=username,
+        action='view',
+        target='import_residents',
+        details='Accessed import residents page'
+    )
+    return render_template('import_residents.html', 
+                          CSV_REQUIRED_HEADERS=CSV_REQUIRED_HEADERS, 
+                          CSV_OPTIONAL_HEADERS=CSV_OPTIONAL_HEADERS)
+
+@residents_bp.route('/admin/residents/import/upload', methods=['POST'], strict_slashes=False)
+@login_required
+@role_required('admin')
+def upload_residents():
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /admin/residents/import/upload route")
+    
+    messages = []
+    stats = {
+        'added': 0,
+        'updated': 0,
+        'deleted': 0,
+        'failed': 0,
+        'processed': 0
+    }
+    preview_changes = []
+    update_diffs = []
+    backup_entries = []
+
+    file = request.files.get('csv_file')
+    dry_run = request.form.get('dry_run') == 'yes'
+
+    if not file or file.filename == '':
+        logger.warning(f"User {username} failed to upload residents: No file selected")
+        log_audit_action(
+            username=username,
+            action='import_residents_failed',
+            target='residents',
+            details='No file selected'
+        )
+        return jsonify({'success': False, 'message': 'No file selected.'}), 400
+    elif not allowed_file(file.filename):
+        logger.warning(f"User {username} failed to upload residents: Invalid file type")
+        log_audit_action(
+            username=username,
+            action='import_residents_failed',
+            target='residents',
+            details='Invalid file type; only CSV allowed'
+        )
+        return jsonify({'success': False, 'message': 'Invalid file type. Only CSV files allowed.'}), 400
+
+    try:
+        stream = io.StringIO(file.stream.read().decode("utf-8-sig"), newline=None)
+        reader = csv.DictReader(stream)
+        reader.fieldnames = [f.lower() for f in reader.fieldnames]
+
+        csv_data = {}
+        for raw_row in reader:
+            row = {k.lower(): v for k, v in raw_row.items()}
+
+            if not row.get('mdoc'):
+                stats['failed'] += 1
+                messages.append(f"✘ Missing MDOC for row: {raw_row}")
+                logger.warning(f"User {username} skipped row in CSV import: Missing MDOC")
+                continue
+
+            # Replace multiple phrases in housing_unit
+            housing_unit = row.get('housing_unit', '')
+            replacements = {
+                'women ctr': "Women's Center",
+                'a walk': "SMWRC",
+                'b walk': "SMWRC",
+                'c walk': "SMWRC",
+                'd walk': "SMWRC",
+            }
+            for key, value in replacements.items():
+                if housing_unit.lower() == key:
+                    row['housing_unit'] = value
+                    break
+
+            csv_data[row['mdoc']] = row
+
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM residents")
+            existing = {row['mdoc']: dict(row) for row in c.fetchall()}
+
+            for mdoc, new_data in csv_data.items():
+                stats['processed'] += 1
+                if mdoc not in existing:
+                    preview_changes.append(f"➕ Add: {new_data['name']}")
+                    stats['added'] += 1
+                    if not dry_run:
+                        try:
+                            c.execute("INSERT INTO residents (name, mdoc, unit, housing_unit, level, photo) VALUES (?, ?, ?, ?, ?, ?)",
+                                      (new_data['name'], new_data['mdoc'], new_data['unit'], new_data.get('housing_unit', ''), new_data['level'], new_data.get('photo', '')))
+                            logger.debug(f"User {username} added resident MDOC {mdoc} during import")
+                        except sqlite3.Error as e:
+                            stats['failed'] += 1
+                            messages.append(f"✘ Error adding {new_data['name']}: {str(e)}")
+                            logger.error(f"User {username} failed to add resident MDOC {mdoc}: {str(e)}")
+                else:
+                    current = existing[mdoc]
+                    diffs = {}
+                    for field in ['name', 'unit', 'housing_unit', 'level', 'photo']:
+                        if str(current[field]) != str(new_data.get(field, '')):
+                            diffs[field] = {'from': current[field], 'to': new_data.get(field, '')}
+
+                    if diffs:
+                        preview_changes.append(f"✏️ Update: {new_data['name']}")
+                        update_diffs.append({
+                            'mdoc': mdoc,
+                            'name': new_data['name'],
+                            'diffs': diffs
+                        })
+                        stats['updated'] += 1
+                        if not dry_run:
+                            try:
+                                backup_entries.append((mdoc, current['name'], current['unit'], current['housing_unit'], current['level'], current['photo']))
+                                c.execute("UPDATE residents SET name=?, unit=?, housing_unit=?, level=?, photo=? WHERE mdoc=?",
+                                          (new_data['name'], new_data['unit'], new_data.get('housing_unit', ''), new_data['level'], new_data.get('photo', ''), mdoc))
+                                logger.debug(f"User {username} updated resident MDOC {mdoc} during import")
+                            except sqlite3.Error as e:
+                                stats['failed'] += 1
+                                messages.append(f"✘ Error updating {new_data['name']}: {str(e)}")
+                                logger.error(f"User {username} failed to update resident MDOC {mdoc}: {str(e)}")
+
+            for mdoc in existing:
+                if mdoc not in csv_data:
+                    preview_changes.append(f"❌ Delete: {existing[mdoc]['name']}")
+                    stats['deleted'] += 1
+                    if not dry_run:
+                        try:
+                            current = existing[mdoc]
+                            backup_entries.append((mdoc, current['name'], current['unit'], current['housing_unit'], current['level'], current['photo']))
+                            c.execute("DELETE FROM residents WHERE mdoc = ?", (mdoc,))
+                            logger.debug(f"User {username} deleted resident MDOC {mdoc} during import")
+                        except sqlite3.Error as e:
+                            stats['failed'] += 1
+                            messages.append(f"✘ Error deleting MDOC {mdoc}: {str(e)}")
+                            logger.error(f"User {username} failed to delete resident MDOC {mdoc}: {str(e)}")
+
+            if not dry_run:
+                conn.commit()
+                messages.append("✅ Changes committed to database.")
+                logger.info(f"User {username} committed resident import: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed")
+
+                # Log import to history
+                try:
+                    timestamp = datetime.utcnow().isoformat()
+                    summary = (stats['added'], stats['updated'], stats['deleted'], stats['failed'], stats['processed'])
+
+                    file.stream.seek(0)
+                    raw_csv = file.stream.read().decode("utf-8-sig")
+
+                    c.execute("""
+                        INSERT INTO import_history (timestamp, username, added, updated, deleted, failed, total, csv_content)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (timestamp, username, *summary, raw_csv))
+                    import_id = c.lastrowid
+
+                    for b in backup_entries:
+                        c.execute("""
+                            INSERT INTO resident_backups (import_id, mdoc, name, unit, housing_unit, level, photo)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (import_id, *b))
+
+                    conn.commit()
+                    logger.info(f"User {username} logged import to history @ {timestamp} with {len(backup_entries)} backup(s)")
+                    log_audit_action(
+                        username=username,
+                        action='import_residents',
+                        target='residents',
+                        details=f"Imported residents: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed"
+                    )
+                except sqlite3.Error as e:
+                    logger.error(f"User {username} failed to log import history or backups: {str(e)}")
+                    log_audit_action(
+                        username=username,
+                        action='error',
+                        target='residents_import',
+                        details=f"Failed to log import history: {str(e)}"
+                    )
+                    messages.append(f"⚠️ Warning: Failed to log import history: {str(e)}")
+            else:
+                messages.append("🧪 Dry Run: No changes committed.")
+                logger.info(f"User {username} performed dry run import: {stats['processed']} rows processed")
+
+        log_audit_action(
+            username=username,
+            action='import_residents' if not dry_run else 'import_residents_dry_run',
+            target='residents',
+            details=f"Processed {stats['processed']} rows: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed"
+        )
+        return jsonify({
+            'success': True,
+            'messages': messages,
+            'stats': stats,
+            'preview_changes': preview_changes,
+            'update_diffs': update_diffs
+        })
+
+    except UnicodeDecodeError as e:
+        logger.error(f"User {username} failed to read CSV: Invalid encoding - {str(e)}")
+        log_audit_action(
+            username=username,
+            action='import_residents_failed',
+            target='residents',
+            details=f"Invalid CSV encoding: {str(e)}"
+        )
+        return jsonify({'success': False, 'message': f"Invalid CSV encoding: {str(e)}"}), 400
+    except sqlite3.Error as e:
+        logger.error(f"Database error for user {username} during resident import: {str(e)}")
+        log_audit_action(
+            username=username,
+            action='error',
+            target='residents_import',
+            details=f"Database error during import: {str(e)}"
+        )
+        return jsonify({'success': False, 'message': f"Database error: {str(e)}"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error for user {username} during resident import: {str(e)}")
+        log_audit_action(
+            username=username,
+            action='error',
+            target='residents_import',
+            details=f"Unexpected error during import: {str(e)}"
+        )
+        return jsonify({'success': False, 'message': f"Error reading CSV: {str(e)}"}), 500
