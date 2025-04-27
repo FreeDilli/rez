@@ -1,50 +1,38 @@
+import sys
+import os
+
+# Add project root to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import logging
-from utils.logging_config import setup_logging
 import sqlite3
 from werkzeug.security import generate_password_hash
-from config import Config
+from rezscan_app.config import Config
 
-# Setup logging
-setup_logging()
 logger = logging.getLogger(__name__)
 
 # Step 1: Use database path from Config
 db_path = Config.DB_PATH
-logger.debug(f"Database path set to: {db_path}")
+logger.info(f"Database path set to: {db_path}")
 
-# Step 2: Create users table if needed
-try:
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL,
-            last_login DATETIME
-        )
-    ''')
-    conn.commit()
-    logger.info("Users table created if it didn't exist.")
-except sqlite3.Error as e:
-    logger.error(f"Failed to create users table: {e}")
-    raise
-finally:
-    c.close()
-    conn.close()
-
-# Step 3: Insert sample admin
+# Step 2: Insert sample admin user
 username = 'admin'
 password = 'admin123'
 hashed_pw = generate_password_hash(password)
-logger.debug("Generated password hash for admin user")
+logger.info("Generated password hash for admin user")
 
 try:
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+
+    # Check if the users table exists first
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
+    if not c.fetchone():
+        logger.error("Users table does not exist. Please run the application once to initialize the database.")
+        raise Exception("Users table missing.")
+
+    # Try to insert admin user
+    c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
               (username, hashed_pw, 'admin'))
     conn.commit()
     logger.info("Admin user created successfully.")

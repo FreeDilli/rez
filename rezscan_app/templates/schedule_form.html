@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ action }} Schedule - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ action }} Schedule</h2>
+
+    <form method="POST" class="card p-4 shadow-sm">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="group_name" class="form-label">Group Name</label>
+                <input type="text" name="group_name" id="group_name" class="form-control" value="{{ schedule.get('group_name', '') }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" name="location" id="location" class="form-control" value="{{ schedule.get('location', '') }}" required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="start_time" class="form-label">Start Time</label>
+                <input type="time" name="start_time" id="start_time" class="form-control" value="{{ schedule.get('start_time', '') }}" required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="end_time" class="form-label">End Time</label>
+                <input type="time" name="end_time" id="end_time" class="form-control" value="{{ schedule.get('end_time', '') }}" required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="days" class="form-label">Days (comma-separated)</label>
+                <input type="text" name="days" id="days" class="form-control" placeholder="Mon,Tue,Wed" value="{{ schedule.get('days', '') }}" required>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('schedules.manage_schedules') }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ action }} Schedule</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
