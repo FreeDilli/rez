@@ -20,6 +20,7 @@ class Config:
     ERROR_LOG_FILE = os.getenv('ERROR_LOG_FILE', 'error.log')
     LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES', 10485760))  # 10MB default
     LOG_BACKUP_COUNT = int(os.getenv('LOG_BACKUP_COUNT', 7))  # 7 backups default
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG')  # Default to DEBUG
 
     # Security settings
     SESSION_COOKIE_SECURE = True

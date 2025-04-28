@@ -11,12 +11,10 @@ class InfoFilter(logging.Filter):
         return record.levelno >= logging.INFO
 
 def setup_logging():
-    # Use a custom logger
     logger = logging.getLogger('rezscan_app')
-    if logger.handlers:  # Avoid duplicate setup
+    if logger.handlers:
         return
 
-    # Ensure log directory exists
     try:
         os.makedirs(Config.LOG_DIR, exist_ok=True)
     except PermissionError as e:
@@ -31,29 +29,30 @@ def setup_logging():
         logger.propagate = False
         return
 
-    # Load logging configuration from YAML
     logging_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.yaml')
     try:
         with open(logging_yaml_path, 'r') as f:
             config = yaml.safe_load(f)
         
-        # Update file paths and rotation settings in config with values from Config
         config['handlers']['info_file']['filename'] = os.path.join(Config.LOG_DIR, Config.APP_LOG_FILE)
         config['handlers']['info_file']['backupCount'] = Config.LOG_BACKUP_COUNT
         config['handlers']['debug_file']['filename'] = os.path.join(Config.LOG_DIR, Config.DEBUG_LOG_FILE)
         config['handlers']['debug_file']['maxBytes'] = Config.LOG_MAX_BYTES
         config['handlers']['debug_file']['backupCount'] = Config.LOG_BACKUP_COUNT
+        config['handlers']['debug_file']['level'] = 'DEBUG'  # Ensure debug.log always captures DEBUG
         config['handlers']['error_file']['filename'] = os.path.join(Config.LOG_DIR, Config.ERROR_LOG_FILE)
         config['handlers']['error_file']['maxBytes'] = Config.LOG_MAX_BYTES
         config['handlers']['error_file']['backupCount'] = Config.LOG_BACKUP_COUNT
         
-        # Add InfoFilter to info_file handler configuration
         config['filters'] = {
             'info_filter': {
                 '()': 'rezscan_app.utils.logging_config.InfoFilter'
             }
         }
         config['handlers']['info_file']['filters'] = ['info_filter']
+        
+        log_level = getattr(logging, Config.LOG_LEVEL.upper(), logging.DEBUG)
+        config['loggers']['rezscan_app']['level'] = log_level
         
         logging.config.dictConfig(config)
     except Exception as e:
