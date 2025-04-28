@@ -1,0 +1,36 @@
+version: 1
+formatters:
+  detailed:
+    format: '%(asctime)s [%(levelname)s] %(name)s:%(funcName)s:%(lineno)d - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: detailed
+  info_file:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: INFO
+    formatter: detailed
+    filename: placeholder.log  # Will be overridden by code
+    when: midnight
+    interval: 1
+    backupCount: 7
+  debug_file:
+    class: concurrent_log_handler.ConcurrentRotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: placeholder.log  # Will be overridden by code
+    maxBytes: 10485760
+    backupCount: 7
+  error_file:
+    class: concurrent_log_handler.ConcurrentRotatingFileHandler
+    level: ERROR
+    formatter: detailed
+    filename: placeholder.log  # Will be overridden by code
+    maxBytes: 10485760
+    backupCount: 7
+loggers:
+  rezscan_app:
+    level: DEBUG
+    handlers: [console, info_file, debug_file, error_file]
+    propagate: no

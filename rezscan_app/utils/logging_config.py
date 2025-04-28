@@ -1,36 +1,26 @@
 import logging
 import os
-from logging import Filter
-from logging.handlers import TimedRotatingFileHandler
-from concurrent_log_handler import ConcurrentRotatingFileHandler
 import sys
+import yaml
+import logging.config
+from concurrent_log_handler import ConcurrentRotatingFileHandler
+from rezscan_app.config import Config
 
-class InfoFilter(Filter):
+class InfoFilter(logging.Filter):
     def filter(self, record):
         return record.levelno >= logging.INFO
 
-def setup_logging(
-    log_dir: str = None,
-    app_log_file: str = 'app.log',
-    debug_log_file: str = 'debug.log',
-    error_log_file: str = 'error.log',
-    max_bytes: int = 10485760,
-    backup_count: int = 7
-):
-    # Use a custom logger instead of root
+def setup_logging():
+    # Use a custom logger
     logger = logging.getLogger('rezscan_app')
     if logger.handlers:  # Avoid duplicate setup
         return
 
-    # Set default log directory
-    if log_dir is None:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(base_dir, '..', 'logs')
-    # Create log directory with error handling
+    # Ensure log directory exists
     try:
-        os.makedirs(log_dir, exist_ok=True)
+        os.makedirs(Config.LOG_DIR, exist_ok=True)
     except PermissionError as e:
-        print(f"Failed to create log directory {log_dir}: {e}. Falling back to console logging.", file=sys.stderr)
+        print(f"Failed to create log directory {Config.LOG_DIR}: {e}. Falling back to console logging.", file=sys.stderr)
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(
@@ -41,49 +31,38 @@ def setup_logging(
         logger.propagate = False
         return
 
-    # Enhanced formatter with module, function, and line number
-    formatter = logging.Formatter(
-        '%(asctime)s [%(levelname)s] %(name)s:%(funcName)s:%(lineno)d - %(message)s'
-    )
-
-    # Info handler (INFO and above, daily rotation)
-    info_handler = TimedRotatingFileHandler(
-        os.path.join(log_dir, app_log_file),
-        when='midnight',
-        interval=1,
-        backupCount=backup_count
-    )
-    info_handler.setLevel(logging.INFO)
-    info_handler.setFormatter(formatter)
-    info_handler.addFilter(InfoFilter())
-
-    # Debug handler (DEBUG and above, size-based rotation, thread/process-safe)
-    debug_handler = ConcurrentRotatingFileHandler(
-        os.path.join(log_dir, debug_log_file),
-        maxBytes=max_bytes,
-        backupCount=backup_count
-    )
-    debug_handler.setLevel(logging.DEBUG)
-    debug_handler.setFormatter(formatter)
-
-    # Error handler (ERROR and above, size-based rotation, thread/process-safe)
-    error_handler = ConcurrentRotatingFileHandler(
-        os.path.join(log_dir, error_log_file),
-        maxBytes=max_bytes,
-        backupCount=backup_count
-    )
-    error_handler.setLevel(logging.ERROR)
-    error_handler.setFormatter(formatter)
-
-    # Console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(formatter)
-
-    # Configure logger
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(info_handler)
-    logger.addHandler(debug_handler)
-    logger.addHandler(error_handler)
-    logger.addHandler(console_handler)
-    logger.propagate = False
+    # Load logging configuration from YAML
+    logging_yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.yaml')
+    try:
+        with open(logging_yaml_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        # Update file paths and rotation settings in config with values from Config
+        config['handlers']['info_file']['filename'] = os.path.join(Config.LOG_DIR, Config.APP_LOG_FILE)
+        config['handlers']['info_file']['backupCount'] = Config.LOG_BACKUP_COUNT
+        config['handlers']['debug_file']['filename'] = os.path.join(Config.LOG_DIR, Config.DEBUG_LOG_FILE)
+        config['handlers']['debug_file']['maxBytes'] = Config.LOG_MAX_BYTES
+        config['handlers']['debug_file']['backupCount'] = Config.LOG_BACKUP_COUNT
+        config['handlers']['error_file']['filename'] = os.path.join(Config.LOG_DIR, Config.ERROR_LOG_FILE)
+        config['handlers']['error_file']['maxBytes'] = Config.LOG_MAX_BYTES
+        config['handlers']['error_file']['backupCount'] = Config.LOG_BACKUP_COUNT
+        
+        # Add InfoFilter to info_file handler configuration
+        config['filters'] = {
+            'info_filter': {
+                '()': 'rezscan_app.utils.logging_config.InfoFilter'
+            }
+        }
+        config['handlers']['info_file']['filters'] = ['info_filter']
+        
+        logging.config.dictConfig(config)
+    except Exception as e:
+        print(f"Failed to load logging configuration: {e}. Falling back to console logging.", file=sys.stderr)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(
+            logging.Formatter('%(asctime)s [%(levelname)s] %(name)s:%(funcName)s:%(lineno)d - %(message)s')
+        )
+        logger.handlers = [console_handler]
+        logger.setLevel(logging.DEBUG)
+        logger.propagate = False

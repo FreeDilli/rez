@@ -11,8 +11,8 @@ from datetime import datetime
 
 load_dotenv()
 
-# Initialize logger
-logger = logging.getLogger(__name__)
+# Initialize logger using the custom 'rezscan_app' logger
+logger = logging.getLogger('rezscan_app')
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
