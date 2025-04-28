@@ -10,12 +10,11 @@
         document.documentElement.setAttribute('data-bs-theme', storedTheme);
     </script>
     <style>
-        body { min-height: 100vh; }
+        body { min-height: 100vh; overflow-x: hidden; }
         .sidebar {
             width: 250px;
+            transition: width 0.3s ease;
             background-color: var(--bs-light);
-            transition: width 0.3s ease, background-color 0.3s ease;
-            overflow-x: hidden;
         }
         .sidebar.collapsed {
             width: 80px;
@@ -23,14 +22,16 @@
         [data-bs-theme="dark"] .sidebar {
             background-color: #1f1f1f;
         }
-        .nav-link {
+        .sidebar .nav-link {
             padding: 10px 15px;
             border-radius: 8px;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
             display: flex;
             align-items: center;
+            gap: 10px;
+        }
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
         }
         .nav-link::before {
             content: "";
@@ -52,24 +53,12 @@
             background-color: var(--bs-primary-bg-subtle);
             color: var(--bs-primary) !important;
         }
-        .sidebar-icon {
-            font-size: 1.5rem;
-            margin-right: 10px;
-            transition: margin 0.3s ease;
-        }
-        .sidebar.collapsed .sidebar-icon {
-            margin-right: 0;
-            text-align: center;
-            width: 100%;
-        }
         .sidebar-text {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            white-space: nowrap;
+            transition: opacity 0.3s ease;
         }
         .sidebar.collapsed .sidebar-text {
             opacity: 0;
-            transform: scaleX(0);
-            display: none;
+            pointer-events: none;
         }
         .theme-toggle {
             cursor: pointer;
@@ -80,13 +69,8 @@
             width: auto;
             margin-right: 10px;
         }
-        .sidebar-title {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        .sidebar.collapsed .sidebar-title {
-            opacity: 0;
-            transform: scaleX(0);
-            display: none;
+        .offcanvas-backdrop {
+            background-color: rgba(0, 0, 0, 0.4) !important;
         }
         footer {
             background-color: var(--bs-light);
@@ -105,16 +89,16 @@
 </head>
 
 <body class="d-flex flex-column bg-body-secondary">
+    <!-- Sidebar + Collapse Button -->
     <div class="d-flex flex-grow-1">
-        <!-- Sidebar -->
         <nav id="sidebar" class="sidebar border-end p-3 d-flex flex-column offcanvas-md offcanvas-start show" tabindex="-1">
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center">
                     <img src="{{ url_for('static', filename='Uploads/rezscanicon.png') }}" alt="RezScan Icon" class="brand-icon">
-                    <h4 class="mb-0 sidebar-title">RezScan</h4>
+                    <h4 class="mb-0 sidebar-text">RezScan</h4>
                 </div>
-                <button id="sidebarToggle" class="btn btn-sm btn-outline-primary d-none d-md-inline" type="button" title="Collapse Sidebar">
-                    ☰
+                <button class="btn btn-sm btn-outline-primary ms-2" id="sidebarToggle" title="Collapse Sidebar">
+                    ⇔
                 </button>
             </div>
 
@@ -123,13 +107,13 @@
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">
-                                <span class="sidebar-icon">🏠</span> <span class="sidebar-text">Admin Dashboard</span>
+                                🛠️ <span class="sidebar-text">Admin Dashboard</span>
                             </a>
                         </li>
                     {% elif current_user.role in ['officer', 'scheduling', 'viewer'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('user_dashboard.dashboard') }}">
-                                <span class="sidebar-icon">📊</span> <span class="sidebar-text">Dashboard</span>
+                                📊 <span class="sidebar-text">Dashboard</span>
                             </a>
                         </li>
                     {% endif %}
@@ -137,21 +121,21 @@
                     {% if current_user.role in ['admin', 'officer'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">
-                                <span class="sidebar-icon">🛰️</span> <span class="sidebar-text">Live Dashboard</span>
+                                📡 <span class="sidebar-text">Live Dashboard</span>
                             </a>
                         </li>
                     {% endif %}
 
                     <li class="nav-item">
                         <a class="nav-link {% if request.path.startswith('/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">
-                            <span class="sidebar-icon">👥</span> <span class="sidebar-text">Residents</span>
+                            👥 <span class="sidebar-text">Residents</span>
                         </a>
                     </li>
 
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">
-                                <span class="sidebar-icon">📍</span> <span class="sidebar-text">Locations</span>
+                                📍 <span class="sidebar-text">Locations</span>
                             </a>
                         </li>
                     {% endif %}
@@ -159,7 +143,7 @@
                     {% if current_user.role in ['admin', 'officer', 'scheduling'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">
-                                <span class="sidebar-icon">🧩</span> <span class="sidebar-text">Scanner</span>
+                                🔍 <span class="sidebar-text">Scanner</span>
                             </a>
                         </li>
                     {% endif %}
@@ -167,7 +151,7 @@
                     {% if current_user.role in ['admin', 'officer', 'viewer'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">
-                                <span class="sidebar-icon">📄</span> <span class="sidebar-text">Scan History</span>
+                                📝 <span class="sidebar-text">Scan History</span>
                             </a>
                         </li>
                     {% endif %}
@@ -175,7 +159,7 @@
                     {% if current_user.role in ['admin', 'scheduling'] %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">
-                                <span class="sidebar-icon">📅</span> <span class="sidebar-text">Scheduling</span>
+                                🗓️ <span class="sidebar-text">Scheduling</span>
                             </a>
                         </li>
                     {% endif %}
@@ -183,19 +167,19 @@
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">
-                                <span class="sidebar-icon">🛠️</span> <span class="sidebar-text">User Management</span>
+                                🧑‍💼 <span class="sidebar-text">User Management</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">
-                                <span class="sidebar-icon">🛡️</span> <span class="sidebar-text">Audit Log</span>
+                                🔒 <span class="sidebar-text">Audit Log</span>
                             </a>
                         </li>
                     {% endif %}
 
                     <li class="nav-item">
                         <a class="nav-link {% if request.path.startswith('/account') %}active{% endif %}" href="{{ url_for('account.account') }}">
-                            <span class="sidebar-icon">👤</span> <span class="sidebar-text">My Account</span>
+                            👤 <span class="sidebar-text">My Account</span>
                         </a>
                     </li>
                 {% endif %}
@@ -203,13 +187,17 @@
 
             <div class="mt-auto pt-3">
                 {% if current_user.is_authenticated %}
-                    <div class="text-center mb-2 small">
+                    <div class="text-center mb-2 small sidebar-text">
                         Welcome, <strong>{{ current_user.username }}</strong><br>
                         <span class="badge bg-secondary text-capitalize">{{ current_user.role }}</span>
                     </div>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100">Logout</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100">
+                        Logout
+                    </a>
                 {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">Login</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">
+                        Login
+                    </a>
                 {% endif %}
                 <div class="mt-3 text-center">
                     <span class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌙</span>
@@ -217,16 +205,16 @@
             </div>
         </nav>
 
-        <!-- Main Content -->
+        <!-- Main Page Content -->
         <main class="flex-grow-1 p-4">
             {% block content %}{% endblock %}
         </main>
     </div>
 
-  <!-- Footer -->
-  <footer class="text-center py-3 border-top small">
-    © 2025 RezScan | Internal Use Only
-  </footer>
+    <!-- Footer -->
+    <footer class="text-center py-3 border-top small">
+        © 2025 RezScan | Internal Use Only
+    </footer>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -242,22 +230,27 @@
         function updateThemeIcon() {
             const themeToggle = document.querySelector('.theme-toggle');
             const current = document.documentElement.getAttribute('data-bs-theme');
-            themeToggle.textContent = current === 'dark' ? '☀️' : '🌙';
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            themeToggle.textContent = (current === 'dark') ? '☀️' : '🌙';
         }
 
         document.addEventListener('DOMContentLoaded', function () {
             updateThemeIcon();
-            const toggleButton = document.getElementById('sidebarToggle');
-            if (toggleButton) {
-                toggleButton.addEventListener('click', toggleSidebar);
-            }
+            document.getElementById('sidebarToggle').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+            });
+
+            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl).show();
+            });
         });
     </script>
 </body>
 </html>
+
+
+
+
+
 
 
