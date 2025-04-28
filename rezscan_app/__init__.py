@@ -53,7 +53,7 @@ def create_app(config_class=None):
     @app.template_filter('datetimeformat')
     def datetimeformat(value):
         """
-        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%m-%d-%Y %I:%M %p'.
+        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%m-%d-%Y %H:%M:%S'.
 
         Args:
             value: A string in the format 'YYYY-MM-DD HH:MM:SS'.
@@ -62,7 +62,7 @@ def create_app(config_class=None):
             A formatted string in the format 'MM-DD-YYYY HH:MM AM/PM'.
         """
         try:
-            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%m-%d-%Y %I:%M %p')
+            return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').strftime('%m-%d-%Y %H:%M:%S')
         except ValueError as e:
             logger.error(f"Failed to parse datetime '{value}': {e}")
             return value
@@ -70,7 +70,7 @@ def create_app(config_class=None):
     @app.template_filter('timeformat')
     def timeformat(value):
         """
-        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%I:%M %p'.
+        Format a datetime string from '%Y-%m-%d %H:%M:%S' to '%H:%M:%S'.
 
         Args:
             value: A string in the format 'YYYY-MM-DD HH:MM:SS'.

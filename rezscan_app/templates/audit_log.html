@@ -5,21 +5,31 @@
 <div class="container mt-4">
     <h2>🛡️ Audit Log</h2>
 
-    <form method="GET" class="row g-3 mb-4">
-        <div class="col-md-3">
-            <input type="text" name="username" class="form-control" placeholder="Filter by Username" value="{{ username_filter }}">
+    <form method="GET" class="row g-2 mb-4 align-items-end">
+        <div class="col-md-3 col-sm-6">
+            <label for="username_filter" class="form-label">Username</label>
+            <input type="text" name="username" id="username_filter" class="form-control" placeholder="Filter by Username" value="{{ username_filter }}">
         </div>
-        <div class="col-md-3">
-            <input type="text" name="action" class="form-control" placeholder="Filter by Action" value="{{ action_filter }}">
+        <div class="col-md-3 col-sm-6">
+            <label for="action_filter" class="form-label">Action</label>
+            <select name="action" id="action_filter" class="form-select">
+                <option value="">All Actions</option>
+                {% for action in actions %}
+                    <option value="{{ action }}" {% if action == action_filter %}selected{% endif %}>{{ action }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="col-md-2">
-            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        <div class="col-md-2 col-sm-6">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
         </div>
-        <div class="col-md-2">
-            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        <div class="col-md-2 col-sm-6">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+        <div class="col-md-2 col-sm-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Apply</button>
+            <a href="{{ url_for('audit_log.view_audit_log') }}" class="btn btn-secondary flex-fill">Clear</a>
         </div>
     </form>
 
@@ -43,7 +53,7 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td>{{ log[1] | dateformat }} {{ log[1] | timeformat }}</td>
+                    <td>{{ log[1] | datetimeformat }}</td>
                     <td>{{ log[2] }}</td>
                     <td>{{ log[3] }}</td>
                     <td>{{ log[4] }}</td>
@@ -89,4 +99,3 @@
     {% endif %}
 </div>
 {% endblock %}
-
