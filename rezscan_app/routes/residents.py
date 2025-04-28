@@ -109,6 +109,9 @@ def residents():
             c.execute("SELECT COUNT(*) FROM residents")
             total_count = c.fetchone()[0]
 
+            # Calculate total pages
+            total_pages = max((filtered_count + per_page - 1) // per_page, 1)
+
             logger.debug(f"User {username} fetched {len(residents)} residents (filtered: {filtered_count}, total: {total_count})")
             log_audit_action(
                 username=username,
@@ -116,9 +119,6 @@ def residents():
                 target='residents',
                 details=f"Viewed residents page with {len(residents)} records (filtered: {filtered_count})"
             )
-
-            next_page = page + 1 if page * per_page < filtered_count else None
-            prev_page = page - 1 if page > 1 else None
 
     except sqlite3.Error as e:
         logger.error(f"Database error for user {username} in residents: {str(e)}")
@@ -134,12 +134,11 @@ def residents():
     return render_template(
         'residents.html',
         residents=residents,
-        prev_page=prev_page,
-        next_page=next_page,
         search=search,
         sort=sort,
         direction=direction,
         page=page,
+        total_pages=total_pages,
         filterUnit=filter_unit,
         filterHousing=filter_housing,
         filterLevel=filter_level,

@@ -56,11 +56,14 @@
   <input type="hidden" name="page" value="{{ page }}">
 </form>
 
-<!-- Resident Count -->
-<p class="mb-3">
-  Showing {{ filtered_count }} of {{ total_count }} residents
-  {% if search or filterUnit or filterHousing or filterLevel %}(filtered){% endif %}
-</p>
+<!-- Resident Count and Page Info -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <p class="mb-0">
+    Showing {{ filtered_count }} of {{ total_count }} residents
+    {% if search or filterUnit or filterHousing or filterLevel %}(filtered){% endif %}
+    | Page {{ page }} of {{ total_pages }}
+  </p>
+</div>
 
 <!-- Residents Table -->
 <div class="table-responsive">
@@ -104,22 +107,67 @@
 </div>
 
 <!-- Pagination -->
-<div class="d-flex justify-content-center mt-4">
-  <nav>
-    <ul class="pagination">
-      {% if prev_page %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('residents.residents', page=prev_page, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Previous</a>
-        </li>
-      {% endif %}
-      {% if next_page %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('residents.residents', page=next_page, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Next</a>
-        </li>
-      {% endif %}
-    </ul>
-  </nav>
-</div>
+<nav aria-label="Residents Pagination" class="mt-4">
+  <ul class="pagination justify-content-center">
+    <!-- First Page -->
+    {% if page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('residents.residents', page=1, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">First</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">First</span>
+      </li>
+    {% endif %}
+
+    <!-- Previous Page -->
+    {% if page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('residents.residents', page=page-1, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Previous</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Previous</span>
+      </li>
+    {% endif %}
+
+    <!-- Page Numbers -->
+    {% set range_size = 5 %}
+    {% set half_range = range_size // 2 %}
+    {% set start_page = [page - half_range, 1] | max %}
+    {% set end_page = [start_page + range_size - 1, total_pages] | min %}
+    {% if end_page - start_page < range_size - 1 %}
+      {% set start_page = [end_page - range_size + 1, 1] | max %}
+    {% endif %}
+    {% for p in range(start_page, end_page + 1) %}
+      <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('residents.residents', page=p, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+
+    <!-- Next Page -->
+    {% if page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('residents.residents', page=page+1, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Next</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Next</span>
+      </li>
+    {% endif %}
+
+    <!-- Last Page -->
+    {% if page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('residents.residents', page=total_pages, search=search, sort=sort, direction=direction, filterUnit=filterUnit, filterHousing=filterHousing, filterLevel=filterLevel) }}">Last</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Last</span>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
 
 <script>
   function resetFilters() {
