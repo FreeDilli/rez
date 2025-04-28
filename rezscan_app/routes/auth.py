@@ -19,12 +19,12 @@ auth_bp = Blueprint('auth', __name__)
 def log_audit_action(username, action, target, details=None):
     """Insert an audit log entry into the audit_log table."""
     try:
-        with get_db() as db:
-            db.execute(
+        with get_db() as conn:
+            conn.execute(
                 'INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)',
                 (username, action, target, details)
             )
-            db.commit()
+            conn.commit()
             logger.debug(f"Audit log created: {username} - {action} - {target}")
     except sqlite3.Error as e:
         logger.error(f"Failed to log audit action for {username}: {str(e)}")
@@ -33,8 +33,10 @@ def role_required(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            logger.debug(f"Checking role for route {f.__name__}, allowed roles: {allowed_roles}")
+            username = current_user.username if current_user.is_authenticated else 'anonymous'
+            logger.debug(f"User {username} checking role for route {f.__name__}, allowed roles: {allowed_roles}")
             if not current_user.is_authenticated:
+                logger.warning(f"Unauthenticated access attempt to {request.path}")
                 flash("Please log in to access this page.", "warning")
                 log_audit_action(
                     username='anonymous',
@@ -44,12 +46,12 @@ def role_required(*allowed_roles):
                 )
                 return redirect(url_for('auth.login'))
             if current_user.role not in allowed_roles:
-                logger.warning(f"Unauthorized role access attempt by {current_user.username} (role: {current_user.role}) to {request.path}")
+                logger.warning(f"User {username} (role: {current_user.role}) attempted unauthorized access to {request.path}")
                 log_audit_action(
-                    username=current_user.username,
+                    username=username,
                     action='unauthorized_access',
                     target=request.path,
-                    details=f'Role {current_user.role} not in {allowed_roles}'
+                    details=f'Role {current_user.role} not in allowed roles {allowed_roles}'
                 )
                 flash("You do not have permission to access this page.", "danger")
                 return render_template('403.html', message='Access Denied'), 403
@@ -59,21 +61,34 @@ def role_required(*allowed_roles):
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    logger.debug(f"Accessing /login route with method: {request.method}")
     username = 'anonymous'  # Default for GET or unauthenticated POST
+    logger.debug(f"User {username} accessing /login route with method: {request.method}")
+    
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password'].strip()
         logger.debug(f"Login attempt for username: {username}")
 
         if not username or not password:
+            logger.warning(f"Login failed for username {username}: Missing username or password")
             flash("Username and password are required.", "danger")
-            log_audit_action(username, 'login_failed', 'login', 'Missing username or password')
+            log_audit_action(
+                username=username,
+                action='login_failed',
+                target='login',
+                details='Missing username or password'
+            )
             return render_template('login.html')
 
         if len(password) < MIN_PASSWORD_LENGTH:
+            logger.warning(f"Login failed for username {username}: Password too short")
             flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
-            log_audit_action(username, 'login_failed', 'login', f'Password less than {MIN_PASSWORD_LENGTH} characters')
+            log_audit_action(
+                username=username,
+                action='login_failed',
+                target='login',
+                details=f'Password less than {MIN_PASSWORD_LENGTH} characters'
+            )
             return render_template('login.html')
 
         try:
@@ -81,38 +96,62 @@ def login():
 
             if user and user.password and check_password_hash(user.password, password):
                 login_user(user)
-                with get_db() as db:
-                    db.execute("UPDATE users SET last_login = ? WHERE username = ?", (datetime.utcnow(), username))
-                    db.commit()
+                last_login = datetime.now().isoformat()  # Use local time
+                with get_db() as conn:
+                    conn.execute("UPDATE users SET last_login = ? WHERE username = ?", (last_login, username))
+                    conn.commit()
+                logger.info(f"User {username} logged in successfully, role: {user.role}, last_login: {last_login}")
                 log_audit_action(
                     username=username,
                     action='login_success',
                     target='login',
-                    details=f'Successful login, role: {user.role}'
+                    details=f'Successful login, role: {user.role}, last_login: {last_login}'
                 )
-                logger.info(f"Successful login for username: {username}, role: {user.role}")
                 flash("Login successful!", "success")
                 redirect_endpoint = ROLE_REDIRECTS.get(user.role, 'dashboard.dashboard')
                 return redirect(url_for(redirect_endpoint))
             else:
+                logger.warning(f"Login failed for username {username}: Invalid username or password")
                 flash("Invalid username or password", "danger")
-                log_audit_action(username, 'login_failed', 'login', 'Invalid username or password')
+                log_audit_action(
+                    username=username,
+                    action='login_failed',
+                    target='login',
+                    details='Invalid username or password'
+                )
                 return render_template('login.html')
 
         except sqlite3.Error as e:
             logger.error(f"Database error during login for username {username}: {str(e)}")
-            log_audit_action(username, 'login_failed', 'login', f"Database error: {str(e)}")
+            log_audit_action(
+                username=username,
+                action='error',
+                target='login',
+                details=f"Database error during login: {str(e)}"
+            )
             flash("Database error. Please try again later.", "danger")
             return render_template('login.html')
 
-    log_audit_action(username, 'view', 'login', 'Accessed login page')
+    log_audit_action(
+        username=username,
+        action='view',
+        target='login',
+        details='Accessed login page'
+    )
     return render_template('login.html')
 
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    logger.debug("Accessing /logout route")
-    logger.info(f"User {current_user.username} logged out")
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /logout route")
+    logger.info(f"User {username} logged out")
+    log_audit_action(
+        username=username,
+        action='logout',
+        target='logout',
+        details=f'User logged out successfully at {datetime.now().isoformat()}'
+    )
     logout_user()
     flash("Logged out successfully.", "info")
     return redirect(url_for('auth.login'))
