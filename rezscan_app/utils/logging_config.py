@@ -3,18 +3,23 @@ import os
 from logging.handlers import RotatingFileHandler
 
 def setup_logging():
-    os.makedirs('./logs', exist_ok=True)
+    # Get the directory of the current module (utils)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join(base_dir, '..', 'logs')    
+    
+    # Create logs directory inside rezscan_app
+    os.makedirs(log_dir, exist_ok=True)
     
     # Formatter for all logs
     formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
     
     # Handler for INFO and above (app.log) with rotation
-    info_handler = RotatingFileHandler('./logs/app.log', maxBytes=10485760, backupCount=2)
+    info_handler = RotatingFileHandler(os.path.join(log_dir, 'app.log'), maxBytes=10485760, backupCount=2)
     info_handler.setLevel(logging.INFO)
     info_handler.setFormatter(formatter)
     
     # Handler for DEBUG and above (debug.log) with rotation
-    debug_handler = RotatingFileHandler('./logs/debug.log', maxBytes=10485760, backupCount=2)
+    debug_handler = RotatingFileHandler(os.path.join(log_dir, 'debug.log'), maxBytes=10485760, backupCount=2)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(formatter)
     
