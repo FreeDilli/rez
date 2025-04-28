@@ -76,37 +76,57 @@
 
             <ul class="nav flex-column">
                 {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">🔧 Admin Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 Live Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">👤 Residents</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">📍 Locations</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">🛠️ Scanner</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">📅 Scan History</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">🗓️ Scheduling</a>
-                    </li>
                     {% if current_user.role == 'admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">💼 User Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">🔍 Audit Log</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">🔧 Admin Dashboard</a>
+                        </li>
                     {% endif %}
+
+                    {% if current_user.role in ['admin', 'officer'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 Live Dashboard</a>
+                        </li>
+                    {% endif %}
+
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/account') %}active{% endif %}" href="{{ url_for('account.account') }}">🧑‍💻 My Account</a>
+                        <a class="nav-link {% if request.path.startswith('/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">🙋‍♂️ Residents</a>
+                    </li>
+
+                    {% if current_user.role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">📍 Locations</a>
+                        </li>
+                    {% endif %}
+
+                    {% if current_user.role in ['admin', 'officer', 'scheduling'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">📡 Scanner</a>
+                        </li>
+                    {% endif %}
+
+                    {% if current_user.role in ['admin', 'officer', 'viewer'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">🗂️ Scan History</a>
+                        </li>
+                    {% endif %}
+
+                    {% if current_user.role in ['admin', 'scheduling'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">📅 Scheduling</a>
+                        </li>
+                    {% endif %}
+
+                    {% if current_user.role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">🧑‍💼 User Management</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">🔎 Audit Log</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path.startswith('/account') %}active{% endif %}" href="{{ url_for('account.account') }}">👤 My Account</a>
                     </li>
                 {% endif %}
             </ul>
@@ -175,15 +195,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
