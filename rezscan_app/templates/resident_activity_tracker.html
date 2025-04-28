@@ -49,7 +49,7 @@
                 <td>{{ p[4] }}</td>
                 <td>{{ p[5] | timeformat }}</td>
                 <td>
-                  <form action="{{ url_for('resident_activity.check_out') }}" method="POST" class="d-inline">
+                  <form action="{{ url_for('resident_activity_tracker.check_out') }}" method="POST" class="d-inline">
                     <input type="hidden" name="mdoc" value="{{ p[1] }}">
                     <input type="hidden" name="location" value="{{ p[6] }}">
                     <button type="submit" class="btn btn-sm btn-danger" aria-label="Check out resident">Check Out</button>
