@@ -9,6 +9,7 @@ from rezscan_app.models.User import User
 import logging
 from datetime import datetime
 import sqlite3
+from rezscan_app.config import Config
 import pytz
 
 # Setup logging
@@ -62,7 +63,7 @@ def role_required(*allowed_roles):
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    username = 'anonymous'  # Default for GET or unauthenticated POST
+    username = 'anonymous'
     logger.debug(f"User {username} accessing /login route with method: {request.method}")
     
     if request.method == 'POST':
@@ -97,8 +98,9 @@ def login():
 
             if user and user.password and check_password_hash(user.password, password):
                 login_user(user)
-                utc_now = datetime.now(pytz.utc)
-                last_login = utc_now.strftime('%Y-%m-%d %H:%M:%S')  # UTC, YYYY-MM-DD HH:MM:SS
+                local_tz = pytz.timezone(Config.TIMEZONE)
+                local_now = datetime.now(local_tz)
+                last_login = local_now.strftime('%Y-%m-%d %H:%M:%S')
                 with get_db() as conn:
                     conn.execute("UPDATE users SET last_login = ? WHERE username = ?", (last_login, username))
                     conn.commit()
@@ -148,11 +150,13 @@ def logout():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /logout route")
     logger.info(f"User {username} logged out")
+    local_tz = pytz.timezone(Config.TIMEZONE)
+    local_now = datetime.now(local_tz)
     log_audit_action(
         username=username,
         action='logout',
         target='logout',
-        details=f'User logged out successfully at {datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")}'
+        details=f'User logged out successfully at {local_now.strftime("%Y-%m-%d %H:%M:%S")}'
     )
     logout_user()
     flash("Logged out successfully.", "info")

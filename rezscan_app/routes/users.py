@@ -9,8 +9,6 @@ from rezscan_app.utils.constants import (
 from rezscan_app.routes.auth import role_required
 import logging
 import sqlite3
-from datetime import datetime
-import pytz
 
 # Setup logging
 setup_logging()
@@ -131,24 +129,9 @@ def get_users():
             c = conn.cursor()
             c.execute("SELECT username, role, last_login FROM users ORDER BY username")
             rows = c.fetchall()
-            local_tz = pytz.timezone('America/New_York')  # Change to your timezone
             users = []
             for row in rows:
                 last_login = row['last_login']
-                if last_login:
-                    try:
-                        try:
-                            # Try YYYY-MM-DD HH:MM:SS
-                            utc_dt = datetime.strptime(last_login, '%Y-%m-%d %H:%M:%S')
-                        except ValueError:
-                            # Try ISO format (e.g., 2025-04-28T04:01:43.692232)
-                            utc_dt = datetime.fromisoformat(last_login.replace('Z', '+00:00'))
-                        utc_dt = pytz.utc.localize(utc_dt)
-                        local_dt = utc_dt.astimezone(local_tz)
-                        last_login = local_dt.strftime('%Y-%m-%d %H:%M:%S')  # For datetimeformat
-                    except ValueError as e:
-                        logger.error(f"Failed to parse last_login '{last_login}' for user {row['username']}: {str(e)}")
-                        last_login = None
                 users.append({
                     'username': row['username'],
                     'role': row['role'],
