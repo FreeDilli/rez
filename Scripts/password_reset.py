@@ -1,91 +1,53 @@
-import sqlite3
-from werkzeug.security import generate_password_hash
-
-# Set your database path
-DB_PATH = "data/rezscan.db"
-
-# Set username and new password
-USERNAME_TO_RESET = "admin"
-NEW_PASSWORD = "admin123"
-
-# Generate the correct hash
-new_password_hash = generate_password_hash(NEW_PASSWORD, method='scrypt')
-print(f"Generated password hash: {new_password_hash}")
-
-# Connect to the database and update
-conn = sqlite3.connect(DB_PATH)
-c = conn.cursor()
-
-# Check if user exists
-c.execute("SELECT id FROM users WHERE username = ?", (USERNAME_TO_RESET,))
-user = c.fetchone()
-
-if user:
-    c.execute(
-        "UPDATE users SET password = ? WHERE username = ?",
-        (new_password_hash, USERNAME_TO_RESET)
-    )
-    conn.commit()
-    print(f"[+] Successfully updated password for user: {USERNAME_TO_RESET}")
-else:
-    print(f"[!] User {USERNAME_TO_RESET} not found.")
-
-conn.close()
-# Scripts/password_reset.py
-import sqlite3
-from werkzeug.security import generate_password_hash
+import sys
 import os
+import logging
+import sqlite3
+from werkzeug.security import generate_password_hash
 
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'rezscan_app', 'data', 'rezscan.db')
+# --- Configure Logging ---
+logger = logging.getLogger(__name__)
 
-# Define users and their new passwords
-users_to_reset = {
-    'admin': {
-        'password': 'admin123',
-        'role': 'admin'
-    },
-    'viewer': {
-        'password': 'viewer123',
-        'role': 'viewer'
-    },
-    'officer': {
-        'password': 'officer123',
-        'role': 'officer'
-    },
-    'scheduling': {
-        'password': 'scheduling123',
-        'role': 'scheduling'
-    }
-}
+# --- Set database path manually (no relying on Config) ---
+base_dir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.abspath(os.path.join(base_dir, '..', 'data', 'rezscan.db'))
 
-def reset_passwords():
-    if not os.path.exists(DB_PATH):
-        print(f"[!] Database not found at {DB_PATH}")
-        return
+print(f"Using database at: {db_path}")
+logger.info(f"Database path set to: {db_path}")
 
-    conn = sqlite3.connect(DB_PATH)
+# --- Insert sample admin user ---
+username = 'admin'
+password = 'admin123'
+hashed_pw = generate_password_hash(password)
+logger.info("Generated password hash for admin user.")
+
+try:
+    if not os.path.exists(db_path):
+        logger.error(f"Database file does not exist at {db_path}")
+        raise FileNotFoundError(f"Database file not found: {db_path}")
+
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    for username, info in users_to_reset.items():
-        hashed_password = generate_password_hash(info['password'], method="scrypt")
-        
-        try:
-            c.execute("SELECT id FROM users WHERE username = ?", (username,))
-            user = c.fetchone()
+    # Check if the users table exists first
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
+    if not c.fetchone():
+        logger.error("Users table does not exist. Please run the application once to initialize the database.")
+        raise Exception("Users table missing.")
 
-            if user:
-                c.execute("UPDATE users SET password = ?, role = ? WHERE username = ?", (hashed_password, info['role'], username))
-                print(f"[+] Updated existing user '{username}'")
-            else:
-                c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (username, hashed_password, info['role']))
-                print(f"[+] Created new user '{username}'")
-
-        except sqlite3.Error as e:
-            print(f"[!] Error processing {username}: {e}")
-
+    # Try to insert admin user
+    c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
+              (username, hashed_pw, 'admin'))
     conn.commit()
-    conn.close()
-    print("\n[✓] Password reset process completed successfully.")
+    logger.info("✅ Admin user created successfully.")
 
-if __name__ == '__main__':
-    reset_passwords()
+except sqlite3.IntegrityError:
+    logger.warning("⚠️ Admin user already exists in the database.")
+except Exception as e:
+    logger.error(f"❌ Failed to insert admin user: {str(e)}")
+    raise
+finally:
+    if 'c' in locals():
+        c.close()
+    if 'conn' in locals():
+        conn.close()
+
