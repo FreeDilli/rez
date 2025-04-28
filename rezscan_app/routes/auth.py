@@ -9,6 +9,7 @@ from rezscan_app.models.User import User
 import logging
 from datetime import datetime
 import sqlite3
+import pytz
 
 # Setup logging
 setup_logging()
@@ -96,7 +97,8 @@ def login():
 
             if user and user.password and check_password_hash(user.password, password):
                 login_user(user)
-                last_login = datetime.now().isoformat()  # Use local time
+                utc_now = datetime.now(pytz.utc)
+                last_login = utc_now.strftime('%Y-%m-%d %H:%M:%S')  # UTC, YYYY-MM-DD HH:MM:SS
                 with get_db() as conn:
                     conn.execute("UPDATE users SET last_login = ? WHERE username = ?", (last_login, username))
                     conn.commit()
@@ -150,7 +152,7 @@ def logout():
         username=username,
         action='logout',
         target='logout',
-        details=f'User logged out successfully at {datetime.now().isoformat()}'
+        details=f'User logged out successfully at {datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")}'
     )
     logout_user()
     flash("Logged out successfully.", "info")

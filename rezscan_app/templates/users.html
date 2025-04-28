@@ -47,7 +47,6 @@
   </form>
 </div>
 
-
 <!-- Users Table -->
 <h4>Existing Users</h4>
 <div class="table-responsive">
@@ -65,7 +64,7 @@
       <tr>
         <td>{{ user.username }}</td>
         <td>{{ user.role.capitalize() }}</td>
-        <td>{{ user.last_login or 'Never' }}</td>
+        <td>{{ user.last_login | datetimeformat if user.last_login else 'Never' }}</td>
         <td class="text-center">
           <div class="d-flex justify-content-center gap-2">
             <form method="GET" action="{{ url_for('users.edit_user', username=user.username) }}" class="d-inline">
@@ -99,5 +98,4 @@
     </tbody>
   </table>
 </div>
-
 {% endblock %}
