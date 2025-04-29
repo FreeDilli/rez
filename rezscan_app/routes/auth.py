@@ -1,8 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import check_password_hash
 from functools import wraps
-from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.utils.constants import ROLE_REDIRECTS, MIN_PASSWORD_LENGTH
 from rezscan_app.models.database import get_db
 from rezscan_app.models.User import User
@@ -13,7 +11,6 @@ from rezscan_app.config import Config
 import pytz
 
 # Setup logging
-setup_logging()
 logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
@@ -94,9 +91,8 @@ def login():
             return render_template('login.html')
 
         try:
-            user = User.get_by_username(username)
-
-            if user and user.password and check_password_hash(user.password, password):
+            user = User.authenticate(username, password)
+            if user:
                 login_user(user)
                 local_tz = pytz.timezone(Config.TIMEZONE)
                 local_now = datetime.now(local_tz)

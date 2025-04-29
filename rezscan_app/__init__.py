@@ -1,31 +1,28 @@
 import os
 from flask import Flask, render_template, jsonify
 from flask_login import LoginManager
-from dotenv import load_dotenv
 from rezscan_app.models.User import User
 import importlib.util
 import sys
 from pathlib import Path
 import logging
 from datetime import datetime
-
-load_dotenv()
-
-# Initialize logger using the custom 'rezscan_app' logger
-logger = logging.getLogger('rezscan_app')
+from traceback import format_exc
+import sqlite3
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
-def create_app(config_class=None):
-    logger.debug("Starting application creation")
+def create_app():
     app = Flask(__name__, static_folder='static', template_folder='templates')
 
     # Setup logging first
     from rezscan_app.utils.logging_config import setup_logging
     try:
         setup_logging()
+        logger = logging.getLogger('rezscan_app')  # Initialize here
         logger.info("Logging configuration initialized successfully")
+        logger.debug("Starting application creation")
     except Exception as e:
         logger.error(f"Error setting up logging: {str(e)}")
         raise
@@ -48,6 +45,23 @@ def create_app(config_class=None):
     except Exception as e:
         logger.error(f"Error initializing login manager: {str(e)}")
         raise
+
+    # User Loader for Login Manager
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            user = User.get(user_id)
+            logger.debug(f"Loaded user: {user_id}")
+            return user
+        except ValueError as e:
+            logger.error(f"Invalid user ID {user_id}: {str(e)}")
+            return None
+        except sqlite3.DatabaseError as e:
+            logger.error(f"Database error loading user {user_id}: {str(e)}\n{format_exc()}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error loading user {user_id}: {str(e)}\n{format_exc()}")
+            return None
 
     # Register Jinja2 filters
     @app.template_filter('datetimeformat')
@@ -176,17 +190,16 @@ def create_app(config_class=None):
     def internal_server_error(error):
         logger.error(f"500 Internal Server error occurred: {str(error)}")
         return render_template('500.html'), 500
+    
+    @app.errorhandler(504)
+    def internal_server_error(error):
+        logger.error(f"500 Internal Server error occurred: {str(error)}")
+        return render_template('504.html'), 500
+
+    @app.errorhandler(Exception)
+    def handle_error(error):
+        logger.error(f"Unhandled error: {str(error)}\n{format_exc()}")
+        return render_template('error.html', error=str(error)), 500
 
     logger.info("Application creation completed successfully")
     return app
-
-# User Loader for Login Manager
-@login_manager.user_loader
-def load_user(user_id):
-    try:
-        user = User.get(user_id)
-        logger.debug(f"Loaded user: {user_id}")
-        return user
-    except Exception as e:
-        logger.error(f"Error loading user {user_id}: {str(e)}")
-        return None
