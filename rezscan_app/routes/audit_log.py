@@ -7,9 +7,23 @@ import logging
 from datetime import datetime
 import pytz
 import re
+import sqlite3
 
 audit_log_bp = Blueprint('audit_log', __name__, url_prefix='/auditlog')
 logger = logging.getLogger(__name__)
+def log_audit_action(username, action, target, details=None):
+    """Helper function to log actions to audit_log table and logger."""
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(
+                "INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)",
+                (username, action, target, details)
+            )
+            conn.commit()
+            logger.debug(f"Audit log created: {username} - {action} - {target}")
+    except sqlite3.Error as e:
+        logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
 # Pagination settings
 PER_PAGE = 25
@@ -34,6 +48,14 @@ def parse_and_convert_timestamp(text, local_tz):
 @login_required
 def view_audit_log():
     logger.debug(f"User {current_user.username} accessing audit log")
+
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    log_audit_action(
+        username=username,
+        action='view',
+        target='audit_log',
+        details='Viewed audit log page'
+    )
 
     username_filter = request.args.get('username', '').strip()
     action_filter = request.args.get('action', '').strip()

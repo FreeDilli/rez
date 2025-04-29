@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from rezscan_app.models.database import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
-from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.utils.constants import VALID_ROLES, MIN_PASSWORD_LENGTH
 from rezscan_app.routes.auth import role_required
 import logging

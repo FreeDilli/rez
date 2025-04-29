@@ -5,20 +5,32 @@
 <div class="container mt-4">
     <h2>👤 My Account</h2>
 
-    <form method="POST" class="mt-4">
+    <!-- Display flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="mt-4" id="accountForm">
         <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" value="{{ user.username }}" readonly>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Role</label>
-            <input type="text" class="form-control" value="{{ user.role | capitalize }}" readonly>
+            <label for="role" class="form-label">Role</label>
+            <input type="text" class="form-control" id="role" value="{{ user.role | capitalize }}" readonly>
         </div>
 
         <div class="mb-3">
             <label for="theme" class="form-label">Theme Preference</label>
-            <select class="form-select" id="theme" name="theme">
+            <select class="form-select" id="theme" name="theme" required>
                 <option value="dark" {% if user.theme == 'dark' %}selected{% endif %}>Dark</option>
                 <option value="light" {% if user.theme == 'light' %}selected{% endif %}>Light</option>
             </select>
@@ -26,10 +38,26 @@
 
         <div class="mb-3">
             <label for="new_password" class="form-label">Change Password</label>
-            <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Leave blank to keep current password">
+            <input type="password" id="new_password" name="new_password" class="form-control" 
+                   placeholder="Leave blank to keep current password" minlength="8" 
+                   aria-describedby="passwordHelp">
+            <div id="passwordHelp" class="form-text">
+                Password must be at least 8 characters long. Leave blank to keep current password.
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary">Update Account</button>
     </form>
 </div>
+
+<!-- Optional JavaScript for client-side validation -->
+<script>
+    document.getElementById('accountForm').addEventListener('submit', function(event) {
+        const password = document.getElementById('new_password').value;
+        if (password && password.length < 8) {
+            event.preventDefault();
+            alert('Password must be at least 8 characters long.');
+        }
+    });
+</script>
 {% endblock %}
