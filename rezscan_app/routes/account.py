@@ -3,15 +3,37 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from rezscan_app.models.database import get_db
 import logging
+import sqlite3
 
 account_bp = Blueprint('account', __name__, url_prefix='/account')
 logger = logging.getLogger(__name__)
+def log_audit_action(username, action, target, details=None):
+    """Helper function to log actions to audit_log table and logger."""
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(
+                "INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)",
+                (username, action, target, details)
+            )
+            conn.commit()
+            logger.debug(f"Audit log created: {username} - {action} - {target}")
+    except sqlite3.Error as e:
+        logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
 @account_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def account():
     logger.debug(f"User {current_user.username} accessed account page")
     
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    log_audit_action(
+        username=username,
+        action='view',
+        target='account',
+        details='Viewed account page'
+    )
+
     if request.method == 'POST':
         new_password = request.form.get('new_password')
         theme = request.form.get('theme')
