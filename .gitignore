@@ -1,8 +1,22 @@
-venv/
+# Python compiled files
 __pycache__/
-.env
 *.pyc
+*.pyo
+*.pyd
 *.py[cod]
+
+# Virtual environments
+venv/
+env/
+
+# Sensitive files
+# config.py  # If it contains sensitive data (consider environment variables instead)
+.env
+*.env
+*.
+
+logs/
+
 .DS_Store
 *.log
 *.db
