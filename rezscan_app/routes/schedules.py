@@ -42,7 +42,7 @@ def manage_schedules():
             return render_template('schedules.html', groups=groups, category_filter=category_filter, categories=categories)
     except Exception as e:
         logger.error(f"Error listing schedules: {e}")
-        flash('An error occurred while retrieving schedules.', 'error')
+        flash('An error occurred while retrieving schedules.', 'danger')
         return render_template('schedules.html', groups=[], category_filter=category_filter, categories=[])
 
 @schedules_bp.route('/admin/schedules/create', methods=['GET', 'POST'])
@@ -54,7 +54,7 @@ def create_schedule():
         category = request.form.get('category')
 
         if not name or not category:
-            flash('Name and category are required.', 'danger')
+            flash('Name and category are required.', 'warning')
             return redirect(url_for('schedules.create_schedule'))
 
         try:
@@ -104,7 +104,7 @@ def edit_schedule(group_id):
                             if not all([day, location, start, end]):
                                 continue
                             if week and week not in valid_week_types:
-                                flash(f'Invalid week type: {week}. Skipping block.', 'error')
+                                flash(f'Invalid week type: {week}. Skipping block.', 'warning')
                                 continue
 
                             c.execute(
@@ -120,7 +120,7 @@ def edit_schedule(group_id):
                         return redirect(url_for('schedules.edit_schedule', group_id=group_id))
                     except sqlite3.Error as e:
                         logger.error(f"Database error updating schedule blocks for group_id {group_id}: {e}")
-                        flash('Database error while updating schedule blocks.', 'error')
+                        flash('Database error while updating schedule blocks.', 'danger')
 
                 else:
                     name = request.form['name'].strip()
@@ -128,7 +128,7 @@ def edit_schedule(group_id):
                     category = request.form['category'].strip()
 
                     if not name or not category:
-                        flash('Name and category are required.', 'error')
+                        flash('Name and category are required.', 'warning')
                         return redirect(url_for('schedules.edit_schedule', group_id=group_id))
 
                     c.execute(
@@ -136,7 +136,7 @@ def edit_schedule(group_id):
                         (name, description, category, group_id)
                     )
                     if c.rowcount == 0:
-                        flash('Schedule group not found.', 'error')
+                        flash('Schedule group not found.', 'warning')
                         return redirect(url_for('schedules.manage_schedules'))
                     db.commit()
                     flash('Schedule group updated successfully.', 'success')
@@ -146,7 +146,7 @@ def edit_schedule(group_id):
             c.execute('SELECT * FROM schedule_groups WHERE id = ?', (group_id,))
             schedule = c.fetchone()
             if not schedule:
-                flash('Schedule group not found.', 'error')
+                flash('Schedule group not found.', 'warning')
                 return redirect(url_for('schedules.manage_schedules'))
 
             c.execute('SELECT * FROM schedule_blocks WHERE group_id = ?', (group_id,))
@@ -158,7 +158,7 @@ def edit_schedule(group_id):
             return render_template('schedule_form.html', action='Edit', schedule=schedule, blocks=blocks, locations=locations)
     except Exception as e:
         logger.error(f"Error in edit_schedule for group_id {group_id}: {e}")
-        flash('An error occurred while accessing the schedule.', 'error')
+        flash('An error occurred while accessing the schedule.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))
 
 @schedules_bp.route('/<int:group_id>/delete')
@@ -170,14 +170,14 @@ def delete_schedule(group_id):
             c = db.cursor()
             c.execute('DELETE FROM schedule_groups WHERE id = ?', (group_id,))
             if c.rowcount == 0:
-                flash('Schedule group not found.', 'error')
+                flash('Schedule group not found.', 'warning')
             else:
                 db.commit()
                 flash('Schedule group deleted.', 'warning')
             return redirect(url_for('schedules.manage_schedules'))
     except Exception as e:
         logger.error(f"Error deleting schedule group {group_id}: {e}")
-        flash('An error occurred while deleting the schedule group.', 'error')
+        flash('An error occurred while deleting the schedule group.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))
 
 @schedules_bp.route('/<int:group_id>/assign', methods=['GET', 'POST'])
@@ -205,11 +205,11 @@ def assign_schedule(group_id):
             c.execute('SELECT name FROM schedule_groups WHERE id = ?', (group_id,))
             group = c.fetchone()
             if not group:
-                flash('Schedule group not found.', 'error')
+                flash('Schedule group not found.', 'warning')
                 return redirect(url_for('schedules.manage_schedules'))
 
             return render_template('schedule_assign.html', group_id=group_id, group_name=group[0], residents=residents, assigned=assigned)
     except Exception as e:
         logger.error(f"Error in assign_schedule for group_id {group_id}: {e}")
-        flash('An error occurred while accessing resident assignments.', 'error')
+        flash('An error occurred while accessing resident assignments.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))

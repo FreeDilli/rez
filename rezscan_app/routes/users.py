@@ -49,7 +49,7 @@ def manage_users():
                     target='users',
                     details=f"Failed to add user {target_username}: Password too short"
                 )
-                flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
+                flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
                 return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
             if role not in VALID_ROLES:
                 logger.warning(f"User {username} failed to add user '{target_username}': Invalid role '{role}'")
@@ -59,7 +59,7 @@ def manage_users():
                     target='users',
                     details=f"Failed to add user {target_username}: Invalid role {role}"
                 )
-                flash(f"Invalid role selected.", "danger")
+                flash(f"Invalid role selected.", "warning")
                 return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
             hashed_password = generate_password_hash(password)
             logger.debug(f"User {username} adding user '{target_username}' with role '{role}'")
@@ -85,7 +85,7 @@ def manage_users():
                         target='users',
                         details=f"Failed to add user {target_username}: Username already exists"
                     )
-                    flash(f"User '{target_username}' already exists.", "danger")
+                    flash(f"User '{target_username}' already exists.", "warning")
                 else:
                     logger.error(f"User {username} failed to add user '{target_username}': Database integrity error - {str(e)}")
                     log_audit_action(
@@ -163,7 +163,7 @@ def edit_user(username):
                 target='users',
                 details=f"Failed to update role for {username}: Invalid role {new_role}"
             )
-            flash(f"Invalid role selected.", "danger")
+            flash(f"Invalid role selected.", "warning")
             return redirect(url_for('users.manage_users'))
 
         logger.debug(f"User {current_username} updating role for user '{username}' to '{new_role}'")
@@ -179,7 +179,7 @@ def edit_user(username):
                         target='users',
                         details=f"Failed to update role for {username}: User not found"
                     )
-                    flash(f"User '{username}' not found.", "danger")
+                    flash(f"User '{username}' not found.", "warning")
                 else:
                     conn.commit()
                     logger.info(f"User {current_username} updated role for '{username}' to '{new_role}'")
@@ -215,7 +215,7 @@ def edit_user(username):
                     target='edit_user',
                     details=f"User {username} not found"
                 )
-                flash(f"User '{username}' not found.", "danger")
+                flash(f"User '{username}' not found.", "warning")
                 return redirect(url_for('users.manage_users'))
             logger.debug(f"User {current_username} accessed edit page for user '{username}'")
             log_audit_action(
@@ -256,7 +256,7 @@ def change_password():
                 target='change_password',
                 details='Missing required fields'
             )
-            flash("All fields are required.", "danger")
+            flash("All fields are required.", "warning")
             return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
         if new_password != confirm_password:
@@ -267,7 +267,7 @@ def change_password():
                 target='change_password',
                 details='New passwords do not match'
             )
-            flash("New passwords do not match.", "danger")
+            flash("New passwords do not match.", "warning")
             return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
         if len(new_password) < MIN_PASSWORD_LENGTH:
@@ -278,7 +278,7 @@ def change_password():
                 target='change_password',
                 details=f"New password too short (< {MIN_PASSWORD_LENGTH} characters)"
             )
-            flash(f"New password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
+            flash(f"New password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
             return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
         try:
@@ -296,7 +296,7 @@ def change_password():
                         target='change_password',
                         details='User not found'
                     )
-                    flash("User not found.", "danger")
+                    flash("User not found.", "warning")
                     return redirect(url_for('users.change_password'))
 
                 if not check_password_hash(user['password'], current_password):
@@ -307,7 +307,7 @@ def change_password():
                         target='change_password',
                         details='Incorrect current password'
                     )
-                    flash("Current password is incorrect.", "danger")
+                    flash("Current password is incorrect.", "warning")
                     return render_template('change_password.html', MIN_PASSWORD_LENGTH=MIN_PASSWORD_LENGTH)
 
                 hashed_new_password = generate_password_hash(new_password)
@@ -362,7 +362,7 @@ def reset_password(username):
                     target='users',
                     details=f"Failed to reset password for {username}: User not found"
                 )
-                flash(f"User '{username}' not found.", "danger")
+                flash(f"User '{username}' not found.", "warning")
             else:
                 conn.commit()
                 logger.info(f"User {current_username} reset password for '{username}'")
@@ -399,7 +399,7 @@ def delete_user(username):
             target='users',
             details=f"Attempted to delete own account {username}"
         )
-        flash("You cannot delete your own account.", "danger")
+        flash("You cannot delete your own account.", "warning")
         return redirect(url_for('users.manage_users'))
 
     try:
@@ -414,7 +414,7 @@ def delete_user(username):
                     target='users',
                     details=f"Failed to delete user {username}: User not found"
                 )
-                flash(f"User '{username}' not found.", "danger")
+                flash(f"User '{username}' not found.", "warning")
             else:
                 conn.commit()
                 logger.info(f"User {current_username} deleted user '{username}'")

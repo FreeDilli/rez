@@ -171,7 +171,7 @@ def add_resident():
                 target='residents',
                 details='Missing required fields'
             )
-            flash('All fields are required.', 'danger')
+            flash('All fields are required.', 'warning')
             return redirect(url_for('residents.add_resident'))
 
         try:
@@ -198,7 +198,7 @@ def add_resident():
                 target='residents',
                 details=f"MDOC {mdoc} already exists"
             )
-            flash('Resident with this MDOC already exists.', 'danger')
+            flash('Resident with this MDOC already exists.', 'warning')
         except sqlite3.Error as e:
             logger.error(f"Database error for user {username} adding resident: {str(e)}")
             log_audit_action(
@@ -232,6 +232,9 @@ def edit_resident(mdoc):
     try:
         with get_db() as conn:
             c = conn.cursor()
+            c.execute("SELECT name FROM residents WHERE mdoc = ?", (mdoc,))
+            resident_name = c.fetchone()
+            resident_name = resident_name[0] if resident_name else 'unknown'
             if request.method == 'POST':    
                 name = request.form['name'].strip()
                 new_mdoc = request.form['mdoc'].strip()
@@ -255,7 +258,7 @@ def edit_resident(mdoc):
                             target='residents',
                             details=f"MDOC {mdoc} not found"
                         )
-                        flash("Resident not found.", "error")
+                        flash("Resident not found.", "warning")
                         return redirect(url_for('residents.residents'))
                     conn.commit()
                     logger.info(f"User {username} updated resident: {name} (MDOC: {new_mdoc})")
@@ -265,7 +268,7 @@ def edit_resident(mdoc):
                         target='residents',
                         details=f"Updated resident: {name}, MDOC: {new_mdoc}, Unit: {unit}, Housing: {housing_unit}, Level: {level}"
                     )
-                    flash("Resident updated successfully.", "success")
+                    flash(f"Resident {resident_name} updated successfully.", "success")
                     return redirect(url_for('residents.residents'))
                 except sqlite3.IntegrityError:
                     logger.error(f"User {username} failed to edit resident: MDOC {new_mdoc} already exists")
@@ -275,7 +278,7 @@ def edit_resident(mdoc):
                         target='residents',
                         details=f"MDOC {new_mdoc} already exists"
                     )
-                    flash("Error: MDOC must be unique.", "error")
+                    flash("Error: MDOC must be unique.", "warning")
                     c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE mdoc = ?", (mdoc,))
                     resident = c.fetchone()
                     return render_template('edit_resident.html', resident=resident,
@@ -288,7 +291,7 @@ def edit_resident(mdoc):
                         target='residents',
                         details=f"Database error editing resident: {str(e)}"
                     )
-                    flash(f"Error editing resident: {str(e)}", "error")
+                    flash(f"Error editing resident: {str(e)}", "danger")
                     return redirect(url_for('residents.residents'))
 
             c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE mdoc = ?", (mdoc,))
@@ -301,7 +304,7 @@ def edit_resident(mdoc):
                     target='edit_resident',
                     details=f"MDOC {mdoc} not found"
                 )
-                flash("Resident not found.", "error")
+                flash("Resident not found.", "warning")
                 return redirect(url_for('residents.residents'))
             
             logger.debug(f"User {username} accessed edit page for resident MDOC {mdoc}")
@@ -320,7 +323,7 @@ def edit_resident(mdoc):
             target='edit_resident',
             details=f"Database error: {str(e)}"
         )
-        flash("Database error occurred.", "error")
+        flash("Database error occurred.", "danger")
         return redirect(url_for('residents.residents'))
 
     return render_template('edit_resident.html', resident=resident,
@@ -350,7 +353,7 @@ def delete_resident(mdoc):
                     target='residents',
                     details=f"MDOC {mdoc} not found"
                 )
-                flash("Resident not found.", "error")
+                flash("Resident not found.", "warning")
             else:
                 conn.commit()
                 logger.info(f"User {username} deleted resident: {resident_name} (MDOC: {mdoc})")
@@ -360,7 +363,7 @@ def delete_resident(mdoc):
                     target='residents',
                     details=f"Deleted resident: {resident_name}, MDOC: {mdoc}"
                 )
-                flash("Resident deleted successfully.", "success")
+                flash(f"Resident {resident_name} deleted successfully.", "success")
                 
     except sqlite3.Error as e:
         logger.error(f"Error deleting resident MDOC {mdoc} for user {username}: {str(e)}")
@@ -370,7 +373,7 @@ def delete_resident(mdoc):
             target='residents',
             details=f"Database error deleting resident: {str(e)}"
         )
-        flash(f"Error deleting resident: {str(e)}", "error")
+        flash(f"Error deleting resident: {str(e)}", "danger")
     
     return redirect(url_for('residents.residents'))
 
@@ -410,7 +413,7 @@ def delete_all_residents():
             target='residents',
             details=f"Database error deleting all residents: {str(e)}"
         )
-        flash(f"Error deleting residents: {str(e)}", "error")
+        flash(f"Error deleting residents: {str(e)}", "danger")
     
     return redirect(url_for('residents.residents'))
 
@@ -458,7 +461,7 @@ def export_residents():
             target='residents_export',
             details=f"Database error during export: {str(e)}"
         )
-        flash("Error exporting residents.", "error")
+        flash("Error exporting residents.", "danger")
         return redirect(url_for('residents.residents'))
     except Exception as e:
         logger.error(f"Unexpected error for user {username} during resident export: {str(e)}")
@@ -468,7 +471,7 @@ def export_residents():
             target='residents_export',
             details=f"Unexpected error during export: {str(e)}"
         )
-        flash("Error exporting residents.", "error")
+        flash("Error exporting residents.", "danger")
         return redirect(url_for('residents.residents'))
 
 @residents_bp.route('/admin/residents/import', methods=['GET'], strict_slashes=False)

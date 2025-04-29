@@ -70,7 +70,7 @@ def login():
 
         if not username or not password:
             logger.warning(f"Login failed for username {username}: Missing username or password")
-            flash("Username and password are required.", "danger")
+            flash("Username and password are required.", "warning")
             log_audit_action(
                 username=username,
                 action='login_failed',
@@ -81,7 +81,7 @@ def login():
 
         if len(password) < MIN_PASSWORD_LENGTH:
             logger.warning(f"Login failed for username {username}: Password too short")
-            flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "danger")
+            flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
             log_audit_action(
                 username=username,
                 action='login_failed',
@@ -112,7 +112,7 @@ def login():
                 return redirect(url_for(redirect_endpoint))
             else:
                 logger.warning(f"Login failed for username {username}: Invalid username or password")
-                flash("Invalid username or password", "danger")
+                flash("Invalid username or password", "warning")
                 log_audit_action(
                     username=username,
                     action='login_failed',

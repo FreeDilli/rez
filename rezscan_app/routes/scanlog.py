@@ -102,7 +102,7 @@ def delete_scanlog():
             target='scanlog_delete',
             details=f"Error deleting scan logs: {str(e)}"
         )
-        flash("Error deleting scan logs.", "error")
+        flash("Error deleting scan logs.", "danger")
         return redirect(url_for('scanlog.scanlog'))
 
 @scanlog_bp.route('/admin/scanlog/export', strict_slashes=False)
@@ -153,7 +153,7 @@ def export_scanlog():
             target='scanlog_export',
             details=f"Database error during export: {str(e)}"
         )
-        flash("Error exporting scanlog.", "error")
+        flash("Error exporting scanlog.", "danger")
         return redirect(url_for('scanlog.scanlog'))
     except ValueError as e:
         logger.error(f"Timestamp parsing error for user {username} during scanlog export: {str(e)}")
@@ -163,7 +163,7 @@ def export_scanlog():
             target='scanlog_export',
             details=f"Timestamp parsing error: {str(e)}"
         )
-        flash("Error exporting scanlog due to invalid timestamp format.", "error")
+        flash("Error exporting scanlog due to invalid timestamp format.", "danger")
         return redirect(url_for('scanlog.scanlog'))
     except Exception as e:
         logger.error(f"Unexpected error for user {username} during scanlog export: {str(e)}")
@@ -173,5 +173,5 @@ def export_scanlog():
             target='scanlog_export',
             details=f"Unexpected error during export: {str(e)}"
         )
-        flash("Error exporting scanlog.", "error")
+        flash("Error exporting scanlog.", "danger")
         return redirect(url_for('scanlog.scanlog'))

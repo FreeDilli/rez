@@ -32,7 +32,6 @@ def log_audit_action(username, action, target, details=None):
 def manage_locations():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/locations route, method: {request.method}")
-    message = None
     locations = []
     
     try:
@@ -44,13 +43,13 @@ def manage_locations():
                 location_type = request.form['type'].strip()
                 
                 if not (name and prefix and location_type):
-                    message = "All fields are required."
+                    flash("All fields are required.", "warning")
                     log_audit_action(
                         username, 'add_location_failed', 'locations', 'Missing required fields'
                     )
                     logger.warning(f"User {username} failed to add location: missing fields")
                 elif not prefix.isalnum():
-                    message = "Prefix must be alphanumeric."
+                    flash("Prefix must be alphanumeric.", "warning")
                     log_audit_action(
                         username, 'add_location_failed', 'locations', 'Invalid prefix (non-alphanumeric)'
                     )
@@ -59,13 +58,13 @@ def manage_locations():
                     try:
                         c.execute("INSERT INTO locations (name, prefix, type) VALUES (?, ?, ?)", (name, prefix, location_type))
                         conn.commit()
-                        message = f"Location '{name}' added."
+                        flash(f"Location '{name}' added.", "success")
                         log_audit_action(
                             username, 'add_location', 'locations', f"Added location: {name}, prefix: {prefix}, type: {location_type}"
                         )
                         logger.info(f"User {username} added location: {name}")
                     except sqlite3.IntegrityError as e:
-                        message = "Location or prefix already exists."
+                        flash("Location or prefix already exists.", "warning")
                         log_audit_action(
                             username, 'add_location_failed', 'locations', f"Integrity error: {str(e)}"
                         )
@@ -83,9 +82,9 @@ def manage_locations():
         log_audit_action(
             username, 'error', 'locations', f"Database error: {str(e)}"
         )
-        message = "Database error occurred."
+        flash("Database error occurred.", "danger")
     
-    return render_template('locations.html', locations=locations, message=message, LOCATION_TYPES=LOCATION_TYPES)
+    return render_template('locations.html', locations=locations, LOCATION_TYPES=LOCATION_TYPES)
 
 @locations_bp.route('/admin/locations/delete/<int:location_id>', methods=['POST'], strict_slashes=False)
 @login_required
@@ -123,6 +122,6 @@ def delete_location(location_id):
         log_audit_action(
             username, 'delete_location_failed', 'locations', f"Database error: {str(e)}"
         )
-        flash("Error deleting location.", "error")
+        flash("Error deleting location.", "danger")
     
     return redirect(url_for('locations.manage_locations'))

@@ -65,7 +65,7 @@ def scan():
                 target='scan',
                 details='No MDOC provided'
             )
-            flash("No barcode scanned.", "danger")
+            flash("No barcode scanned.", "warning")
             return render_template('scan.html')
 
         if '-' not in raw_input:
@@ -76,7 +76,7 @@ def scan():
                 target='scan',
                 details='Invalid scan format (missing prefix-MDOC separator)'
             )
-            flash("Invalid scan format. Expected format: PREFIX-MDOC", "danger")
+            flash("Invalid scan format. Expected format: PREFIX-MDOC", "warning")
             return render_template('scan.html')
 
         prefix, mdoc = raw_input.split('-', 1)
