@@ -19,21 +19,9 @@ login_manager.login_view = 'auth.login'
 
 def create_app(config_class=None):
     logger.debug("Starting application creation")
-    
     app = Flask(__name__, static_folder='static', template_folder='templates')
 
-    try:
-        if config_class:
-            logger.debug(f"Loading configuration from provided config class: {config_class}")
-            app.config.from_object(config_class)
-        else:
-            logger.debug("Loading default configuration from rezscan_app.config.Config")
-            app.config.from_object('rezscan_app.config.Config')
-    except Exception as e:
-        logger.error(f"Error loading configuration: {str(e)}")
-        raise
-
-    # Setup logging
+    # Setup logging first
     from rezscan_app.utils.logging_config import setup_logging
     try:
         setup_logging()
@@ -42,6 +30,18 @@ def create_app(config_class=None):
         logger.error(f"Error setting up logging: {str(e)}")
         raise
 
+    # Load configuration based on FLASK_ENV
+    env = os.getenv('FLASK_ENV', 'development')
+    from .config import Config, DevelopmentConfig, ProductionConfig, TestingConfig
+    config_map = {
+        'development': DevelopmentConfig,
+        'production': ProductionConfig,
+        'testing': TestingConfig
+    }
+    app.config.from_object(config_map[env])
+    logger.debug(f"Loaded configuration: {config_map[env].__name__}")
+
+    # Load login manager
     try:
         login_manager.init_app(app)
         logger.info("Login manager initialized successfully")
