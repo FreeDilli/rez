@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_login import LoginManager
 from rezscan_app.models.User import User
 import importlib.util
@@ -183,7 +183,7 @@ def create_app():
 
     @app.errorhandler(404)
     def page_not_found_error(error):
-        logger.warning(f"404 Not Found error occurred: {str(error)}")
+        logger.warning(f"404 Not Found error occurred: {error}, URL: {request.url}, Method: {request.method}, Referrer: {request.referrer}")
         return render_template('404.html'), 404
 
     @app.errorhandler(500)
