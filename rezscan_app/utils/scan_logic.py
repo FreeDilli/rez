@@ -42,7 +42,7 @@ def process_scan(mdoc: str, prefix: str) -> str:
                 cursor.execute("""
                 INSERT INTO residents (mdoc, name)
                 VALUES (?, ?)
-            """, (mdoc, "Unknown Resident"))
+            """, (mdoc, "Update Resident"))
             logger.info(f"Added unknown resident with MDOC '{mdoc}' to database.")
 
             cursor.execute("""
