@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (brandText) brandText.style.display = 'none';
         toggleBtn.setAttribute('aria-expanded', 'false');
     }
-    // Remove no-transition after state application
-    document.documentElement.classList.remove('no-transition');
+    // Restore transitions
+    sidebar.style.transition = 'width 0.3s ease';
     // Keyboard accessibility for theme toggle
     const themeToggle = document.querySelector('.theme-toggle');
     themeToggle.addEventListener('keypress', function(e) {

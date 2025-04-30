@@ -9,7 +9,7 @@ import pytz
 import re
 import sqlite3
 
-audit_log_bp = Blueprint('audit_log', __name__, url_prefix='/auditlog')
+audit_log_bp = Blueprint('audit_log', __name__)
 logger = logging.getLogger(__name__)
 def log_audit_action(username, action, target, details=None):
     """Helper function to log actions to audit_log table and logger."""
@@ -44,7 +44,7 @@ def parse_and_convert_timestamp(text, local_tz):
             continue
     return text
 
-@audit_log_bp.route('/', methods=['GET'])
+@audit_log_bp.route('/auditlog', methods=['GET'])
 @login_required
 def view_audit_log():
     logger.debug(f"User {current_user.username} accessing audit log")

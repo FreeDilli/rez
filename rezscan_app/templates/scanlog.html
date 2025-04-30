@@ -59,7 +59,7 @@
           {% for scan in scans %}
           <tr>
             <td>{{ scan[0] }}</td>
-            <td>{{ scan[1] }}</td>
+            <td>{{ scan[1] or 'Unknown Resident' }}</td>
             <td>{{ scan[2] | dateformat }}</td>
             <td>{{ scan[2] | timeformat }}</td>
             <td>{{ scan[3] }}</td>

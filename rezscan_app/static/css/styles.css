@@ -3,20 +3,20 @@ body {
     overflow-x: hidden; 
 }
 .sidebar {
-    width: 250px;
+    width: 250px !important;
     transition: width 0.3s ease;
     background-color: var(--bs-light);
-    position: relative;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
     box-sizing: border-box;
 }
 .sidebar:not(.collapsed) {
     width: 250px !important;
 }
 .sidebar.collapsed { 
-    width: 80px; 
-}
-.sidebar.no-transition {
-    transition: none;
+    width: 80px !important; 
 }
 [data-bs-theme="dark"] .sidebar {
     background-color: #1f1f1f;
@@ -77,18 +77,23 @@ footer {
     color: #ffffff;
 }
 main {
+    margin-left: 250px;
     transition: margin-left 0.3s ease;
 }
 main .container {
     margin-left: 0;
     padding-left: 15px;
+    padding-right: 15px;
+}
+.sidebar.collapsed ~ main {
+    margin-left: 80px;
 }
 @media (max-width: 768px) {
     .sidebar {
-        width: 80px;
+        width: 80px !important;
     }
     .sidebar.collapsed {
-        width: 80px;
+        width: 80px !important;
     }
     .sidebar .nav-link span, #brandText {
         display: none;
@@ -110,5 +115,6 @@ main .container {
     main .container {
         margin-left: 0;
         padding-left: 15px;
+        padding-right: 15px;
     }
 }

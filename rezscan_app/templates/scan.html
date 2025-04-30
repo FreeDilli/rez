@@ -4,18 +4,6 @@
 {% block content %}
 <h2 class="mb-4">Scanner</h2>
 
-<!-- 🔔 Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" id="scan-alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
 {% if current_location %}
 <div class="mb-4">
   <span class="badge text-bg-primary">Location: {{ current_location }}</span>

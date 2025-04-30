@@ -10,11 +10,19 @@
         // Apply theme
         const storedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-bs-theme', storedTheme);
-        // Apply sidebar state before DOM renders
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            document.documentElement.classList.add('no-transition');
-            document.write('<style>#sidebarMenu { width: 80px; } #brandText { display: none; }</style>');
-        }
+        // Apply sidebar state synchronously
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        document.write(`
+            <style>
+                #sidebarMenu${isCollapsed ? '.collapsed' : ''} {
+                    width: ${isCollapsed ? '80px' : '250px'};
+                    transition: none;
+                }
+                #brandText {
+                    display: ${isCollapsed ? 'none' : 'inline'};
+                }
+            </style>
+        `);
     </script>
 </head>
 
