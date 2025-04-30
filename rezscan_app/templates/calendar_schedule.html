@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+{% block title %}Weekly Calendar View - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">📅 Weekly Schedule Overview</h2>
+
+  <!-- Week Filter Bar -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label for="week" class="form-label">Select Week</label>
+      <input type="date" name="week" id="week" class="form-control" value="{{ selected_date }}">
+    </div>
+    <div class="col-md-3">
+      <label for="filter_location" class="form-label">Filter by Location</label>
+      <select name="location" id="filter_location" class="form-select">
+        <option value="">All Locations</option>
+        {% for loc in locations %}
+          <option value="{{ loc }}" {% if loc == selected_location %}selected{% endif %}>{{ loc }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-auto">
+      <button type="submit" class="btn btn-primary">Apply</button>
+    </div>
+  </form>
+
+  <!-- Weekly Grid -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>Time Block</th>
+          {% for day in week_days %}
+          <th>{{ day }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for block in time_blocks %}
+        <tr>
+          <th>{{ block }}</th>
+          {% for day in week_days %}
+            <td style="min-width: 150px;">
+              {% for entry in schedule[day][block] %}
+                <div class="border rounded p-1 mb-1 bg-light text-start">
+                  <strong>{{ entry.name }}</strong><br>
+                  <small>{{ entry.location }}<br>{{ entry.group }}</small>
+                </div>
+              {% endfor %}
+            </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

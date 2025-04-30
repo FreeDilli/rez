@@ -9,7 +9,7 @@
     Welcome, <strong>{{ current_user.username }}</strong>! Here you can manage and monitor all scheduling-related tasks.
   </div>
 
-  <div class="row row-cols-1 row-cols-md-2 g-4">
+  <div class="row row-cols-1 row-cols-md-3 g-4">
     <div class="col">
       <div class="card h-100 border-primary">
         <div class="card-body text-center">
@@ -23,9 +23,19 @@
     <div class="col">
       <div class="card h-100 border-success">
         <div class="card-body text-center">
-          <h5 class="card-title">View Live Schedule</h5>
-          <p class="card-text">See which groups are currently active.</p>
-          <a href="{{ url_for('schedules.manage_schedules') }}" class="btn btn-success">View Live Schedule</a>
+          <h5 class="card-title">View Weekly Calendar</h5>
+          <p class="card-text">See a full calendar view of currently active schedule groups.</p>
+          <a href="{{ url_for('calendar_schedule.weekly_calendar') }}" class="btn btn-success">View Calendar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-info">
+        <div class="card-body text-center">
+          <h5 class="card-title">Resident Schedule Lookup</h5>
+          <p class="card-text">Search by MDOC and date to see a resident's current schedule.</p>
+          <a href="{{ url_for('resident_schedule.lookup') }}" class="btn btn-info">Lookup Schedule</a>
         </div>
       </div>
     </div>

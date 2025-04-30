@@ -3,7 +3,10 @@ from rezscan_app.models.database import get_db
 import logging
 from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.audit_log import log_audit_action
 import sqlite3
+from datetime import datetime
+
 # Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -45,7 +48,7 @@ def manage_schedules():
         flash('An error occurred while retrieving schedules.', 'danger')
         return render_template('schedules.html', groups=[], category_filter=category_filter, categories=[])
 
-@schedules_bp.route('/admin/schedules/create', methods=['GET', 'POST'])
+@schedules_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_schedule():
     if request.method == 'POST':
@@ -60,18 +63,17 @@ def create_schedule():
         try:
             with get_db() as conn:
                 conn.execute(
-                    "INSERT INTO schedules (name, description, category) VALUES (?, ?, ?)",
+                    "INSERT INTO schedule_groups (name, description, category) VALUES (?, ?, ?)",
                     (name, description, category)
                 )
                 conn.commit()
             flash('Schedule group created successfully.', 'success')
-            return redirect(url_for('schedules.list_schedules'))
+            return redirect(url_for('schedules.manage_schedules'))
         except Exception as e:
             flash(f'Error creating schedule group: {e}', 'danger')
             return redirect(url_for('schedules.create_schedule'))
 
     return render_template('schedule_form.html', action='Create', schedule={})
-
 
 @schedules_bp.route('/<int:group_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -173,6 +175,12 @@ def delete_schedule(group_id):
                 flash('Schedule group not found.', 'warning')
             else:
                 db.commit()
+                log_audit_action(
+                    username=current_user.username,
+                    action="delete_schedule_group",
+                    target=f"group_id:{group_id}",
+                    details="Deleted schedule group"
+                )
                 flash('Schedule group deleted.', 'warning')
             return redirect(url_for('schedules.manage_schedules'))
     except Exception as e:
@@ -189,14 +197,29 @@ def assign_schedule(group_id):
 
             if request.method == 'POST':
                 selected_mdocs = request.form.getlist('assign[]')
+
                 c.execute('DELETE FROM resident_schedules WHERE group_id = ?', (group_id,))
+                log_audit_action(
+                    username=current_user.username,
+                    action="clear_assignments",
+                    target=f"schedule_group:{group_id}",
+                    details="Cleared all resident assignments for this group"
+                )
+
                 for mdoc in selected_mdocs:
                     c.execute('INSERT INTO resident_schedules (mdoc, group_id) VALUES (?, ?)', (mdoc, group_id))
+                    log_audit_action(
+                        username=current_user.username,
+                        action="assign_resident",
+                        target=f"schedule_group:{group_id}",
+                        details=f"Assigned MDOC {mdoc} to schedule group {group_id}"
+                    )
+
                 db.commit()
                 flash('Resident assignments updated.', 'success')
                 return redirect(url_for('schedules.manage_schedules'))
 
-            c.execute('SELECT id, name, mdoc, unit, housing_unit, level FROM residents')
+            c.execute('SELECT id, name, mdoc, area, housing_unit, level FROM residents')
             residents = c.fetchall()
 
             c.execute('SELECT mdoc FROM resident_schedules WHERE group_id = ?', (group_id,))
@@ -213,3 +236,41 @@ def assign_schedule(group_id):
         logger.error(f"Error in assign_schedule for group_id {group_id}: {e}")
         flash('An error occurred while accessing resident assignments.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))
+
+@schedules_bp.route('/live')
+@login_required
+def live_schedule():
+    try:
+        now = datetime.now()
+        current_time = now.strftime('%H:%M')
+        current_day = now.strftime('%A')
+
+        log_audit_action(
+            username=current_user.username,
+            action="view",
+            target="live_schedule",
+            details=f"Viewed live schedule at {now.isoformat()}"
+        )
+
+        with get_db() as db:
+            c = db.cursor()
+            c.execute('''
+                SELECT r.name AS resident_name, r.mdoc, sg.name AS group_name, sb.day_of_week,
+                       sb.start_time, sb.end_time, sb.location
+                FROM resident_schedules rs
+                JOIN residents r ON rs.mdoc = r.mdoc
+                JOIN schedule_blocks sb ON rs.group_id = sb.group_id
+                JOIN schedule_groups sg ON sg.id = sb.group_id
+                WHERE sb.day_of_week = ?
+                  AND sb.start_time <= ?
+                  AND sb.end_time >= ?
+                ORDER BY sb.location, sb.start_time
+            ''', (current_day, current_time, current_time))
+
+            active_rows = c.fetchall()
+
+        return render_template('live_schedule.html', active_rows=active_rows, current_day=current_day, current_time=current_time)
+    except Exception as e:
+        logger.error(f"Error loading live schedule: {e}")
+        flash('An error occurred while loading the live schedule.', 'danger')
+        return render_template('live_schedule.html', active_rows=[], current_day='Unknown', current_time='--:--')
