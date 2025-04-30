@@ -9,12 +9,28 @@
     <form method="POST" id="addResidentForm">
         <div class="mb-3">
             <label for="name" class="form-label">Full Name</label>
-            <input type="text" name="name" id="name" class="form-control" required aria-label="Full Name">
-        </div>
+            <input type="text" 
+            name="name" 
+            id="name" 
+            pattern="^[A-Za-z, ]+$" 
+            class="form-control" 
+            placeholder="LAST NAME, FIRST NAME" 
+            oninput="filterInput(this);" 
+            required 
+            aria-label="Full Name">
+        </div>    
 
         <div class="mb-3">
             <label for="mdoc" class="form-label">MDOC Number</label>
-            <input type="text" name="mdoc" id="mdoc" class="form-control" required aria-label="MDOC Number">
+            <input type="text" 
+            name="mdoc" 
+            id="mdoc" 
+            class="form-control" 
+            placeholder="" 
+            oninput="filterNumberInput(this);" 
+            required
+            maxlength="10"
+            aria-label="MDOC Number">
             <div id="mdocError" class="invalid-feedback"></div>
         </div>
 
@@ -82,5 +98,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+// Only allows uppercase letters and spaces in the name field
+function filterInput(el) {
+    let p = el.selectionStart;
+    el.value = el.value.toUpperCase().replace(/[^A-Z, ]/g, '');
+    el.setSelectionRange(p, p);
+}
+// Only allows numbers in the MDOC field
+function filterNumberInput(el) {
+    let p = el.selectionStart;
+    el.value = el.value.replace(/[^0-9]/g, '');
+    el.setSelectionRange(p, p);
+}
 </script>
 {% endblock %}

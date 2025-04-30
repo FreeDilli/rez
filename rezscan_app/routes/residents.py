@@ -188,7 +188,7 @@ def add_resident():
                     target='residents',
                     details=f"Added resident: {name}, MDOC: {mdoc}, Unit: {unit}, Housing: {housing_unit}, Level: {level}"
                 )
-                flash('Resident added successfully!', 'success')
+                flash(f'Resident {name} added successfully!', 'success')
                 return redirect(url_for('residents.residents'))
         except sqlite3.IntegrityError:
             logger.error(f"User {username} failed to add resident: MDOC {mdoc} already exists")

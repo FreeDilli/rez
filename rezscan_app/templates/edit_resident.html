@@ -8,10 +8,27 @@
   <form method="POST" enctype="multipart/form-data" class="card p-4" id="editResidentForm">
     <div class="row g-3">
       <div class="col-md-6">
-        <input type="text" name="name" class="form-control" placeholder="Resident Name" value="{{ resident[1] }}" required aria-label="Resident Name">
+        <input type="text" 
+        name="name" 
+        pattern="^[A-Za-z, ]+$" 
+        class="form-control" 
+        placeholder="LAST NAME, FIRST NAME" 
+        value="{{ resident[1] }}"
+        oninput="filterInput(this);" 
+        required 
+        aria-label="Full Name">
       </div>
       <div class="col-md-6">
-        <input type="text" name="mdoc" class="form-control" placeholder="MDOC" value="{{ resident[2] }}" required aria-label="MDOC Number">
+        <input type="text" 
+        name="mdoc" 
+        id="mdoc" 
+        class="form-control" 
+        placeholder="" 
+        oninput="filterNumberInput(this);"
+        value="{{ resident[2] }}"
+        required
+        maxlength="10"
+        aria-label="MDOC Number">
         <div id="mdocError" class="invalid-feedback"></div>
       </div>
 
@@ -123,5 +140,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 });
+
+// Only allows uppercase letters and spaces in the name field
+function filterInput(el) {
+    let p = el.selectionStart;
+    el.value = el.value.toUpperCase().replace(/[^A-Z, ]/g, '');
+    el.setSelectionRange(p, p);
+}
+
+// Only allows numbers in the MDOC field
+function filterNumberInput(el) {
+    let p = el.selectionStart;
+    el.value = el.value.replace(/[^0-9]/g, '');
+    el.setSelectionRange(p, p);
+}
 </script>
 {% endblock %}
