@@ -26,7 +26,7 @@ def log_audit_action(username, action, target, details=None):
         logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
 # Pagination settings
-PER_PAGE = 25
+PER_PAGE = 10
 
 def parse_and_convert_timestamp(text, local_tz):
     """Convert UTC timestamps in text (e.g., in details) to local time."""

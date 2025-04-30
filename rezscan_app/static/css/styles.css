@@ -1,0 +1,114 @@
+body { 
+    min-height: 100vh; 
+    overflow-x: hidden; 
+}
+.sidebar {
+    width: 250px;
+    transition: width 0.3s ease;
+    background-color: var(--bs-light);
+    position: relative;
+    box-sizing: border-box;
+}
+.sidebar:not(.collapsed) {
+    width: 250px !important;
+}
+.sidebar.collapsed { 
+    width: 80px; 
+}
+.sidebar.no-transition {
+    transition: none;
+}
+[data-bs-theme="dark"] .sidebar {
+    background-color: #1f1f1f;
+}
+.nav-link {
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: all 0.3s;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+.nav-link.active {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary) !important;
+}
+.sidebar.collapsed .nav-link span {
+    display: none;
+}
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 10px;
+}
+.sidebar.collapsed .btn span {
+    display: none;
+}
+.sidebar.collapsed .btn {
+    justify-content: center;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+}
+.theme-toggle {
+    cursor: pointer;
+    font-size: 1.4rem;
+}
+.brand-icon {
+    height: 40px;
+    width: auto;
+}
+.toggle-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: inherit;
+    cursor: pointer;
+}
+footer {
+    background-color: var(--bs-light);
+    color: var(--bs-dark);
+    transition: all 0.3s;
+}
+[data-bs-theme="dark"] footer {
+    background-color: #212529;
+    color: #ffffff;
+}
+main {
+    transition: margin-left 0.3s ease;
+}
+main .container {
+    margin-left: 0;
+    padding-left: 15px;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        width: 80px;
+    }
+    .sidebar.collapsed {
+        width: 80px;
+    }
+    .sidebar .nav-link span, #brandText {
+        display: none;
+    }
+    .sidebar .nav-link {
+        justify-content: center;
+        padding: 10px;
+    }
+    .sidebar .btn span {
+        display: none;
+    }
+    .sidebar .btn {
+        justify-content: center;
+        padding: 10px;
+    }
+    main {
+        margin-left: 80px;
+    }
+    main .container {
+        margin-left: 0;
+        padding-left: 15px;
+    }
+}
