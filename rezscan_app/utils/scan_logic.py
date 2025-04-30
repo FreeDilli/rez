@@ -39,7 +39,11 @@ def process_scan(mdoc: str, prefix: str) -> str:
             resident = cursor.fetchone()
             resident_not_found = not resident
             if resident_not_found:
-                logger.warning(f"Resident with MDOC '{mdoc}' not found, but scan will be recorded")
+                cursor.execute("""
+                INSERT INTO residents (mdoc, name)
+                VALUES (?, ?)
+            """, (mdoc, "Unknown Resident"))
+            logger.info(f"Added unknown resident with MDOC '{mdoc}' to database.")
 
             cursor.execute("""
                 SELECT location, status, timestamp
@@ -49,7 +53,7 @@ def process_scan(mdoc: str, prefix: str) -> str:
                 LIMIT 1
             """, (mdoc,))
             last_scan = cursor.fetchone()
-
+            
             now = datetime.now()
             scan_time = now
             out_time = now - timedelta(seconds=1)
@@ -84,6 +88,8 @@ def process_scan(mdoc: str, prefix: str) -> str:
             insert_scan(cursor, mdoc, scan_time, 'In', location_name)
             conn.commit()
             message = f"Scan recorded: 'In' at {location_name}"
+            if resident_not_found:
+                message += f" Unknown resident with MDOC '{mdoc}' added to database."
             logger.info(f"Initial scan for MDOC '{mdoc}': In at {location_name}")
             return _format_return_message(message, resident_not_found)
 

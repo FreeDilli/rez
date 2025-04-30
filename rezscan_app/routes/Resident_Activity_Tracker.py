@@ -12,6 +12,15 @@ logger = logging.getLogger(__name__)
 def live_dashboard():
     logger.debug(f"User {current_user.username} accessing Resident Activity Tracker")
     
+    # Get sorting parameters
+    sort = request.args.get('sort', 'timestamp')
+    direction = request.args.get('direction', 'desc')  # Changed default from 'asc' to 'desc'
+    
+    # Validate sort and direction
+    valid_sorts = ['name', 'timestamp']
+    sort = sort if sort in valid_sorts else 'timestamp'
+    direction = direction if direction in ['asc', 'desc'] else 'desc'  # Changed default from 'asc' to 'desc'
+    
     checked_in = []
     try:
         with get_db() as conn:
@@ -25,7 +34,7 @@ def live_dashboard():
                 current_user.username,
                 'view_dashboard',
                 'resident_activity_tracker',
-                'Accessed resident activity dashboard'
+                f'Accessed resident activity dashboard with sort={sort}, direction={direction}'
             ))
 
             # Fetch latest scan for each resident with name
@@ -49,6 +58,12 @@ def live_dashboard():
                 if result:
                     checked_in.append(result)
             
+            # Sort the checked_in list
+            if sort == 'name':
+                checked_in.sort(key=lambda x: (x[0] or 'Unknown Resident').lower(), reverse=(direction == 'desc'))
+            elif sort == 'timestamp':
+                checked_in.sort(key=lambda x: x[5], reverse=(direction == 'desc'))
+
             logger.info(f"User {current_user.username} successfully loaded {len(checked_in)} checked-in residents")
 
             conn.commit()
@@ -74,7 +89,7 @@ def live_dashboard():
         except Exception as audit_error:
             logger.error(f"Failed to write audit log for dashboard error: {str(audit_error)}")
 
-    return render_template('resident_activity_tracker.html', data=checked_in)
+    return render_template('resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
 
 @resident_activity_tracker_bp.route('/check_out', methods=['POST'])
 @login_required
@@ -113,12 +128,12 @@ def check_out():
             c.execute("""
                 INSERT INTO audit_log (username, action, target, details)
                 VALUES (?, ?, ?, ?)
-            """, (
-                current_user.username,
-                'check_out',
-                f'resident:{resident_name}',
-                f'Checked out resident from {location}'
-            ))
+                """, (
+                    current_user.username,
+                    'check_out',
+                    f'resident:{resident_name}',
+                    f'Checked out resident from {location}'
+                ))
 
             conn.commit()
 

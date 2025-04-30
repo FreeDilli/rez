@@ -119,7 +119,7 @@ main .container {
     }
 }
 .table.table-striped tr.unknown-resident {
-    background-color: #f8d7da !important;
+    background-color: #eb99a0 !important;
 }
 
 .table.table-striped tr.unknown-resident td {

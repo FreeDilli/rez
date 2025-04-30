@@ -2,6 +2,18 @@
 
 {% block title %}Resident Activity Tracker{% endblock %}
 
+{% macro sort_link(column_name, label) %}
+  {% set current_sort = sort|default('name') %}
+  {% set current_dir = direction|default('asc') %}
+  {% set next_dir = 'desc' if current_sort == column_name and current_dir == 'asc' else 'asc' %}
+  <a href="{{ url_for('resident_activity_tracker.live_dashboard', sort=column_name, direction=next_dir) }}" class="text-decoration-none">
+    {{ label }}
+    {% if current_sort == column_name %}
+      {% if current_dir == 'asc' %}▲{% else %}▼{% endif %}
+    {% endif %}
+  </a>
+{% endmacro %}
+
 {% block content %}
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -30,19 +42,18 @@
           <table class="table table-striped table-hover mb-0">
             <thead class="table-dark">
               <tr>
-                <th>Name</th>
+                <th>{{ sort_link('name', 'Name') }}</th>
                 <th>MDOC</th>
-                <th>Area</th>
+                <th>Unit</th>
                 <th>Housing Unit</th>
                 <th>Level</th>
-                <th>Scanned In</th>
+                <th>{{ sort_link('timestamp', 'Scanned In') }}</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for p in people %}
-                  <!-- Debug: p[0] = {{ p[0] | tojson }} -->
-                  <tr {% if not p[0] or p[0].strip() == '' %}class="unknown-resident"{% endif %}>
+                  <tr {% if not p[0] or p[0].strip() == 'Unknown Resident' %}class="unknown-resident"{% endif %}>
                       <td>{{ p[0] or 'Unknown Resident' }}</td>
                       <td>{{ p[1] }}</td>
                       <td>{{ p[2] }}</td>
@@ -55,13 +66,13 @@
                               <input type="hidden" name="location" value="{{ p[6] }}">
                               <button type="submit" class="btn btn-sm btn-danger" aria-label="Check out resident">Check Out</button>
                           </form>
-                          {% if not p[0] or p[0].strip() == '' and p[1] %}
-                          <a href="{{ url_for('residents.add_resident', mdoc=p[1]) }}" class="btn btn-sm btn-info" aria-label="Add resident details">Add Resident</a>
+                          {% if not p[0] or p[0].strip() == 'Unknown Resident' and p[1] %}
+                          <a href="{{ url_for('residents.add_resident', mdoc=p[1]) }}" class="btn btn-sm btn-info" aria-label="Edit resident details">Edit Resident</a>
                           {% endif %}
                       </td>
                   </tr>
               {% endfor %}
-          </tbody>
+            </tbody>
           </table>
         </div>
       </div>
