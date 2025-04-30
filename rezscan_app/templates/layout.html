@@ -13,25 +13,41 @@
         body { min-height: 100vh; overflow-x: hidden; }
         .sidebar {
             width: 250px;
-            transition: width 0.3s;
+            transition: width 0.3s ease;
             background-color: var(--bs-light);
             position: relative;
         }
         .sidebar.collapsed { width: 80px; }
-
         [data-bs-theme="dark"] .sidebar {
             background-color: #1f1f1f;
         }
-
         .nav-link {
             padding: 10px 15px;
             border-radius: 8px;
             transition: all 0.3s;
             overflow: hidden;
+            display: flex;
+            align-items: center;
         }
         .nav-link.active {
             background-color: var(--bs-primary-bg-subtle);
             color: var(--bs-primary) !important;
+        }
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 10px;
+        }
+        .sidebar.collapsed .btn span {
+            display: none;
+        }
+        .sidebar.collapsed .btn {
+            justify-content: center;
+            padding: 10px;
+            display: flex;
+            align-items: center;
         }
         .theme-toggle {
             cursor: pointer;
@@ -60,6 +76,34 @@
             background-color: #212529;
             color: #ffffff;
         }
+        main {
+            transition: margin-left 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar.collapsed {
+                width: 80px;
+            }
+            .sidebar .nav-link span, #brandText {
+                display: none;
+            }
+            .sidebar .nav-link {
+                justify-content: center;
+                padding: 10px;
+            }
+            .sidebar .btn span {
+                display: none;
+            }
+            .sidebar .btn {
+                justify-content: center;
+                padding: 10px;
+            }
+            main {
+                margin-left: 80px;
+            }
+        }
     </style>
 </head>
 
@@ -67,7 +111,7 @@
     <div class="d-flex flex-grow-1">
         <!-- Sidebar -->
         <nav class="sidebar border-end p-3 d-flex flex-column" id="sidebarMenu">
-            <button class="toggle-btn" id="sidebarToggle" data-bs-toggle="tooltip" title="Toggle Sidebar">⇄</button>
+            <button class="toggle-btn" id="sidebarToggle" data-bs-toggle="tooltip" title="Toggle Sidebar" aria-label="Toggle Sidebar" aria-expanded="true">⇄</button>
 
             <div class="d-flex align-items-center mb-4">
                 <img src="{{ url_for('static', filename='images/rezscanicon.png') }}" alt="RezScan Icon" class="brand-icon">
@@ -78,55 +122,55 @@
                 {% if current_user.is_authenticated %}
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">🔧 Admin Dashboard</a>
+                            <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">🔧 <span>Admin Dashboard</span></a>
                         </li>
                     {% endif %}
 
                     {% if current_user.role in ['admin', 'officer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 Live Dashboard</a>
+                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>Live Dashboard</span></a>
                         </li>
                     {% endif %}
 
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">🙋‍♂️ Residents</a>
+                        <a class="nav-link {% if request.path.startswith('/admin/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">🙋‍♂️ <span>Residents</span></a>
                     </li>
 
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">📍 Locations</a>
+                            <a class="nav-link {% if request.path.startswith('/admin/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">📍 <span>Locations</span></a>
                         </li>
                     {% endif %}
 
                     {% if current_user.role in ['admin', 'officer', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">📡 Scanner</a>
+                            <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">📡 <span>Scanner</span></a>
                         </li>
                     {% endif %}
 
                     {% if current_user.role in ['admin', 'officer', 'viewer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">🗂️ Scan History</a>
+                            <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">🗂️ <span>Scan History</span></a>
                         </li>
                     {% endif %}
 
                     {% if current_user.role in ['admin', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">📅 Scheduling</a>
+                            <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">📅 <span>Scheduling</span></a>
                         </li>
                     {% endif %}
 
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">🧑‍💼 User Management</a>
+                            <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">🧑 <span>User Management</span></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">🔎 Audit Log</a>
+                            <a class="nav-link {% if request.path.startswith('/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">🔎 <span>Audit Log</span></a>
                         </li>
                     {% endif %}
 
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/account') %}active{% endif %}" href="{{ url_for('account.account') }}">👤 My Account</a>
+                        <a class="nav-link {% if request.path.startswith('/account') %}active{% endif %}" href="{{ url_for('account.account') }}">👤 <span>My Account</span></a>
                     </li>
                 {% endif %}
             </ul>
@@ -137,7 +181,7 @@
                         Welcome, <strong>{{ current_user.username }}</strong><br>
                         <span class="badge bg-secondary text-capitalize">{{ current_user.role }}</span>
                     </div>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100">Logout</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger w-100" aria-label="Logout">🔓 <span>Logout</span></a>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">Login</a>
                 {% endif %}
@@ -170,7 +214,7 @@
 
     <!-- Footer -->
     <footer class="text-center py-3 border-top small">
-        © 2025 RezScan | Internal Use Only
+        © <span id="currentYear"></span> RezScan | Internal Use Only
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -192,19 +236,39 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
             const brandText = document.getElementById('brandText');
+            const toggleBtn = document.getElementById('sidebarToggle');
             sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
             if (brandText) {
-                brandText.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'inline';
+                brandText.style.display = isCollapsed ? 'none' : 'inline';
             }
+            toggleBtn.setAttribute('aria-expanded', !isCollapsed);
+            // Refresh tooltip
+            const tooltip = bootstrap.Tooltip.getInstance(toggleBtn);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+            new bootstrap.Tooltip(toggleBtn);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             updateThemeIcon();
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
             const toggleBtn = document.getElementById('sidebarToggle');
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', toggleSidebar);
                 const tooltip = new bootstrap.Tooltip(toggleBtn);
             }
+            // Prevent nav-link clicks from expanding sidebar
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const sidebar = document.getElementById('sidebarMenu');
+                    if (sidebar.classList.contains('collapsed')) {
+                        e.stopPropagation();
+                    }
+                });
+            });
         });
     </script>
 </body>

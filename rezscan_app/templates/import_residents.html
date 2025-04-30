@@ -4,6 +4,12 @@
 {% block content %}
 <div class="container mt-4">
   <h2 class="mb-4">📥 Import Residents</h2>
+  {% if current_user.role in ['admin', 'officer'] %}
+  <p class="mb-4">
+    Want to add a single resident? 
+    <a href="{{ url_for('residents.add_resident') }}" aria-label="Add Single Resident">Click here</a>
+  </p>
+{% endif %}
   <div class="alert alert-secondary" id="instructionsBox">
     <h5 class="mb-1">📄 CSV Import Guidelines</h5>
     <ul class="mb-1">

@@ -17,6 +17,13 @@
 {% block content %}
 <h2 class="mb-4">Residents</h2>
 
+<!-- Add Resident Button -->
+{% if current_user.role in ['admin', 'officer'] %}
+  <div class="mb-3">
+    <a href="{{ url_for('residents.add_resident') }}" class="btn btn-primary" aria-label="Add New Resident">Add Resident</a>
+  </div>
+{% endif %}
+
 <!-- Search and Filters -->
 <form id="filterForm" action="{{ url_for('residents.residents') }}" method="GET">
   <div class="row row-cols-1 row-cols-md-5 g-3 align-items-end mb-4">
