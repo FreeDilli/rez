@@ -9,6 +9,7 @@ from datetime import datetime
 import sqlite3
 from rezscan_app.config import Config
 import pytz
+from urllib.parse import urlparse, urljoin
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -58,13 +59,28 @@ def role_required(*allowed_roles):
         return decorated_function
     return decorator
 
+def is_safe_url(target):
+    """Check if the target URL is safe to redirect to."""
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+def get_role_redirect(user):
+    """Get the redirect URL based on user's role."""
+    return url_for(ROLE_REDIRECTS.get(user.role, 'dashboard.dashboard'))
+
+@auth_bp.route('/')
+def index():
+    if current_user.is_authenticated:
+        return redirect(get_role_redirect(current_user))
+    return redirect(url_for('auth.login'))
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    username = 'anonymous'
+    username = request.form['username'].strip() if request.method == 'POST' else 'anonymous'
     logger.debug(f"User {username} accessing /login route with method: {request.method}")
     
     if request.method == 'POST':
-        username = request.form['username'].strip()
         password = request.form['password'].strip()
         logger.debug(f"Login attempt for username: {username}")
 
@@ -108,8 +124,9 @@ def login():
                     details=f'Successful login, role: {user.role}, last_login: {last_login}'
                 )
                 flash("Login successful!", "success")
-                redirect_endpoint = ROLE_REDIRECTS.get(user.role, 'dashboard.dashboard')
-                return redirect(url_for(redirect_endpoint))
+                next_page = request.args.get('next')
+                redirect_url = next_page if next_page and is_safe_url(next_page) else get_role_redirect(user)
+                return redirect(redirect_url)
             else:
                 logger.warning(f"Login failed for username {username}: Invalid username or password")
                 flash("Invalid username or password", "warning")
@@ -148,12 +165,12 @@ def logout():
     logger.info(f"User {username} logged out")
     local_tz = pytz.timezone(Config.TIMEZONE)
     local_now = datetime.now(local_tz)
+    logout_user()
     log_audit_action(
         username=username,
-        action='logout',
+        action='logout_success',
         target='logout',
         details=f'User logged out successfully at {local_now.strftime("%Y-%m-%d %H:%M:%S")}'
     )
-    logout_user()
     flash("Logged out successfully.", "info")
     return redirect(url_for('auth.login'))

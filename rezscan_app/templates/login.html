@@ -10,13 +10,13 @@
       <p class="text-muted">Resident Tracking System</p>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+    <!-- {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
           <div class="alert alert-{{ category }} text-center">{{ message }}</div>
         {% endfor %}
       {% endif %}
-    {% endwith %}
+    {% endwith %} -->
 
     <form method="POST" action="{{ url_for('auth.login') }}">
       <div class="mb-3">

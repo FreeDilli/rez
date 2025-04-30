@@ -32,7 +32,7 @@ def live_dashboard():
                 VALUES (?, ?, ?, ?)
             """, (
                 current_user.username,
-                'view_dashboard',
+                'view',
                 'resident_activity_tracker',
                 f'Accessed resident activity dashboard with sort={sort}, direction={direction}'
             ))
@@ -81,7 +81,7 @@ def live_dashboard():
                     VALUES (?, ?, ?, ?)
                 """, (
                     current_user.username,
-                    'view_dashboard_failed',
+                    'view_failed',
                     'resident_activity_tracker',
                     f'Failed to load resident activity: {str(e)}'
                 ))
