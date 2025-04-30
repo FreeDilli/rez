@@ -61,9 +61,16 @@ def role_required(*allowed_roles):
 
 def is_safe_url(target):
     """Check if the target URL is safe to redirect to."""
+    if not target:
+        return False
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+    # Compare netloc without port and allow http/https
+    ref_netloc = ref_url.netloc.split(':')[0]
+    test_netloc = test_url.netloc.split(':')[0]
+    is_safe = test_url.scheme in ('http', 'https') and ref_netloc == test_netloc
+    logger.debug(f"is_safe_url: target={target}, is_safe={is_safe}")
+    return is_safe
 
 def get_role_redirect(user):
     """Get the redirect URL based on user's role."""
@@ -93,7 +100,7 @@ def login():
                 target='login',
                 details='Missing username or password'
             )
-            return render_template('login.html')
+            return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
 
         if len(password) < MIN_PASSWORD_LENGTH:
             logger.warning(f"Login failed for username {username}: Password too short")
@@ -104,7 +111,7 @@ def login():
                 target='login',
                 details=f'Password less than {MIN_PASSWORD_LENGTH} characters'
             )
-            return render_template('login.html')
+            return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
 
         try:
             user = User.authenticate(username, password)
@@ -124,9 +131,12 @@ def login():
                     details=f'Successful login, role: {user.role}, last_login: {last_login}'
                 )
                 flash("Login successful!", "success")
-                next_page = request.args.get('next')
-                redirect_url = next_page if next_page and is_safe_url(next_page) else get_role_redirect(user)
-                return redirect(redirect_url)
+                next_page = request.form.get('next', request.args.get('next'))
+                if next_page and is_safe_url(next_page):
+                    logger.debug(f"Redirecting to: {next_page}")
+                    return redirect(next_page)
+                logger.debug(f"Using role-based redirect for role: {user.role}")
+                return redirect(get_role_redirect(user))
             else:
                 logger.warning(f"Login failed for username {username}: Invalid username or password")
                 flash("Invalid username or password", "warning")
@@ -136,7 +146,7 @@ def login():
                     target='login',
                     details='Invalid username or password'
                 )
-                return render_template('login.html')
+                return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
 
         except sqlite3.Error as e:
             logger.error(f"Database error during login for username {username}: {str(e)}")
@@ -147,15 +157,10 @@ def login():
                 details=f"Database error during login: {str(e)}"
             )
             flash("Database error. Please try again later.", "danger")
-            return render_template('login.html')
+            return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
 
-    log_audit_action(
-        username=username,
-        action='view',
-        target='login',
-        details='Accessed login page'
-    )
-    return render_template('login.html')
+    next_page = request.args.get('next', '')
+    return render_template('login.html', next=next_page)
 
 @auth_bp.route('/logout')
 @login_required
@@ -168,7 +173,7 @@ def logout():
     logout_user()
     log_audit_action(
         username=username,
-        action='logout_success',
+        action='logout',
         target='logout',
         details=f'User logged out successfully at {local_now.strftime("%Y-%m-%d %H:%M:%S")}'
     )
