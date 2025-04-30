@@ -156,6 +156,9 @@ def add_resident():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/add route, method: {request.method}")
     
+    # Get mdoc from query parameter (e.g., ?mdoc=888)
+    mdoc_prefill = request.args.get('mdoc', '')
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         mdoc = request.form.get('mdoc', '').strip()
@@ -172,7 +175,13 @@ def add_resident():
                 details='Missing required fields'
             )
             flash('All fields are required.', 'warning')
-            return redirect(url_for('residents.add_resident'))
+            return render_template(
+                'add_resident.html',
+                UNIT_OPTIONS=UNIT_OPTIONS,
+                HOUSING_OPTIONS=HOUSING_OPTIONS,
+                LEVEL_OPTIONS=LEVEL_OPTIONS,
+                mdoc_prefill=mdoc  # Pass mdoc back to form if validation fails
+            )
 
         try:
             with get_db() as conn:
@@ -219,7 +228,8 @@ def add_resident():
         'add_resident.html',
         UNIT_OPTIONS=UNIT_OPTIONS,
         HOUSING_OPTIONS=HOUSING_OPTIONS,
-        LEVEL_OPTIONS=LEVEL_OPTIONS
+        LEVEL_OPTIONS=LEVEL_OPTIONS,
+        mdoc_prefill=mdoc_prefill  # Pass mdoc to pre-fill form
     )
 
 @residents_bp.route('/admin/residents/edit/<int:mdoc>', methods=['GET', 'POST'], strict_slashes=False)

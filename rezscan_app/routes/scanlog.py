@@ -93,7 +93,7 @@ def delete_scanlog():
             
             logger.info(f"User {username} deleted {deleted_rows} scan logs")
             flash("All scan logs deleted successfully.", "success")
-            return redirect(url_for('scanlog.scanlog'))
+            return redirect(url_for('admin.admin_dashboard'))
     except sqlite3.Error as e:
         logger.error(f"Error deleting scan logs for user {username}: {str(e)}")
         log_audit_action(
@@ -103,7 +103,7 @@ def delete_scanlog():
             details=f"Error deleting scan logs: {str(e)}"
         )
         flash("Error deleting scan logs.", "danger")
-        return redirect(url_for('scanlog.scanlog'))
+        return redirect(url_for('admin.admin_dashboard'))
 
 @scanlog_bp.route('/admin/scanlog/export', strict_slashes=False)
 @login_required

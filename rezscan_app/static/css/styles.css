@@ -118,3 +118,14 @@ main .container {
         padding-right: 15px;
     }
 }
+.table.table-striped tr.unknown-resident {
+    background-color: #f8d7da !important;
+}
+
+.table.table-striped tr.unknown-resident td {
+    background-color: transparent !important;
+}
+
+.d-inline + .d-inline {
+    margin-left: 8px;
+}

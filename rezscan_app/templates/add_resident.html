@@ -10,27 +10,28 @@
         <div class="mb-3">
             <label for="name" class="form-label">Full Name</label>
             <input type="text" 
-            name="name" 
-            id="name" 
-            pattern="^[A-Za-z, ]+$" 
-            class="form-control" 
-            placeholder="LAST NAME, FIRST NAME" 
-            oninput="filterInput(this);" 
-            required 
-            aria-label="Full Name">
+                   name="name" 
+                   id="name" 
+                   pattern="^[A-Za-z, ]+$" 
+                   class="form-control" 
+                   placeholder="LAST NAME, FIRST NAME" 
+                   oninput="filterInput(this);" 
+                   required 
+                   aria-label="Full Name">
         </div>    
 
         <div class="mb-3">
             <label for="mdoc" class="form-label">MDOC Number</label>
             <input type="text" 
-            name="mdoc" 
-            id="mdoc" 
-            class="form-control" 
-            placeholder="" 
-            oninput="filterNumberInput(this);" 
-            required
-            maxlength="10"
-            aria-label="MDOC Number">
+                   name="mdoc" 
+                   id="mdoc" 
+                   class="form-control" 
+                   placeholder="" 
+                   value="{{ mdoc_prefill }}" 
+                   oninput="filterNumberInput(this);" 
+                   required
+                   maxlength="10"
+                   aria-label="MDOC Number">
             <div id="mdocError" class="invalid-feedback"></div>
         </div>
 
@@ -78,17 +79,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('addResidentForm');
 
     function validateMDOC() {
-        const mdoc = mdocInput.value;
-        const mdocRegex = /^[A-Za-z0-9]+$/;
-        if (!mdocRegex.test(mdoc)) {
-            mdocInput.classList.add('is-invalid');
-            mdocError.textContent = 'MDOC must be alphanumeric.';
-            return false;
-        }
-        mdocInput.classList.remove('is-invalid');
-        mdocInput.classList.add('is-valid');
-        return true;
+    const mdoc = mdocInput.value;
+    const mdocRegex = /^[0-9]+$/; // Numeric only
+    if (!mdocRegex.test(mdoc)) {
+        mdocInput.classList.add('is-invalid');
+        mdocError.textContent = 'MDOC must be numeric.';
+        return false;
     }
+    mdocInput.classList.remove('is-invalid');
+    mdocInput.classList.add('is-valid');
+    return true;
+}
 
     mdocInput.addEventListener('input', validateMDOC);
 
