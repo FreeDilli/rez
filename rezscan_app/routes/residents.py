@@ -415,7 +415,7 @@ def delete_all_residents():
         )
         flash(f"Error deleting residents: {str(e)}", "danger")
     
-    return redirect(url_for('residents.residents'))
+    return redirect(url_for('admin.admin_dashboard'))
 
 @residents_bp.route('/admin/residents/export', strict_slashes=False)
 @login_required
