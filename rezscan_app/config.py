@@ -21,7 +21,7 @@ class Config:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)  # Ensure DB directory exists
 
     # --- File Uploads ---
-    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(base_dir, 'static', 'Uploads'))
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(base_dir, 'static', 'uploads'))
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure upload directory exists
     MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # 16 MB
     ALLOWED_EXTENSIONS = set(os.getenv('ALLOWED_EXTENSIONS', 'csv').split(','))
