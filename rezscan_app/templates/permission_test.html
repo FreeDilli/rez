@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block title %}Permission Testing - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">🔐 Permission Testing</h2>
+
+  <form method="get" class="mb-4">
+    <label for="role" class="form-label">Select Role</label>
+    <select name="role" id="role" class="form-select w-auto d-inline-block" onchange="this.form.submit()">
+      <option value="viewer" {% if selected_role == 'viewer' %}selected{% endif %}>Viewer</option>
+      <option value="officer" {% if selected_role == 'officer' %}selected{% endif %}>Officer</option>
+      <option value="scheduling" {% if selected_role == 'scheduling' %}selected{% endif %}>Scheduling</option>
+      <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
+    </select>
+  </form>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">Visible Pages for <strong>{{ selected_role|capitalize }}</strong></h5>
+      <ul class="list-group list-group-flush">
+        {% for item in access_list %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span data-bs-toggle="tooltip" title="{{ item.name }} is visible to the {{ selected_role }} role">{{ item.name }}</span>
+          <code class="text-muted small">{{ item.path }}</code>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+</script>
+{% endblock %}

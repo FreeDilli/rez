@@ -200,6 +200,12 @@ def create_app():
     def handle_error(error):
         logger.error(f"Unhandled error: {str(error)}\n{format_exc()}")
         return render_template('error.html', error=str(error)), 500
+    
+    
+    # Register is_training_mode globally for Jinja
+    from rezscan_app.utils.settings import is_training_mode
+    app.jinja_env.globals['is_training_mode'] = is_training_mode
+    logger.debug("Registered is_training_mode as a Jinja global")
 
     logger.info("Application creation completed successfully")
     return app

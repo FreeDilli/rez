@@ -127,6 +127,14 @@
                     </div>
                 {% endif %}
             {% endwith %}
+            
+            <!-- Training Notification Banner -->
+            {% if is_training_mode() %}
+                <div class="alert alert-warning text-center mb-0 rounded-0">
+                    🚧 <strong>Training Mode Active</strong> — No changes will be saved.
+                </div>
+            {% endif %}
+
 
             {% block content %}{% endblock %}
         </main>
@@ -141,3 +149,4 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
+

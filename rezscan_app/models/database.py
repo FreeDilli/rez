@@ -233,7 +233,41 @@ def init_db():
             except sqlite3.Error as e:
                 logger.error(f"Error creating resident_backups table: {str(e)}")
                 raise
-
+            
+            # Settings table
+            try:
+                c.execute('''
+                    CREATE TABLE IF NOT EXISTS settings (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        category TEXT NOT NULL,
+                        key TEXT NOT NULL,
+                        value TEXT,
+                        UNIQUE(category, key)
+                    )
+                ''')
+                logger.debug("Created settings table")
+            except sqlite3.Error as e:
+                logger.error(f"Error creating settings table: {str(e)}")
+                raise
+            
+            # Seed default settings if none exist
+            try:
+                c.execute('SELECT COUNT(*) FROM settings')
+                if c.fetchone()[0] == 0:
+                    c.executemany('''
+                        INSERT INTO settings (category, key, value) VALUES (?, ?, ?)
+                        ''', [
+                            ('api', 'coris_api_url', 'https://coris.example.gov/api/residents'),
+                            ('api', 'coris_api_key', 'changeme-key'),
+                            ('flags', 'enable_kiosk_mode', 'true'),
+                            ('flags', 'training_mode', 'false'),
+                            ('ui', 'default_theme', 'light')
+                        ])
+                logger.info("Seeded default settings")
+            except sqlite3.Error as e:
+                logger.error(f"Error seeding default settings: {str(e)}")
+                raise
+                
             # Commit changes
             conn.commit()
             logger.info("Database schema creation completed")
