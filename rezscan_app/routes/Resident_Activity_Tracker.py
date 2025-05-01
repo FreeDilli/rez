@@ -171,6 +171,8 @@ def check_out():
 def heatmap_data():
     logger.debug(f"User {current_user.username} accessing heatmap data")
     
+    date_filter = request.args.get('date_filter', '1 day')
+    
     try:
         with get_db() as conn:
             c = conn.cursor()
@@ -183,20 +185,21 @@ def heatmap_data():
                 current_user.username,
                 'view',
                 'heatmap',
-                'Accessed resident activity heatmap data'
+                f'Accessed resident activity heatmap data with date_filter={date_filter}'
             ))
 
-            # Fetch all checked-in scans with resident data
+            # Fetch latest scan for each resident with status = 'In'
             c.execute('''
-                SELECT r.name, s.mdoc, r.unit, r.housing_unit, r.level, s.timestamp, s.location
+                SELECT s.mdoc, MAX(s.timestamp) AS latest_time, r.name, r.unit, r.housing_unit, r.level, s.location
                 FROM scans s
                 LEFT JOIN residents r ON s.mdoc = r.mdoc
-                WHERE s.status = 'In'
-            ''')
+                WHERE s.status = 'In' AND s.timestamp >= datetime('now', ?)
+                GROUP BY s.mdoc
+            ''', (f'-{date_filter}',))
             data = c.fetchall()
 
             if not data:
-                logger.info("No checked-in residents found for heatmap")
+                logger.warning("No checked-in residents found for heatmap")
                 return jsonify({
                     'locations': [],
                     'time_buckets': [],
@@ -204,10 +207,8 @@ def heatmap_data():
                 })
 
             # Convert to DataFrame
-            df = pd.DataFrame(data, columns=['name', 'mdoc', 'unit', 'housing_unit', 'level', 'timestamp', 'location'])
-
-            # Convert timestamp to datetime
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df = pd.DataFrame(data, columns=['mdoc', 'latest_time', 'name', 'unit', 'housing_unit', 'level', 'location'])
+            df['timestamp'] = pd.to_datetime(df['latest_time'])
 
             # Create hourly time buckets
             df['time_bucket'] = df['timestamp'].dt.floor('H').dt.strftime('%Y-%m-%d %H:%00')
