@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from models.database import get_db
+from rezscan_app.models.database import get_db
 from flask import request
 
 api_bp = Blueprint('api', __name__)
