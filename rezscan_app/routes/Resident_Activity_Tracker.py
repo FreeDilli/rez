@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from rezscan_app.models.database import get_db
 from datetime import datetime
 import logging
+import pandas as pd
 
 resident_activity_tracker_bp = Blueprint('resident_activity_tracker', __name__)
 logger = logging.getLogger(__name__)
@@ -162,3 +163,112 @@ def check_out():
             logger.error(f"Failed to write audit log for check-out error: {str(audit_error)}")
 
     return redirect(url_for('resident_activity_tracker.live_dashboard'))
+
+# ... (previous routes: /live, /check_out, /heatmap-data remain unchanged)
+
+@resident_activity_tracker_bp.route('/heatmap-data', methods=['GET'])
+@login_required
+def heatmap_data():
+    logger.debug(f"User {current_user.username} accessing heatmap data")
+    
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+
+            # Log audit entry for heatmap access
+            c.execute("""
+                INSERT INTO audit_log (username, action, target, details)
+                VALUES (?, ?, ?, ?)
+            """, (
+                current_user.username,
+                'view',
+                'heatmap',
+                'Accessed resident activity heatmap data'
+            ))
+
+            # Fetch all checked-in scans with resident data
+            c.execute('''
+                SELECT r.name, s.mdoc, r.unit, r.housing_unit, r.level, s.timestamp, s.location
+                FROM scans s
+                LEFT JOIN residents r ON s.mdoc = r.mdoc
+                WHERE s.status = 'In'
+            ''')
+            data = c.fetchall()
+
+            if not data:
+                logger.info("No checked-in residents found for heatmap")
+                return jsonify({
+                    'locations': [],
+                    'time_buckets': [],
+                    'values': []
+                })
+
+            # Convert to DataFrame
+            df = pd.DataFrame(data, columns=['name', 'mdoc', 'unit', 'housing_unit', 'level', 'timestamp', 'location'])
+
+            # Convert timestamp to datetime
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+            # Create hourly time buckets
+            df['time_bucket'] = df['timestamp'].dt.floor('H').dt.strftime('%Y-%m-%d %H:%00')
+
+            # Group by location and time_bucket, count residents
+            heatmap_data = df.groupby(['location', 'time_bucket']).size().unstack(fill_value=0)
+
+            # Prepare data for Plotly
+            locations = heatmap_data.index.tolist()
+            time_buckets = heatmap_data.columns.tolist()
+            values = heatmap_data.values.tolist()
+
+            logger.info(f"User {current_user.username} successfully loaded heatmap data with {len(locations)} locations and {len(time_buckets)} time buckets")
+
+            conn.commit()
+
+            return jsonify({
+                'locations': locations,
+                'time_buckets': time_buckets,
+                'values': values
+            })
+
+    except Exception as e:
+        logger.error(f"Error generating heatmap data for user {current_user.username}: {str(e)}", exc_info=True)
+        
+        # Log error to audit log
+        try:
+            with get_db() as conn:
+                c = conn.cursor()
+                c.execute("""
+                    INSERT INTO audit_log (username, action, target, details)
+                    VALUES (?, ?, ?, ?)
+                """, (
+                    current_user.username,
+                    'view_failed',
+                    'heatmap',
+                    f'Failed to load heatmap data: {str(e)}'
+                ))
+                conn.commit()
+        except Exception as audit_error:
+            logger.error(f"Failed to write audit log for heatmap error: {str(audit_error)}")
+
+        return jsonify({'error': 'Failed to generate heatmap data'}), 500
+
+@resident_activity_tracker_bp.route('/heatmap', methods=['GET'])
+@login_required
+def heatmap():
+    logger.debug(f"User {current_user.username} accessing heatmap page")
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("""
+                INSERT INTO audit_log (username, action, target, details)
+                VALUES (?, ?, ?, ?)
+            """, (
+                current_user.username,
+                'view',
+                'heatmap_page',
+                'Accessed resident activity heatmap page'
+            ))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Failed to write audit log for heatmap page access: {str(e)}")
+    return render_template('heatmap.html')

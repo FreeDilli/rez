@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+
+{% block title %}Resident Activity Heatmap{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-4">Resident Activity Heatmap</h2>
+    <div>
+      <a href="{{ url_for('resident_activity_tracker.live_dashboard') }}" class="btn btn-secondary" aria-label="Back to Dashboard">← Back to Dashboard</a>
+      {% if current_user.role == 'admin' %}
+      <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary ms-2" aria-label="Back to Admin">← Back to Admin</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="heatmap" class="mb-4"></div>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    async function loadHeatmap() {
+      try {
+        const response = await fetch('{{ url_for("resident_activity_tracker.heatmap_data") }}');
+        const data = await response.json();
+
+        if (data.error) {
+          console.error('Error:', data.error);
+          document.getElementById('heatmap').innerHTML = '<div class="alert alert-danger">Failed to load heatmap data.</div>';
+          return;
+        }
+
+        if (!data.locations.length || !data.time_buckets.length) {
+          document.getElementById('heatmap').innerHTML = '<div class="alert alert-info">No data available for heatmap.</div>';
+          return;
+        }
+
+        const trace = {
+          z: data.values,
+          x: data.time_buckets,
+          y: data.locations,
+          type: 'heatmap',
+          colorscale: 'Viridis',
+          showscale: true,
+          hovertemplate: '%{y}, %{x}<br>Residents: %{z}<extra></extra>'
+        };
+
+        const layout = {
+          title: {
+            text: 'Resident Activity by Location and Time',
+            x: 0.5,
+            xanchor: 'center'
+          },
+          xaxis: {
+            title: 'Time',
+            tickangle: 45,
+            automargin: true
+          },
+          yaxis: {
+            title: 'Location',
+            automargin: true
+          },
+          margin: { t: 100, b: 150 },
+          height: 600
+        };
+
+        Plotly.newPlot('heatmap', [trace], layout);
+      } catch (error) {
+        console.error('Error loading heatmap:', error);
+        document.getElementById('heatmap').innerHTML = '<div class="alert alert-danger">Failed to load heatmap data.</div>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadHeatmap);
+  </script>
+</div>
+{% endblock %}
