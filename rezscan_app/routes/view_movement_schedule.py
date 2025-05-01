@@ -5,7 +5,7 @@ from rezscan_app.models.database import get_db
 from rezscan_app.routes.auth import login_required, role_required
 import datetime
 
-movement_board_bp = Blueprint('movement_board', __name__, url_prefix='/admin/movement')
+movement_board_bp = Blueprint('movement_schedule', __name__, url_prefix='/admin/movement')
 
 @movement_board_bp.route('/', methods=['GET'])
 @login_required

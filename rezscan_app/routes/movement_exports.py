@@ -48,7 +48,7 @@ def export_movement_csv():
 
 @movement_exports_bp.route('/export_pdf', methods=['GET'])
 @login_required
-@role_required('scheduling')
+@role_required('admin','scheduling')
 def export_movement_pdf():
     selected_date = request.args.get('date', datetime.date.today().strftime('%Y-%m-%d'))
     try:
