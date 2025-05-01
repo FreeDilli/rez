@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block title %}Coming Soon - RezScan{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+  <h1 class="display-4">🚧 Coming Soon</h1>
+  <p class="lead">This feature is under construction and will be available in a future update.</p>
+  <hr>
+  <p>If you have suggestions or questions, please contact your system administrator.</p>
+  <a href="{{ request.referrer or url_for('scheduling.dashboard') }}" class="btn btn-outline-primary mt-3">⬅ Back to Scheduling Dashboard</a>
+</div>
+{% endblock %}

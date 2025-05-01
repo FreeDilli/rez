@@ -274,3 +274,8 @@ def live_schedule():
         logger.error(f"Error loading live schedule: {e}")
         flash('An error occurred while loading the live schedule.', 'danger')
         return render_template('live_schedule.html', active_rows=[], current_day='Unknown', current_time='--:--')
+    
+@schedules_bp.route('/import')
+@login_required
+def import_schedule():
+    return render_template('import_schedule.html')

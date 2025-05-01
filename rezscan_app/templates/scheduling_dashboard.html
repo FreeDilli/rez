@@ -77,6 +77,17 @@
       </div>
     </div>
 
+    <!-- Import Schedule -->
+    <div class="col">
+      <div class="card h-100 border-secondary">
+        <div class="card-body text-center">
+          <h5 class="card-title">Import Schedule</h5>
+          <p class="card-text">Upload a schedule CSV file to batch import assignments.</p>
+          <a href="{{ url_for('schedules.import_schedule') }}" class="btn btn-secondary">📥 Import Schedule</a>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}
