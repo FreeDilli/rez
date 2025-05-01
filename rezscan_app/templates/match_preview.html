@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+{% block title %}Match Preview - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">🔎 Match Preview for Movement Data</h2>
+
+  <form method="POST" action="{{ url_for('movement_match.match_preview') }}">
+    <div class="mb-3">
+      <label for="movement_text" class="form-label">Paste OCR Text from PDF</label>
+      <textarea name="movement_text" id="movement_text" rows="12" class="form-control">{{ raw_text }}</textarea>
+    </div>
+    <div class="text-end">
+      <button type="submit" class="btn btn-primary">🔍 Re-Analyze</button>
+    </div>
+  </form>
+
+  {% if blocks %}
+  <hr>
+  <h4 class="mt-4">🧾 Parsed Blocks</h4>
+  {% for block in blocks %}
+    <div class="card mb-3">
+      <div class="card-header">
+        <strong>{{ block.start }}</strong> — {{ block.title }}
+      </div>
+      <div class="card-body">
+        {% if block.residents %}
+          <ul class="list-group">
+            {% for r in block.residents %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ r.name }}
+                <span class="text-muted small">
+                  {% if r.mdoc %}MDOC: {{ r.mdoc }}{% else %}No MDOC{% endif %} |
+                  {% if r.housing %}{{ r.housing }}{% else %}No Housing{% endif %}
+                  {% if r.matched %}
+                    <span class="badge bg-success ms-2">✅ Matched</span>
+                  {% else %}
+                    <span class="badge bg-danger ms-2">❌ Not Found</span>
+                  {% endif %}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No residents parsed.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
+
+

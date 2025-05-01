@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+{% block title %}Upload Movement Schedule - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">📤 Upload Movement Schedule (Preview)</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="movement_text" class="form-label">Paste OCR Text from PDF</label>
+      <textarea name="movement_text" id="movement_text" rows="12" class="form-control" placeholder="Paste raw text from the movement schedule here...">{{ raw_text }}</textarea>
+    </div>
+    <div class="text-end">
+      <button type="submit" class="btn btn-primary">🔍 Preview Parsed Schedule</button>
+    </div>
+  </form>
+
+  {% if blocks %}
+  <hr>
+  <h4 class="mt-4">🧾 Parsed Blocks</h4>
+  {% for block in blocks %}
+    <div class="card mb-3">
+      <div class="card-header">
+        <strong>{{ block.start }} - {{ block.end }}</strong> — {{ block.title }}
+      </div>
+      <div class="card-body">
+        {% if block.residents %}
+          <ul class="list-group">
+            {% for r in block.residents %}
+              <li class="list-group-item">
+                {{ r.name }}
+                {% if r.mdoc %}<span class="text-muted">— {{ r.mdoc }}</span>{% endif %}
+                {% if r.housing %}<span class="text-muted">({{ r.housing }})</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No residents parsed.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
