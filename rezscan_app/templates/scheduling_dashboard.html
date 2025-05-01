@@ -10,6 +10,8 @@
   </div>
 
   <div class="row row-cols-1 row-cols-md-3 g-4">
+
+    <!-- Manage Groups -->
     <div class="col">
       <div class="card h-100 border-primary">
         <div class="card-body text-center">
@@ -20,25 +22,61 @@
       </div>
     </div>
 
+    <!-- Calendar View -->
     <div class="col">
       <div class="card h-100 border-success">
         <div class="card-body text-center">
-          <h5 class="card-title">View Weekly Calendar</h5>
-          <p class="card-text">See a full calendar view of currently active schedule groups.</p>
+          <h5 class="card-title">Weekly Calendar View</h5>
+          <p class="card-text">Visual calendar of active schedule groups by week.</p>
           <a href="{{ url_for('calendar_schedule.weekly_calendar') }}" class="btn btn-success">View Calendar</a>
         </div>
       </div>
     </div>
 
+    <!-- Resident Lookup -->
     <div class="col">
       <div class="card h-100 border-info">
         <div class="card-body text-center">
           <h5 class="card-title">Resident Schedule Lookup</h5>
-          <p class="card-text">Search by MDOC and date to see a resident's current schedule.</p>
+          <p class="card-text">Search by MDOC and date to view a resident’s schedule.</p>
           <a href="{{ url_for('resident_schedule.lookup') }}" class="btn btn-info">Lookup Schedule</a>
         </div>
       </div>
     </div>
+
+    <!-- Conflict Checker -->
+    <div class="col">
+      <div class="card h-100 border-danger">
+        <div class="card-body text-center">
+          <h5 class="card-title">Conflict Checker</h5>
+          <p class="card-text">Find overlapping schedules for residents.</p>
+          <a href="{{ url_for('conflict_checker.check_conflicts') }}" class="btn btn-danger">Check Conflicts</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Assignment -->
+    <div class="col">
+      <div class="card h-100 border-warning">
+        <div class="card-body text-center">
+          <h5 class="card-title">Bulk Assign Residents</h5>
+          <p class="card-text">Assign multiple residents to a group at once.</p>
+          <a href="{{ url_for('bulk_assign.bulk_assign') }}" class="btn btn-warning">Bulk Assign</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Printer -->
+    <div class="col">
+      <div class="card h-100 border-dark">
+        <div class="card-body text-center">
+          <h5 class="card-title">Printable Weekly Schedule</h5>
+          <p class="card-text">Generate a clean printable version of the full weekly schedule.</p>
+          <a href="{{ url_for('schedule_printer.print_schedule') }}" class="btn btn-dark">🖨️ Print Schedule</a>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}

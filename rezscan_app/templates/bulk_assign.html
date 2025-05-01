@@ -1,0 +1,102 @@
+{% extends 'layout.html' %}
+{% block title %}Bulk Assign Residents{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">👥 Bulk Assign Residents to Schedule Group</h2>
+
+  <form method="POST">
+    <!-- Group Selection -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label for="group_id" class="form-label">Select Schedule Group</label>
+        <select name="group_id" id="group_id" class="form-select" required>
+          <option value="">-- Choose a group --</option>
+          {% for group in groups %}
+            <option value="{{ group.id }}">{{ group.name }} ({{ group.category }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Resident Filters -->
+    <div class="row mb-3">
+      <div class="col-md-3">
+        <label for="filter_area" class="form-label">Filter by Area</label>
+        <input type="text" name="filter_area" id="filter_area" class="form-control" placeholder="e.g. Unit I">
+      </div>
+      <div class="col-md-3">
+        <label for="filter_housing" class="form-label">Filter by Housing</label>
+        <input type="text" name="filter_housing" id="filter_housing" class="form-control" placeholder="e.g. Echo">
+      </div>
+      <div class="col-md-3">
+        <label for="filter_level" class="form-label">Filter by Level</label>
+        <input type="text" name="filter_level" id="filter_level" class="form-control" placeholder="e.g. 2">
+      </div>
+    </div>
+
+    <!-- Resident Table -->
+    <div class="card card-body shadow-sm">
+      <input type="text" id="searchBox" class="form-control mb-3" placeholder="Search residents...">
+
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>
+                <input type="checkbox" id="selectAll">
+                <label for="selectAll" class="ms-1">All</label>
+              </th>
+              <th>MDOC</th>
+              <th>Name</th>
+              <th>Area</th>
+              <th>Housing</th>
+              <th>Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in residents %}
+            <tr>
+              <td><input type="checkbox" name="assign[]" value="{{ r.mdoc }}"></td>
+              <td>{{ r.mdoc }}</td>
+              <td>{{ r.name }}</td>
+              <td>{{ r.area }}</td>
+              <td>{{ r.housing_unit }}</td>
+              <td>{{ r.level }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+      <a href="{{ url_for('schedules.manage_schedules') }}" class="btn btn-outline-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">💾 Assign Selected Residents</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Search filter
+  document.getElementById("searchBox").addEventListener("keyup", function () {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll("table tbody tr");
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? "" : "none";
+    });
+  });
+
+  // Select All toggle
+  const selectAllCheckbox = document.getElementById("selectAll");
+  selectAllCheckbox.addEventListener("change", function () {
+    const checkboxes = document.querySelectorAll('input[name="assign[]"]');
+    checkboxes.forEach(cb => {
+      if (cb.closest('tr').style.display !== "none") {
+        cb.checked = this.checked;
+      }
+    });
+  });
+</script>
+{% endblock %}

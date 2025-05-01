@@ -75,7 +75,7 @@
 
                     {% if current_user.role in ['admin', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/schedules') %}active{% endif %}" href="{{ url_for('schedules.manage_schedules') }}">📅 <span>Scheduling</span></a>
+                            <a class="nav-link {% if request.path.startswith('/admin/scheduling') %}active{% endif %}" href="{{ url_for('scheduling.dashboard') }}">📅 <span>Scheduling</span></a>
                         </li>
                     {% endif %}
 

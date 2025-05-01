@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block title %}Printable Weekly Schedule{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-print-none text-end mb-3">
+    <button onclick="window.print()" class="btn btn-outline-secondary">🖨️ Print</button>
+    <a href="{{ url_for('calendar_schedule.weekly_calendar') }}" class="btn btn-outline-primary">Back to Calendar</a>
+  </div>
+
+  <h2 class="mb-4">🗓️ Weekly Schedule ({{ selected_date }})</h2>
+
+  <div class="row">
+    {% for day in week_days %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header fw-bold">{{ day }}</div>
+          <div class="card-body">
+            {% for block in time_blocks %}
+              <h6 class="text-muted">{{ block }}</h6>
+              {% if schedule[day][block] %}
+              <ul class="mb-3">
+                {% for entry in schedule[day][block] %}
+                  <li><strong>{{ entry.name }}</strong> ({{ entry.mdoc }}) — {{ entry.group }} @ {{ entry.location }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <p class="text-muted small">No assignments</p>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  @media print {
+    .btn, .d-print-none, nav, footer { display: none !important; }
+    body { background: white !important; }
+    .card { border: none; box-shadow: none; }
+  }
+</style>
+{% endblock %}

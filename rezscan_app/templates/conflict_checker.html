@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block title %}Schedule Conflict Checker{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">⚠️ Schedule Conflict Checker</h2>
+
+  <form method="GET" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label for="week" class="form-label">Select Week</label>
+      <input type="date" name="week" id="week" class="form-control" value="{{ selected_date }}">
+    </div>
+    <div class="col-md-auto">
+      <button type="submit" class="btn btn-primary">Check Conflicts</button>
+    </div>
+  </form>
+
+  {% if conflicts %}
+    <div class="alert alert-warning">Found <strong>{{ conflicts|length }}</strong> resident(s) with conflicts.</div>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Resident</th>
+            <th>MDOC</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Conflicting Groups</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in conflicts %}
+          <tr>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.mdoc }}</td>
+            <td>{{ entry.day }}</td>
+            <td>{{ entry.block }}</td>
+            <td>
+              {% for group in entry.groups %}
+                <div><strong>{{ group.group }}</strong> ({{ group.location }})</div>
+              {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% elif selected_date %}
+    <div class="alert alert-success">✅ No scheduling conflicts found for the selected week.</div>
+  {% endif %}
+</div>
+{% endblock %}
