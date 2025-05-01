@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block title %}Session Expired{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+  <h1 class="display-4 text-warning">⏳ Session Expired</h1>
+  <p class="lead">Your session has timed out. Please log in again to continue.</p>
+  <a href="{{ url_for('auth.login') }}" class="btn btn-warning mt-3">🔐 Log In</a>
+</div>
+{% endblock %}

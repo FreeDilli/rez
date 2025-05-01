@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+  <h1 class="display-4 text-danger">🚫 Access Denied</h1>
+  <p class="lead">You are logged in but do not have permission to view this page.</p>
+  <p class="text-muted">If you believe this is an error, please contact your administrator.</p>
+  <a href="{{ url_for('scheduling.dashboard') }}" class="btn btn-outline-primary mt-3">Return to Dashboard</a>
+</div>
+{% endblock %}

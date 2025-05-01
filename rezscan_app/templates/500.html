@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+  <h1 class="display-4">😵 Oops!</h1>
+  <p class="lead">Something went wrong on our end. Our team has been notified.</p>
+  <a href="{{ url_for('scheduling.dashboard') }}" class="btn btn-primary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}
