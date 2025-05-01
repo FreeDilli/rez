@@ -25,26 +25,59 @@
         </div>
 
         <div class="mb-3">
-            <label for="new_password" class="form-label">Change Password</label>
+            <label for="new_password" class="form-label">New Password</label>
             <input type="password" id="new_password" name="new_password" class="form-control" 
                    placeholder="Leave blank to keep current password" minlength="8" 
                    aria-describedby="passwordHelp">
             <div id="passwordHelp" class="form-text">
                 Password must be at least 8 characters long. Leave blank to keep current password.
             </div>
+            <div id="new_password_error" class="invalid-feedback"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm New Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control" 
+                   placeholder="Confirm your new password" minlength="8">
+            <div id="confirm_password_error" class="invalid-feedback"></div>
         </div>
 
         <button type="submit" class="btn btn-primary">Update Account</button>
     </form>
 </div>
 
-<!-- Optional JavaScript for client-side validation -->
+<!-- JavaScript for client-side validation -->
 <script>
     document.getElementById('accountForm').addEventListener('submit', function(event) {
         const password = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const newPasswordInput = document.getElementById('new_password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const newPasswordError = document.getElementById('new_password_error');
+        const confirmPasswordError = document.getElementById('confirm_password_error');
+
+        // Clear previous error messages
+        newPasswordError.textContent = '';
+        confirmPasswordError.textContent = '';
+        newPasswordInput.classList.remove('is-invalid');
+        confirmPasswordInput.classList.remove('is-invalid');
+
+        let hasError = false;
+
         if (password && password.length < 8) {
+            newPasswordError.textContent = 'Password must be at least 8 characters long.';
+            newPasswordInput.classList.add('is-invalid');
+            hasError = true;
+        }
+
+        if (password !== confirmPassword) {
+            confirmPasswordError.textContent = 'Passwords do not match.';
+            confirmPasswordInput.classList.add('is-invalid');
+            hasError = true;
+        }
+
+        if (hasError) {
             event.preventDefault();
-            alert('Password must be at least 8 characters long.');
         }
     });
 </script>
