@@ -14,12 +14,12 @@ def admin_dashboard():
     c.execute("SELECT COUNT(*) FROM residents")
     total_residents = c.fetchone()[0]
 
-    c.execute("SELECT COUNT(*) FROM scans WHERE DATE(timestamp) = date('now')")
-    active_today = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM scans WHERE strftime('%Y-%m-%d', timestamp) = strftime('%Y-%m-%d', 'now', 'localtime')")
+    scans_today = c.fetchone()[0]
 
     stats = {
         'total_residents': total_residents,
-        'active_today': active_today
+        'scans_today': scans_today
     }
 
     return render_template('admin_dashboard.html', stats=stats)
