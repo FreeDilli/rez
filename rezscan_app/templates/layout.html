@@ -64,13 +64,13 @@
 
                     {% if current_user.role in ['admin', 'officer', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scan.scan') }}">📡 <span>Scanner</span></a>
+                            <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scanner.scanner') }}">📡 <span>Scanner</span></a>
                         </li>
                     {% endif %}
 
                     {% if current_user.role in ['admin', 'officer', 'viewer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">🗂️ <span>Scan History</span></a>
+                            <a class="nav-link {% if request.path.startswith('/scanlog') %}active{% endif %}" href="{{ url_for('scanlog.scanlog') }}">🗂️ <span>Scan History</span></a>
                         </li>
                     {% endif %}
 
@@ -85,7 +85,7 @@
                             <a class="nav-link {% if request.path.startswith('/admin/users') %}active{% endif %}" href="{{ url_for('users.manage_users') }}">🧑 <span>User Management</span></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">🔎 <span>Audit Log</span></a>
+                            <a class="nav-link {% if request.path.startswith('/admin/auditlog') %}active{% endif %}" href="{{ url_for('audit_log.view_audit_log') }}">🔎 <span>Audit Log</span></a>
                         </li>
                     {% endif %}
 

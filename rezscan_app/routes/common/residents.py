@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify, g
 from flask_login import login_required, current_user
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required, role_required
+from rezscan_app.routes.common.auth import role_required
 from rezscan_app.utils.constants import UNIT_OPTIONS, HOUSING_OPTIONS, LEVEL_OPTIONS, CSV_REQUIRED_HEADERS, CSV_OPTIONAL_HEADERS
 from rezscan_app.utils.file_utils import save_uploaded_file, allowed_file
 from rezscan_app.utils.logging_config import setup_logging
@@ -149,7 +149,7 @@ def residents():
         LEVEL_OPTIONS=LEVEL_OPTIONS
     )
 
-@residents_bp.route('/admin/residents/add', methods=['GET', 'POST'])
+@residents_bp.route('/residents/add', methods=['GET', 'POST'])
 @login_required
 def add_resident():
     """Add a new resident."""
@@ -232,7 +232,7 @@ def add_resident():
         mdoc_prefill=mdoc_prefill  # Pass mdoc to pre-fill form
     )
 
-@residents_bp.route('/admin/residents/edit/<int:mdoc>', methods=['GET', 'POST'], strict_slashes=False)
+@residents_bp.route('/residents/edit/<int:mdoc>', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def edit_resident(mdoc):
@@ -387,7 +387,7 @@ def delete_resident(mdoc):
     
     return redirect(url_for('residents.residents'))
 
-@residents_bp.route('/admin/residents/delete_all', methods=['POST'], strict_slashes=False)
+@residents_bp.route('/residents/delete_all', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def delete_all_residents():
@@ -427,7 +427,7 @@ def delete_all_residents():
     
     return redirect(url_for('admin.admin_dashboard'))
 
-@residents_bp.route('/admin/residents/export', strict_slashes=False)
+@residents_bp.route('/residents/export', strict_slashes=False)
 @login_required
 @role_required('admin')
 def export_residents():
@@ -484,7 +484,7 @@ def export_residents():
         flash("Error exporting residents.", "danger")
         return redirect(url_for('residents.residents'))
 
-@residents_bp.route('/admin/residents/import', methods=['GET'], strict_slashes=False)
+@residents_bp.route('/residents/import', methods=['GET'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def import_residents():
@@ -501,7 +501,7 @@ def import_residents():
                           CSV_REQUIRED_HEADERS=CSV_REQUIRED_HEADERS, 
                           CSV_OPTIONAL_HEADERS=CSV_OPTIONAL_HEADERS)
 
-@residents_bp.route('/admin/residents/import/upload', methods=['POST'], strict_slashes=False)
+@residents_bp.route('/residents/import/upload', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def upload_residents():

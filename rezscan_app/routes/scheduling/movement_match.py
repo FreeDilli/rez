@@ -1,13 +1,12 @@
-# rezscan_app/routes/scheduling/movement_match.py
-
 from flask import Blueprint, render_template, session, request, flash
-from rezscan_app.routes.common.auth import login_required, role_required
+from flask_login import login_required
+from rezscan_app.routes.common.auth import role_required
 from rezscan_app.models.database import get_db
 import re
 
-movement_match_bp = Blueprint('movement_match', __name__, url_prefix='/admin/scheduling')
+movement_match_bp = Blueprint('movement_match', __name__)
 
-@movement_match_bp.route('/match_preview', methods=['GET', 'POST'])
+@movement_match_bp.route('/schedule/match_preview', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'scheduling')
 def match_preview():

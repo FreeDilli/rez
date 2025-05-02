@@ -4,7 +4,7 @@ from flask import request
 
 api_bp = Blueprint('api', __name__)
 
-@api_bp.route('/api/status/<mdoc>', methods=['GET'])
+@api_bp.route('/admin/api/status/<mdoc>', methods=['GET'])
 def get_resident_status(mdoc):
     db = get_db()
     c = db.cursor()
@@ -49,7 +49,7 @@ def get_resident_status(mdoc):
         "status": "Scanned In" if status == 'in' else "Scanned Out"
     })
 
-@api_bp.route('/api/scan', methods=['POST'])
+@api_bp.route('/admin/api/scan', methods=['POST'])
 def api_scan():
     db = get_db()
     c = db.cursor()

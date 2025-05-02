@@ -1,13 +1,12 @@
-# rezscan_app/routes/movement_board.py
-
 from flask import Blueprint, render_template, request
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required, role_required
+from flask_login import login_required
+from rezscan_app.routes.common.auth import role_required
 import datetime
 
-movement_board_bp = Blueprint('movement_schedule', __name__, url_prefix='/admin/movement')
+movement_board_bp = Blueprint('movement_schedule', __name__)
 
-@movement_board_bp.route('/', methods=['GET'])
+@movement_board_bp.route('/schedule/movement-schedule', methods=['GET'])
 @login_required
 @role_required('scheduling')
 def view_movement_schedule():

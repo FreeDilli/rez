@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, request
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required
+from flask_login import login_required
+from rezscan_app.routes.common.auth import role_required
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-printer_bp = Blueprint('schedule_printer', __name__, url_prefix='/admin/schedules/print')
+printer_bp = Blueprint('schedule_printer', __name__)
 
-@printer_bp.route('/', methods=['GET'])
+@printer_bp.route('/schedule/print', methods=['GET'])
 @login_required
 def print_schedule():
     selected_date = request.args.get('week', datetime.today().strftime('%Y-%m-%d'))

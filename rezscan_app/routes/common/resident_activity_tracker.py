@@ -92,7 +92,7 @@ def live_dashboard():
 
     return render_template('resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
 
-@resident_activity_tracker_bp.route('/check_out', methods=['POST'])
+@resident_activity_tracker_bp.route('/live/check_out', methods=['POST'])
 @login_required
 def check_out():
     mdoc = request.form.get('mdoc')
@@ -163,8 +163,6 @@ def check_out():
             logger.error(f"Failed to write audit log for check-out error: {str(audit_error)}")
 
     return redirect(url_for('resident_activity_tracker.live_dashboard'))
-
-# ... (previous routes: /live, /check_out, /heatmap-data remain unchanged)
 
 @resident_activity_tracker_bp.route('/heatmap-data', methods=['GET'])
 @login_required

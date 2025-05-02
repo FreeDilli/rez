@@ -1,14 +1,15 @@
 from flask import Blueprint, render_template, request, flash, send_file, redirect, url_for
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required
+from rezscan_app.routes.common.auth import role_required
+from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from collections import defaultdict
 import io
 import csv
 
-calendar_bp = Blueprint('calendar_schedule', __name__, url_prefix='/admin/schedules/calendar')
+calendar_bp = Blueprint('calendar_schedule', __name__)
 
-@calendar_bp.route('/', methods=['GET'])
+@calendar_bp.route('/schedule/calendar', methods=['GET'])
 @login_required
 def weekly_calendar():
     try:

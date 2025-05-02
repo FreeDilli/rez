@@ -10,7 +10,7 @@ import sqlite3
 setup_logging()
 logger = logging.getLogger(__name__)
 
-scan_bp = Blueprint('scan', __name__)
+scanner_bp = Blueprint('scanner', __name__)
 
 def log_audit_action(username, action, target, details=None):
     """Insert an audit log entry into the audit_log table."""
@@ -26,9 +26,9 @@ def log_audit_action(username, action, target, details=None):
     except sqlite3.Error as e:
         logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
-@scan_bp.route('/scan', methods=['GET', 'POST'], strict_slashes=False)
+@scanner_bp.route('/scanner', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
-def scan():
+def scanner():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /scan route with method: {request.method}")
     logger.debug(f"Request headers: {request.headers}")
@@ -55,7 +55,7 @@ def scan():
                     details=f"Error decoding POST data: {str(e)}"
                 )
                 flash("Invalid POST data received.", "danger")
-                return render_template('scan.html')
+                return render_template('scanner.html')
 
         if not raw_input:
             logger.warning(f"User {username} submitted scan with no MDOC")
@@ -66,7 +66,7 @@ def scan():
                 details='No MDOC provided'
             )
             flash("No barcode scanned.", "warning")
-            return render_template('scan.html')
+            return render_template('scanner.html')
 
         if '-' not in raw_input:
             logger.warning(f"User {username} submitted invalid scan format: {raw_input}")
@@ -77,7 +77,7 @@ def scan():
                 details='Invalid scan format (missing prefix-MDOC separator)'
             )
             flash("Invalid scan format. Expected format: PREFIX-MDOC", "warning")
-            return render_template('scan.html')
+            return render_template('scanner.html')
 
         prefix, mdoc = raw_input.split('-', 1)
         logger.debug(f"User {username} parsed prefix: {prefix}, mdoc: {mdoc}")
@@ -107,11 +107,11 @@ def scan():
         username=username,
         action='view',
         target='scan',
-        details='Accessed scan page'
+        details='Accessed scanner page'
     )
-    return render_template('scan.html', clear_input=clear_input)
+    return render_template('scanner.html', clear_input=clear_input)
 
-@scan_bp.route('/_last_scan_partial')
+@scanner_bp.route('/scanner/_last_scan_partial')
 @login_required
 def last_scan_partial():
     username = current_user.username if current_user.is_authenticated else 'unknown'

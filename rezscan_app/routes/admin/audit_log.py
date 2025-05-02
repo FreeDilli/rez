@@ -176,7 +176,7 @@ def _build_filter_params(username, action, start_date, end_date, local_tz):
             pass
     return params
 
-@audit_log_bp.route('/export', methods=['GET'])
+@audit_log_bp.route('/admin/auditlog/export', methods=['GET'])
 @login_required
 def export_audit_log():
     logger.debug(f"User {current_user.username} requested audit log export")

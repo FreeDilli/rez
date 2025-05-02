@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required
+from flask_login import login_required
+from rezscan_app.routes.common.auth import role_required
 from datetime import datetime
 
 resident_schedule_bp = Blueprint('resident_schedule', __name__, url_prefix='/admin/resident_schedule')

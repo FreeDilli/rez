@@ -2,16 +2,17 @@
 
 from flask import Blueprint, request, send_file, flash, redirect, url_for
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required, role_required
+from flask_login import login_required
+from rezscan_app.routes.common.auth import role_required
 import datetime
 import csv
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-movement_exports_bp = Blueprint('movement_exports', __name__, url_prefix='/admin/movement')
+movement_exports_bp = Blueprint('movement_exports', __name__)
 
-@movement_exports_bp.route('/export_csv', methods=['GET'])
+@movement_exports_bp.route('/schedule/movement/export_csv', methods=['GET'])
 @login_required
 @role_required('admin', 'scheduling')
 def export_movement_csv():
@@ -46,7 +47,7 @@ def export_movement_csv():
         flash(f"Error exporting CSV: {str(e)}", "danger")
         return redirect(url_for('movement_board.view_movement_schedule'))
 
-@movement_exports_bp.route('/export_pdf', methods=['GET'])
+@movement_exports_bp.route('/schedule/movement/export_pdf', methods=['GET'])
 @login_required
 @role_required('admin','scheduling')
 def export_movement_pdf():

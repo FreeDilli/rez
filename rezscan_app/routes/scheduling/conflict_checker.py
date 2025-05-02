@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, request
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required
+from rezscan_app.routes.common.auth import role_required
+from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-conflict_bp = Blueprint('conflict_checker', __name__, url_prefix='/admin/schedules/conflicts')
+conflict_bp = Blueprint('conflict_checker', __name__)
 
-@conflict_bp.route('/', methods=['GET'])
+@conflict_bp.route('/schedule/conflicts', methods=['GET'])
 @login_required
 def check_conflicts():
     selected_date = request.args.get('week', datetime.today().strftime('%Y-%m-%d'))

@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template
-from rezscan_app.routes.common.auth import login_required
+from flask_login import login_required
+from rezscan_app.routes.common.auth import role_required
 
-scheduling_bp = Blueprint('scheduling', __name__, url_prefix='/admin/scheduling')
+scheduling_bp = Blueprint('scheduling', __name__)
 
-@scheduling_bp.route('/')
+@scheduling_bp.route('/schedule')
 @login_required
 def dashboard():
     return render_template('scheduling_dashboard.html')

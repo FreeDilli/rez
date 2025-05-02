@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from rezscan_app.models.database import get_db
 import logging
 from rezscan_app.utils.logging_config import setup_logging
-from rezscan_app.routes.common.auth import login_required, role_required
+from rezscan_app.routes.common.auth import role_required
 from rezscan_app.routes.admin.audit_log import log_audit_action
 import sqlite3
 from datetime import datetime
@@ -13,9 +13,9 @@ from flask_login import login_required, current_user
 setup_logging()
 logger = logging.getLogger(__name__)
 
-schedules_bp = Blueprint('schedules', __name__, url_prefix='/admin/schedules')
+schedules_bp = Blueprint('schedules', __name__)
 
-@schedules_bp.route('/')
+@schedules_bp.route('/schedule/schedules')
 @login_required
 def manage_schedules():
     category_filter = request.args.get('category')
@@ -50,7 +50,7 @@ def manage_schedules():
         flash('An error occurred while retrieving schedules.', 'danger')
         return render_template('schedules.html', groups=[], category_filter=category_filter, categories=[])
 
-@schedules_bp.route('/create', methods=['GET', 'POST'])
+@schedules_bp.route('/schedule/create', methods=['GET', 'POST'])
 @login_required
 def create_schedule():
     if request.method == 'POST':
@@ -77,7 +77,7 @@ def create_schedule():
 
     return render_template('schedule_form.html', action='Create', schedule={})
 
-@schedules_bp.route('/<int:group_id>/edit', methods=['GET', 'POST'])
+@schedules_bp.route('/schedule/<int:group_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_schedule(group_id):
     try:
@@ -165,7 +165,7 @@ def edit_schedule(group_id):
         flash('An error occurred while accessing the schedule.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))
 
-@schedules_bp.route('/<int:group_id>/delete')
+@schedules_bp.route('/schedule/<int:group_id>/delete')
 @login_required
 @role_required('admin')
 def delete_schedule(group_id):
@@ -190,7 +190,7 @@ def delete_schedule(group_id):
         flash('An error occurred while deleting the schedule group.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))
 
-@schedules_bp.route('/<int:group_id>/assign', methods=['GET', 'POST'])
+@schedules_bp.route('/schedule/<int:group_id>/assign', methods=['GET', 'POST'])
 @login_required
 def assign_schedule(group_id):
     try:
@@ -239,7 +239,7 @@ def assign_schedule(group_id):
         flash('An error occurred while accessing resident assignments.', 'danger')
         return redirect(url_for('schedules.manage_schedules'))
 
-@schedules_bp.route('/live')
+@schedules_bp.route('/schedule/live')
 @login_required
 def live_schedule():
     try:
@@ -277,7 +277,7 @@ def live_schedule():
         flash('An error occurred while loading the live schedule.', 'danger')
         return render_template('live_schedule.html', active_rows=[], current_day='Unknown', current_time='--:--')
     
-@schedules_bp.route('/import')
+@schedules_bp.route('/schedule/import')
 @login_required
 def import_schedule():
     return render_template('import_schedule.html')

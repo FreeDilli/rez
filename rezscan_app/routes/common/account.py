@@ -5,7 +5,7 @@ from rezscan_app.models.database import get_db
 import logging
 import sqlite3
 
-account_bp = Blueprint('account', __name__, url_prefix='/account')
+account_bp = Blueprint('account', __name__)
 logger = logging.getLogger(__name__)
 def log_audit_action(username, action, target, details=None):
     """Helper function to log actions to audit_log table and logger."""
@@ -21,7 +21,7 @@ def log_audit_action(username, action, target, details=None):
     except sqlite3.Error as e:
         logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
-@account_bp.route('/', methods=['GET', 'POST'])
+@account_bp.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
     logger.debug(f"User {current_user.username} accessed account page")

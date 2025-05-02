@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required, role_required
+from rezscan_app.routes.common.auth import role_required
+from flask_login import login_required
 
-bulk_bp = Blueprint('bulk_assign', __name__, url_prefix='/admin/schedules/bulk_assign')
 
-@bulk_bp.route('/', methods=['GET', 'POST'])
+bulk_bp = Blueprint('bulk_assign', __name__)
+
+@bulk_bp.route('/schedule/bulk_assign', methods=['GET', 'POST'])
 @login_required
 @role_required('admin','scheduling')
 def bulk_assign():

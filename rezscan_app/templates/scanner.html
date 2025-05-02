@@ -11,7 +11,7 @@
 {% endif %}
 
 <!-- 🎯 Scan Form -->
-<form method="POST" action="{{ url_for('scan.scan') }}" autocomplete="off" id="scan-form">
+<form method="POST" action="{{ url_for('scanner.scanner') }}" autocomplete="off" id="scan-form">
   <div class="mb-4">
     <label for="mdoc" class="form-label">Scan MDOC Barcode</label>
     <input type="text" id="mdoc" name="mdoc" class="form-control form-control-lg" autofocus required>
@@ -23,7 +23,7 @@
 <script>
   // Auto-refresh last scan every 10 seconds with animation
   setInterval(() => {
-    fetch("{{ url_for('scan.last_scan_partial') }}")
+    fetch("{{ url_for('scanner.last_scan_partial') }}")
       .then(res => res.text())
       .then(html => {
         const section = document.getElementById("last-scan-section");

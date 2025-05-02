@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, send_file
-from flask_login import current_user
+from flask_login import current_user, login_required
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.common.auth import login_required, role_required
+from rezscan_app.routes.common.auth import role_required
 from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.utils.constants import DATEFORMAT, TIMEFORMAT
 import logging
@@ -70,7 +70,7 @@ def scanlog():
         )
         return render_template('error.html', message=f"Database error: {str(e)}"), 500
     
-@scanlog_bp.route('/admin/scanlog/delete', methods=['POST'], strict_slashes=False)
+@scanlog_bp.route('/scanlog/delete', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def delete_scanlog():
@@ -105,7 +105,7 @@ def delete_scanlog():
         flash("Error deleting scan logs.", "danger")
         return redirect(url_for('admin.admin_dashboard'))
 
-@scanlog_bp.route('/admin/scanlog/export', strict_slashes=False)
+@scanlog_bp.route('/scanlog/export', strict_slashes=False)
 @login_required
 @role_required('admin')
 def export_scanlog():
