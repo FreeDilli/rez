@@ -31,7 +31,7 @@ def log_audit_action(username, action, target, details=None):
     except sqlite3.Error as e:
         logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
-@residents_bp.route('/admin/residents', methods=['GET', 'POST'], strict_slashes=False)
+@residents_bp.route('/residents', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 def residents():
     """Render resident management page with search, sort, and pagination."""

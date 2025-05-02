@@ -30,7 +30,7 @@ def log_audit_action(username, action, target, details=None):
     except sqlite3.Error as e:
         logger.error(f"Failed to log audit action for {username}: {str(e)}")
 
-@scanlog_bp.route('/admin/scanlog', methods=['GET', 'POST'], strict_slashes=False)
+@scanlog_bp.route('/scanlog', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 def scanlog():
     username = current_user.username if current_user.is_authenticated else 'unknown'

@@ -44,7 +44,7 @@ def parse_and_convert_timestamp(text, local_tz):
             continue
     return text
 
-@audit_log_bp.route('/auditlog', methods=['GET'])
+@audit_log_bp.route('/admin/auditlog', methods=['GET'])
 @login_required
 def view_audit_log():
     logger.debug(f"User {current_user.username} accessing audit log")
