@@ -132,7 +132,7 @@ def residents():
         return redirect(url_for('residents.residents'))
 
     return render_template(
-        'residents.html',
+        'residents/residents.html',
         residents=residents,
         search=search,
         sort=sort,
@@ -176,7 +176,7 @@ def add_resident():
             )
             flash('All fields are required.', 'warning')
             return render_template(
-                'add_resident.html',
+                'residents/add_resident.html',
                 UNIT_OPTIONS=UNIT_OPTIONS,
                 HOUSING_OPTIONS=HOUSING_OPTIONS,
                 LEVEL_OPTIONS=LEVEL_OPTIONS,
@@ -225,7 +225,7 @@ def add_resident():
         details='Accessed add resident page'
     )
     return render_template(
-        'add_resident.html',
+        'residents/add_resident.html',
         UNIT_OPTIONS=UNIT_OPTIONS,
         HOUSING_OPTIONS=HOUSING_OPTIONS,
         LEVEL_OPTIONS=LEVEL_OPTIONS,
@@ -291,7 +291,7 @@ def edit_resident(mdoc):
                     flash("Error: MDOC must be unique.", "warning")
                     c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE mdoc = ?", (mdoc,))
                     resident = c.fetchone()
-                    return render_template('edit_resident.html', resident=resident,
+                    return render_template('residents/edit_resident.html', resident=resident,
                                         UNIT_OPTIONS=UNIT_OPTIONS, HOUSING_OPTIONS=HOUSING_OPTIONS, LEVEL_OPTIONS=LEVEL_OPTIONS)
                 except sqlite3.Error as e:
                     logger.error(f"Database error for user {username} editing resident MDOC {mdoc}: {str(e)}")
@@ -336,7 +336,7 @@ def edit_resident(mdoc):
         flash("Database error occurred.", "danger")
         return redirect(url_for('residents.residents'))
 
-    return render_template('edit_resident.html', resident=resident,
+    return render_template('residents/edit_resident.html', resident=resident,
                            UNIT_OPTIONS=UNIT_OPTIONS, HOUSING_OPTIONS=HOUSING_OPTIONS, LEVEL_OPTIONS=LEVEL_OPTIONS)
 
 @residents_bp.route('/residents/delete/<int:mdoc>', methods=['POST'], strict_slashes=False)
@@ -497,7 +497,7 @@ def import_residents():
         target='import_residents',
         details='Accessed import residents page'
     )
-    return render_template('import_residents.html', 
+    return render_template('residents/import_residents.html', 
                           CSV_REQUIRED_HEADERS=CSV_REQUIRED_HEADERS, 
                           CSV_OPTIONAL_HEADERS=CSV_OPTIONAL_HEADERS)
 
