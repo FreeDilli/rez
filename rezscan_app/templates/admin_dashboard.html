@@ -51,12 +51,12 @@
           <div class="mt-auto">
             <a href="{{ url_for('residents.residents') }}" class="btn btn-primary btn-sm w-100 mb-2" aria-label="View Residents">View Residents</a>
             <div class="d-flex flex-wrap gap-2">
-              <a href="/admin/residents/import" class="btn btn-outline-info btn-sm" style="width: calc(50% - 0.5rem);" aria-label="Import Residents">Import Residents</a>
-              <a href="/admin/residents/import/history" class="btn btn-outline-info btn-sm" style="width: calc(50% - 0.5rem);" aria-label="Import History">Import History</a>
+              <a href="{{ url_for('residents.import_residents') }}" class="btn btn-outline-info btn-sm" style="width: calc(50% - 0.5rem);" aria-label="Import Residents">Import Residents</a>
+              <a href="{{ url_for('import_history.view_import_history') }}" class="btn btn-outline-info btn-sm" style="width: calc(50% - 0.5rem);" aria-label="Import History">Import History</a>
             </div>
             <div class="d-flex flex-wrap gap-2 mt-2">
-              <a href="/admin/residents/export" class="btn btn-outline-success btn-sm" style="width: calc(50% - 0.5rem);" aria-label="Export Residents">Export Residents</a>
-              <form action="/admin/residents/delete_all" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL residents? This action cannot be undone.');" style="width: calc(50% - 0.5rem);">
+              <a href="{{ url_for('residents.export_residents') }}" class="btn btn-outline-success btn-sm" style="width: calc(50% - 0.5rem);" aria-label="Export Residents">Export Residents</a>
+              <form action="{{ url_for('residents.delete_all_residents') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL residents? This action cannot be undone.');" style="width: calc(50% - 0.5rem);">
                 <button type="submit" class="btn btn-outline-danger btn-sm w-100" aria-label="Delete All Residents">Delete All Residents</button>
               </form>
             </div>
@@ -90,7 +90,7 @@
           <p class="card-text mb-3">Add or manage admin and viewer accounts.</p>
           <div class="fw-bold text-primary text-center" style="font-size: 1.75rem;">{{ stats.total_users }} active users</div>
           <div class="mt-auto">
-            <a href="/admin/users" class="btn btn-primary btn-sm w-100" aria-label="Manage Users">Manage Users</a>
+            <a href="{{ url_for('users.manage_users') }}" class="btn btn-primary btn-sm w-100" aria-label="Manage Users">Manage Users</a>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@
           <h5 class="card-title">🏠 Locations</h5>
           <p class="card-text mb-3">Add or edit scan locations by area or unit.</p>
           <div class="mt-auto">
-            <a href="/admin/locations" class="btn btn-primary btn-sm w-100" aria-label="Manage Locations">Manage</a>
+            <a href="{{ url_for('locations.manage_locations') }}" class="btn btn-primary btn-sm w-100" aria-label="Manage Locations">Manage</a>
           </div>
         </div>
       </div>
@@ -114,7 +114,7 @@
           <h5 class="card-title">📆 Scheduling</h5>
           <p class="card-text mb-3">Manage schedule groups, blocks, and assignments.</p>
           <div class="mt-auto">
-            <a href="/admin/scheduling" class="btn btn-primary btn-sm w-100" aria-label="Manage Scheduling">Manage</a>
+            <a href="{{ url_for('scheduling.dashboard') }}" class="btn btn-primary btn-sm w-100" aria-label="Manage Scheduling">Manage</a>
           </div>
         </div>
       </div>
@@ -126,7 +126,7 @@
           <h5 class="card-title">📅 Live Schedule</h5>
           <p class="card-text mb-3">See which groups are active right now.</p>
           <div class="mt-auto">
-            <a href="/admin/schedules" class="btn btn-primary btn-sm w-100" aria-label="View Live Schedule">View Schedule</a>
+            <a href="{{ url_for('schedules.live_schedule') }}" class="btn btn-primary btn-sm w-100" aria-label="View Live Schedule">View Schedule</a>
           </div>
         </div>
       </div>

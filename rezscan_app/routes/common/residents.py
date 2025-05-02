@@ -339,7 +339,7 @@ def edit_resident(mdoc):
     return render_template('edit_resident.html', resident=resident,
                            UNIT_OPTIONS=UNIT_OPTIONS, HOUSING_OPTIONS=HOUSING_OPTIONS, LEVEL_OPTIONS=LEVEL_OPTIONS)
 
-@residents_bp.route('/admin/residents/delete/<int:mdoc>', methods=['POST'], strict_slashes=False)
+@residents_bp.route('/residents/delete/<int:mdoc>', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def delete_resident(mdoc):

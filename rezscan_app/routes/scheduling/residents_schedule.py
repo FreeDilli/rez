@@ -4,9 +4,9 @@ from flask_login import login_required
 from rezscan_app.routes.common.auth import role_required
 from datetime import datetime
 
-resident_schedule_bp = Blueprint('resident_schedule', __name__, url_prefix='/admin/resident_schedule')
+resident_schedule_bp = Blueprint('resident_schedule', __name__)
 
-@resident_schedule_bp.route('/', methods=['GET'])
+@resident_schedule_bp.route('/schedule/resident-schedule', methods=['GET'])
 @login_required
 def lookup():
     mdoc = request.args.get('mdoc', '').strip()
