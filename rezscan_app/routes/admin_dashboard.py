@@ -17,9 +17,28 @@ def admin_dashboard():
     c.execute("SELECT COUNT(*) FROM scans WHERE strftime('%Y-%m-%d', timestamp) = strftime('%Y-%m-%d', 'now', 'localtime')")
     scans_today = c.fetchone()[0]
 
+    c.execute('''
+                    SELECT COUNT(*)
+                    FROM (
+                        SELECT mdoc, MAX(timestamp) AS latest_time
+                        FROM scans
+                        GROUP BY mdoc
+                        HAVING (SELECT status FROM scans WHERE mdoc = scans.mdoc AND timestamp = latest_time) = 'In'
+                    )
+                ''')
+    checked_in = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users")
+    total_users = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM users where role = 'admin'")
+    total_admins = c.fetchone()[0]
+
     stats = {
         'total_residents': total_residents,
-        'scans_today': scans_today
+        'scans_today': scans_today,
+        'checked_in': checked_in,
+        'total_users': total_users
     }
 
     return render_template('admin_dashboard.html', stats=stats)

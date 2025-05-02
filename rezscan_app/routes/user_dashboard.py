@@ -25,12 +25,13 @@ def dashboard():
         stats = {}
 
         if role in ['officer', 'scheduling', 'viewer']:
-            with get_db() as conn:
-                c = conn.cursor()
-                c.execute('SELECT COUNT(*) FROM residents')
+                db = get_db()
+                c = db.cursor()
+
+                c.execute("SELECT COUNT(*) FROM residents")
                 total_residents = c.fetchone()[0]
 
-                c.execute('SELECT COUNT(*) FROM scans WHERE DATE(timestamp) = DATE("now", "localtime")')
+                c.execute("SELECT COUNT(*) FROM scans WHERE strftime('%Y-%m-%d', timestamp) = strftime('%Y-%m-%d', 'now', 'localtime')")
                 scans_today = c.fetchone()[0]
 
                 c.execute('''
@@ -51,7 +52,7 @@ def dashboard():
                 }
 
         logger.debug(f"Rendering {template_name} with stats: {stats}")
-        return render_template(template_name, user=current_user, stats=stats)
+        return render_template(template_name, stats=stats, user=current_user)
 
     except Exception as e:
         logger.error(f"Dashboard template not found or error for role: {role} - {str(e)}")
