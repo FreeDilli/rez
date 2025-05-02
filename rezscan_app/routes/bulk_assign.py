@@ -6,7 +6,7 @@ bulk_bp = Blueprint('bulk_assign', __name__, url_prefix='/admin/schedules/bulk_a
 
 @bulk_bp.route('/', methods=['GET', 'POST'])
 @login_required
-@role_required('scheduling')
+@role_required('admin','scheduling')
 def bulk_assign():
     try:
         with get_db() as db:
