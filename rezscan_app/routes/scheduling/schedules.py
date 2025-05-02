@@ -2,10 +2,12 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from rezscan_app.models.database import get_db
 import logging
 from rezscan_app.utils.logging_config import setup_logging
-from rezscan_app.routes.auth import login_required, role_required
-from rezscan_app.routes.audit_log import log_audit_action
+from rezscan_app.routes.common.auth import login_required, role_required
+from rezscan_app.routes.admin.audit_log import log_audit_action
 import sqlite3
 from datetime import datetime
+from flask_login import login_required, current_user
+
 
 # Setup logging
 setup_logging()

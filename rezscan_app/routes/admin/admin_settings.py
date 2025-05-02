@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.auth import role_required
+from rezscan_app.routes.common.auth import role_required
 import sqlite3
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/admin/settings')

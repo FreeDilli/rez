@@ -1,7 +1,7 @@
 # rezscan_app/routes/scheduling/movement_upload.py
 
 from flask import Blueprint, render_template, request, redirect, flash, session, url_for
-from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.common.auth import login_required, role_required
 
 movement_upload_bp = Blueprint('movement_upload', __name__, url_prefix='/admin/scheduling')
 

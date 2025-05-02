@@ -2,7 +2,7 @@
 
 from flask import Blueprint, request, send_file, flash, redirect, url_for
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.common.auth import login_required, role_required
 import datetime
 import csv
 import io

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import current_user
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.common.auth import login_required, role_required
 from rezscan_app.utils.logging_config import setup_logging
 from rezscan_app.utils.constants import LOCATION_TYPES
 import sqlite3

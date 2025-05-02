@@ -1,7 +1,7 @@
 # rezscan_app/routes/scheduling/movement_match.py
 
 from flask import Blueprint, render_template, session, request, flash
-from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.common.auth import login_required, role_required
 from rezscan_app.models.database import get_db
 import re
 

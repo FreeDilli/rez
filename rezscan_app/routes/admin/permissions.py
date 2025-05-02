@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
-from rezscan_app.routes.auth import role_required
+from rezscan_app.routes.common.auth import role_required
 
 permissions_bp = Blueprint('permissions', __name__, url_prefix='/admin/permissions')
 

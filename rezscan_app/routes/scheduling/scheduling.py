@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from rezscan_app.routes.auth import login_required
+from rezscan_app.routes.common.auth import login_required
 
 scheduling_bp = Blueprint('scheduling', __name__, url_prefix='/admin/scheduling')
 

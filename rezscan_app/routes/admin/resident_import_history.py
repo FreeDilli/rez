@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, abort, redirect, url_for, flash, g
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.common.auth import login_required, role_required
 import csv
 import io
 from datetime import datetime

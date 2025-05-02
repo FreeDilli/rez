@@ -1,7 +1,7 @@
 import requests
 from flask import Blueprint, flash, redirect, url_for
 from rezscan_app.models.database import get_db
-from rezscan_app.routes.auth import login_required, role_required
+from rezscan_app.routes.common.auth import login_required, role_required
 
 coris_bp = Blueprint('coris_import', __name__, url_prefix='/admin/import/coris')
 
