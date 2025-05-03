@@ -9,6 +9,7 @@ import logging
 import sqlite3
 import secrets
 import re
+import string
 
 logger = logging.getLogger(__name__)
 users_bp = Blueprint('users', __name__)
@@ -162,7 +163,9 @@ def reset_password(username):
     current_username = current_user.username
     logger.debug(f"User {current_username} accessing /admin/users/reset/{username} route")
     
-    new_password = secrets.token_urlsafe(12)
+    # Generate 8-character password with letters and numbers
+    characters = string.ascii_letters + string.digits
+    new_password = ''.join(secrets.choice(characters) for _ in range(8))
     hashed_password = generate_password_hash(new_password)
     try:
         with get_db() as conn:
