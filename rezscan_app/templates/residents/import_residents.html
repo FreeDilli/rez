@@ -112,7 +112,7 @@ document.getElementById('uploadForm').addEventListener('submit', function (e) {
   formData.append('csv_file', fileInput.files[0]);
   formData.append('dry_run', dryRun ? 'yes' : 'no');
   lastFormData = formData;
-  submitFormData(formData, true);
+  submitFormData(formData, dryRun);
 });
 
 document.getElementById('modalConfirmBtn').addEventListener('click', function () {
@@ -148,7 +148,15 @@ function submitFormData(formData, isDryRun) {
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
       progressBar.classList.remove('progress-bar-animated');
-      const res = JSON.parse(xhr.responseText);
+      let res;
+      try {
+        res = JSON.parse(xhr.responseText);
+      } catch (e) {
+        output.innerHTML = `<div class="alert alert-danger">❌ Failed to parse server response.</div>`;
+        showToast('Failed to parse server response.', 'danger');
+        return;
+      }
+
       if (xhr.status === 200 && res.success) {
         let html = `<div class="alert alert-success">${res.messages.join('<br>')}</div>`;
         html += `<div class="row text-center g-2 mb-3">
@@ -188,10 +196,14 @@ function submitFormData(formData, isDryRun) {
         }
         if (isDryRun) {
           html += `<button id="confirmBtn" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal" aria-label="Confirm Changes">✅ Confirm Changes</button>`;
+          output.innerHTML = html;
+          showToast("Dry run completed. Review changes below.", 'success');
         } else {
-          showToast("✅ Changes committed to the database.", 'success');
+          showToast("Changes committed. Redirecting to residents page...", 'success');
+          setTimeout(() => {
+            window.location.href = "{{ url_for('residents.residents') }}";
+          }, 2000); // Delay redirect to show toast
         }
-        output.innerHTML = html;
       } else {
         output.innerHTML = `<div class="alert alert-danger">❌ ${res.message || 'Something went wrong.'}</div>`;
         showToast(res.message || 'Import failed.', 'danger');

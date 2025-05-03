@@ -559,7 +559,9 @@ def upload_residents():
             target='residents',
             details='No file selected'
         )
+        flash('No file selected.', 'error')
         return jsonify({'success': False, 'message': 'No file selected.'}), 400
+
     elif not allowed_file(file.filename):
         logger.warning(f"User {username} failed to upload residents: Invalid file type")
         log_audit_action(
@@ -568,6 +570,7 @@ def upload_residents():
             target='residents',
             details='Invalid file type; only CSV allowed'
         )
+        flash('Invalid file type. Only CSV files allowed.', 'error')
         return jsonify({'success': False, 'message': 'Invalid file type. Only CSV files allowed.'}), 400
 
     try:
@@ -670,7 +673,7 @@ def upload_residents():
                 conn.commit()
                 messages.append("✅ Changes committed to database.")
                 logger.info(f"User {username} committed resident import: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed")
-
+                
                 try:
                     timestamp = datetime.utcnow().isoformat()
                     summary = (stats['added'], stats['updated'], stats['deleted'], stats['failed'], stats['processed'])
@@ -707,6 +710,7 @@ def upload_residents():
                         details=f"Failed to log import history: {str(e)}"
                     )
                     messages.append(f"⚠️ Warning: Failed to log import history: {str(e)}")
+                    flash(f"Warning: Failed to log import history: {str(e)}", 'error')
             else:
                 messages.append("🧪 Dry Run: No changes committed.")
                 logger.info(f"User {username} performed dry run import: {stats['processed']} rows processed")
@@ -717,6 +721,10 @@ def upload_residents():
             target='residents',
             details=f"Processed {stats['processed']} rows: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed"
         )
+
+        if not dry_run:
+            flash(f"Import successful: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed", 'success')
+
         return jsonify({
             'success': True,
             'messages': messages,
@@ -733,7 +741,9 @@ def upload_residents():
             target='residents',
             details=f"Invalid CSV encoding: {str(e)}"
         )
+        flash(f"Invalid CSV encoding: {str(e)}", 'error')
         return jsonify({'success': False, 'message': f"Invalid CSV encoding: {str(e)}"}), 400
+
     except sqlite3.Error as e:
         logger.error(f"Database error for user {username} during resident import: {str(e)}")
         log_audit_action(
@@ -742,7 +752,9 @@ def upload_residents():
             target='residents_import',
             details=f"Database error during import: {str(e)}"
         )
+        flash(f"Database error: {str(e)}", 'error')
         return jsonify({'success': False, 'message': f"Database error: {str(e)}"}), 500
+
     except Exception as e:
         logger.error(f"Unexpected error for user {username} during resident import: {str(e)}")
         log_audit_action(
@@ -751,4 +763,5 @@ def upload_residents():
             target='residents_import',
             details=f"Unexpected error during import: {str(e)}"
         )
+        flash(f"Error reading CSV: {str(e)}", 'error')
         return jsonify({'success': False, 'message': f"Error reading CSV: {str(e)}"}), 500
