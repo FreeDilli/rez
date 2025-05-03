@@ -10,31 +10,29 @@ import sqlite3
 import logging
 import csv
 import io
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from rezscan_app.utils.audit_logging import log_audit_action
+import re
 
-# Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 residents_bp = Blueprint('residents', __name__)
 
-def log_audit_action(username, action, target, details=None):
-    """Insert an audit log entry into the audit_log table."""
-    try:
-        with get_db() as conn:
-            c = conn.cursor()
-            c.execute(
-                'INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)',
-                (username, action, target, details)
-            )
-            conn.commit()
-            logger.debug(f"Audit log created: {username} - {action} - {target}")
-    except sqlite3.Error as e:
-        logger.error(f"Failed to log audit action for {username}: {str(e)}")
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+def user_key_func():
+    if current_user.is_authenticated:
+        return current_user.username
+    return get_remote_address()
 
 @residents_bp.route('/residents', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 def residents():
-    """Render resident management page with search, sort, and pagination."""
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents route")
     
@@ -47,7 +45,6 @@ def residents():
     page = int(request.args.get('page', 1)) if request.args.get('page', '1').isdigit() else 1
     per_page = 10
 
-    # Validate filter parameters
     if filter_unit not in UNIT_OPTIONS:
         filter_unit = ''
     if filter_housing not in HOUSING_OPTIONS:
@@ -87,7 +84,6 @@ def residents():
             columns = ['id', 'name', 'mdoc', 'unit', 'housing_unit', 'level', 'photo']
             residents = [dict(zip(columns, row)) for row in c.fetchall()]
 
-            # Count filtered residents
             count_query = "SELECT COUNT(*) FROM residents WHERE 1=1"
             count_params = []
             if search:
@@ -105,11 +101,9 @@ def residents():
             c.execute(count_query, count_params)
             filtered_count = c.fetchone()[0]
 
-            # Count total residents (unfiltered)
             c.execute("SELECT COUNT(*) FROM residents")
             total_count = c.fetchone()[0]
 
-            # Calculate total pages
             total_pages = max((filtered_count + per_page - 1) // per_page, 1)
 
             logger.debug(f"User {username} fetched {len(residents)} residents (filtered: {filtered_count}, total: {total_count})")
@@ -151,12 +145,11 @@ def residents():
 
 @residents_bp.route('/residents/add', methods=['GET', 'POST'])
 @login_required
+@limiter.limit("50/hour", key_func=user_key_func)
 def add_resident():
-    """Add a new resident."""
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/add route, method: {request.method}")
     
-    # Get mdoc from query parameter (e.g., ?mdoc=888)
     mdoc_prefill = request.args.get('mdoc', '')
 
     if request.method == 'POST':
@@ -165,6 +158,23 @@ def add_resident():
         unit = request.form.get('unit', '').strip()
         housing_unit = request.form.get('housing_unit', '').strip()
         level = request.form.get('level', '').strip()
+
+        if not re.match(r'^\d{1,10}$', mdoc):
+            logger.warning(f"User {username} failed to add resident: Invalid MDOC format {mdoc}")
+            log_audit_action(
+                username=username,
+                action='add_resident_failed',
+                target='residents',
+                details='Invalid MDOC format'
+            )
+            flash("Invalid MDOC format. Use numeric characters, max 10 digits.", "warning")
+            return render_template(
+                'residents/add_resident.html',
+                UNIT_OPTIONS=UNIT_OPTIONS,
+                HOUSING_OPTIONS=HOUSING_OPTIONS,
+                LEVEL_OPTIONS=LEVEL_OPTIONS,
+                mdoc_prefill=mdoc
+            )
 
         if not all([name, mdoc, unit, housing_unit, level]):
             logger.warning(f"User {username} failed to add resident: missing fields")
@@ -180,7 +190,7 @@ def add_resident():
                 UNIT_OPTIONS=UNIT_OPTIONS,
                 HOUSING_OPTIONS=HOUSING_OPTIONS,
                 LEVEL_OPTIONS=LEVEL_OPTIONS,
-                mdoc_prefill=mdoc  # Pass mdoc back to form if validation fails
+                mdoc_prefill=mdoc
             )
 
         try:
@@ -229,12 +239,13 @@ def add_resident():
         UNIT_OPTIONS=UNIT_OPTIONS,
         HOUSING_OPTIONS=HOUSING_OPTIONS,
         LEVEL_OPTIONS=LEVEL_OPTIONS,
-        mdoc_prefill=mdoc_prefill  # Pass mdoc to pre-fill form
+        mdoc_prefill=mdoc_prefill
     )
 
 @residents_bp.route('/residents/edit/<int:mdoc>', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("50/hour", key_func=user_key_func)
 def edit_resident(mdoc):
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/edit/{mdoc} route, method: {request.method}")
@@ -253,6 +264,20 @@ def edit_resident(mdoc):
                 level = request.form['level'].strip()
                 photo_file = request.files.get('photo')
                 photo_path = save_uploaded_file(photo_file) or request.form.get('existing_photo')
+
+                if not re.match(r'^\d{1,10}$', new_mdoc):
+                    logger.warning(f"User {username} failed to edit resident: Invalid MDOC format {new_mdoc}")
+                    log_audit_action(
+                        username=username,
+                        action='edit_resident_failed',
+                        target='residents',
+                        details='Invalid MDOC format'
+                    )
+                    flash("Invalid MDOC format. Use numeric characters, max 10 digits.", "warning")
+                    c.execute("SELECT id, name, mdoc, unit, housing_unit, level, photo FROM residents WHERE mdoc = ?", (mdoc,))
+                    resident = c.fetchone()
+                    return render_template('residents/edit_resident.html', resident=resident,
+                                        UNIT_OPTIONS=UNIT_OPTIONS, HOUSING_OPTIONS=HOUSING_OPTIONS, LEVEL_OPTIONS=LEVEL_OPTIONS)
                 
                 try:
                     c.execute("""
@@ -342,8 +367,8 @@ def edit_resident(mdoc):
 @residents_bp.route('/residents/delete/<int:mdoc>', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("50/hour", key_func=user_key_func)
 def delete_resident(mdoc):
-    """Delete a resident by MDOC."""
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/delete/{mdoc} route")
     
@@ -390,6 +415,7 @@ def delete_resident(mdoc):
 @residents_bp.route('/residents/delete_all', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("10/day", key_func=user_key_func)
 def delete_all_residents():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/delete_all route")
@@ -430,6 +456,7 @@ def delete_all_residents():
 @residents_bp.route('/residents/export', strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("50/hour", key_func=user_key_func)
 def export_residents():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/export route")
@@ -504,6 +531,7 @@ def import_residents():
 @residents_bp.route('/residents/import/upload', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("50/hour", key_func=user_key_func)
 def upload_residents():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/residents/import/upload route")
@@ -557,7 +585,12 @@ def upload_residents():
                 logger.warning(f"User {username} skipped row in CSV import: Missing MDOC")
                 continue
 
-            # Replace multiple phrases in housing_unit
+            if not re.match(r'^\d{1,10}$', row['mdoc']):
+                stats['failed'] += 1
+                messages.append(f"✘ Invalid MDOC format for row: {row['mdoc']}")
+                logger.warning(f"User {username} skipped row in CSV import: Invalid MDOC format {row['mdoc']}")
+                continue
+
             housing_unit = row.get('housing_unit', '')
             replacements = {
                 'women ctr': "Women's Center",
@@ -638,7 +671,6 @@ def upload_residents():
                 messages.append("✅ Changes committed to database.")
                 logger.info(f"User {username} committed resident import: {stats['added']} added, {stats['updated']} updated, {stats['deleted']} deleted, {stats['failed']} failed")
 
-                # Log import to history
                 try:
                     timestamp = datetime.utcnow().isoformat()
                     summary = (stats['added'], stats['updated'], stats['deleted'], stats['failed'], stats['processed'])
