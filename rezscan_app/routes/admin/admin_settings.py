@@ -8,12 +8,12 @@ import logging
 import re
 
 logger = logging.getLogger(__name__)
-settings_bp = Blueprint('settings', __name__, url_prefix='/admin/settings')
+admin_settings_bp = Blueprint('admin_settings', __name__)
 
-@settings_bp.route('/', methods=['GET', 'POST'])
+@admin_settings_bp.route('/admin/settings', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
-def manage_settings():
+def manage_admin_settings():
     username = current_user.username
     logger.debug(f"User {username} accessing /admin/settings, method: {request.method}")
     

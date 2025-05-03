@@ -133,7 +133,7 @@ def scanner():
     )
     return render_template('common/scanner.html', clear_input=clear_input)
 
-@scanner_bp.route('/scanner/_last_scan_partial')
+@scanner_bp.route('/scanner/_last_scan_partial', strict_slashes=False)
 @login_required
 def last_scan_partial():
     username = current_user.username if current_user.is_authenticated else 'unknown'

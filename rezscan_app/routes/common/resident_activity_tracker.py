@@ -87,7 +87,7 @@ def live_dashboard():
 
     return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
 
-@resident_activity_tracker_bp.route('/live/check_out', methods=['POST'])
+@resident_activity_tracker_bp.route('/live/check_out', methods=['POST'], strict_slashes=False)
 @login_required
 @limiter.limit("100/hour", key_func=user_key_func)
 def check_out():
@@ -143,7 +143,7 @@ def check_out():
 
     return redirect(url_for('resident_activity_tracker.live_dashboard'))
 
-@resident_activity_tracker_bp.route('/heatmap-data', methods=['GET'])
+@resident_activity_tracker_bp.route('/heatmap-data', methods=['GET'], strict_slashes=False)
 @login_required
 @limiter.limit("100/hour", key_func=user_key_func)
 def heatmap_data():
@@ -206,7 +206,7 @@ def heatmap_data():
         )
         return jsonify({'error': 'Failed to generate heatmap data'}), 500
 
-@resident_activity_tracker_bp.route('/heatmap', methods=['GET'])
+@resident_activity_tracker_bp.route('/heatmap', methods=['GET'], strict_slashes=False)
 @login_required
 def heatmap():
     logger.debug(f"User {current_user.username} accessing heatmap page")

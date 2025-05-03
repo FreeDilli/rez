@@ -143,7 +143,7 @@ def residents():
         LEVEL_OPTIONS=LEVEL_OPTIONS
     )
 
-@residents_bp.route('/residents/add', methods=['GET', 'POST'])
+@residents_bp.route('/residents/add', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @limiter.limit("50/hour", key_func=user_key_func)
 def add_resident():

@@ -6,11 +6,11 @@ from rezscan_app.utils.audit_logging import log_audit_action
 from rezscan_app.config import Config
 import pytz
 
-user_dashboard_bp = Blueprint('user_dashboard', __name__, url_prefix='/dashboard')
+user_dashboard_bp = Blueprint('user_dashboard', __name__)
 
 logger = logging.getLogger(__name__)
 
-@user_dashboard_bp.route('/', strict_slashes=False)
+@user_dashboard_bp.route('/dashboard', strict_slashes=False)
 @login_required
 def dashboard():
     logger.debug(f"Accessing user dashboard for role: {current_user.role}")

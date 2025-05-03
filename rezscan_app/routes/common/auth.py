@@ -84,7 +84,7 @@ def index():
         return redirect(get_role_redirect(current_user))
     return redirect(url_for('auth.login'))
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'], strict_slashes=False)
 @limiter.limit("50/hour", key_func=user_key_func)
 def login():
     username = request.form.get('username', '').strip() if request.method == 'POST' else 'anonymous'
@@ -182,7 +182,7 @@ def login():
     next_page = request.args.get('next', '')
     return render_template('common/login.html', next=next_page)
 
-@auth_bp.route('/logout')
+@auth_bp.route('/logout', strict_slashes=False)
 @login_required
 def logout():
     username = current_user.username if current_user.is_authenticated else 'unknown'

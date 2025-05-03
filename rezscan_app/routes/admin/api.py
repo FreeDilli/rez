@@ -26,7 +26,7 @@ def user_key_func():
         return current_user.username
     return get_remote_address()
 
-@api_bp.route('/admin/api/status/<mdoc>', methods=['GET'])
+@api_bp.route('/admin/api/status/<mdoc>', methods=['GET'], strict_slashes=False)
 @login_required
 @role_required('admin')
 @limiter.limit("100/hour", key_func=user_key_func)
@@ -85,7 +85,7 @@ def get_resident_status(mdoc):
         log_audit_action(username, 'error', 'resident', f"Database error for MDOC {mdoc}: {str(e)}")
         return jsonify({"status": "error", "message": "Database error."}), 500
 
-@api_bp.route('/admin/api/scan', methods=['POST'])
+@api_bp.route('/admin/api/scan', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 @limiter.limit("50/hour", key_func=user_key_func)

@@ -33,7 +33,7 @@ def parse_and_convert_timestamp(text, local_tz):
             continue
     return text
 
-@audit_log_bp.route('/admin/auditlog', methods=['GET'])
+@audit_log_bp.route('/admin/auditlog', methods=['GET'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def view_audit_log():
@@ -160,7 +160,7 @@ def _build_filter_params(username, action, start_date, end_date, local_tz):
             pass
     return params
 
-@audit_log_bp.route('/admin/auditlog/export', methods=['GET'])
+@audit_log_bp.route('/admin/auditlog/export', methods=['GET'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def export_audit_log():
@@ -201,7 +201,7 @@ def export_audit_log():
         flash("Error exporting audit log.", "danger")
         return redirect(url_for('audit_log.view_audit_log'))
 
-@audit_log_bp.route('/admin/auditlog/delete', methods=['GET', 'POST'])
+@audit_log_bp.route('/admin/auditlog/delete', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def delete_audit_log():

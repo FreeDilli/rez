@@ -7,7 +7,7 @@ from flask import url_for
 import logging
 
 logger = logging.getLogger(__name__)
-permissions_bp = Blueprint('permissions', __name__, url_prefix='/admin/permissions')
+permissions_bp = Blueprint('permissions', __name__)
 
 # Define what routes/pages are visible to each role
 ROLE_ACCESS = {
@@ -34,7 +34,7 @@ ROLE_ACCESS = {
     ]
 }
 
-@permissions_bp.route('/', methods=['GET'])
+@permissions_bp.route('/admin/permissions', methods=['GET'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def permission_test():

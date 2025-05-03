@@ -7,7 +7,7 @@ from rezscan_app.routes.common.auth import role_required
 from rezscan_app.config import Config
 from rezscan_app.utils.audit_logging import log_audit_action
 
-coris_bp = Blueprint('coris_import', __name__, url_prefix='/admin/import/coris')
+coris_bp = Blueprint('coris_import', __name__)
 logger = logging.getLogger(__name__)
 
 def get_api_settings():
@@ -25,7 +25,7 @@ def get_api_settings():
         logger.error(f"Error fetching API settings: {str(e)}")
         return Config.CORIS_API_URL, Config.CORIS_API_KEY
 
-@coris_bp.route('/', methods=['GET'])
+@coris_bp.route('/admin/coris/import', methods=['GET'], strict_slashes=False)
 @login_required
 @role_required('admin')
 def import_coris_residents():

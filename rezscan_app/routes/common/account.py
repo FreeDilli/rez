@@ -21,7 +21,7 @@ def user_key_func():
         return current_user.username
     return get_remote_address()
 
-@account_bp.route('/account', methods=['GET', 'POST'])
+@account_bp.route('/account', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @limiter.limit("50/hour", key_func=user_key_func)
 def account():
