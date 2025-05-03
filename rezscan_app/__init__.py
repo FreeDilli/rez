@@ -24,7 +24,7 @@ def user_key_func():
 
 def create_app():
     app = Flask(__name__, static_folder='static', template_folder='templates')
-
+    app.url_map.strict_slashes = False
     # Setup logging first
     from rezscan_app.utils.logging_config import setup_logging
     try:
