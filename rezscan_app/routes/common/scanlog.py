@@ -9,26 +9,24 @@ import sqlite3
 import io
 import csv
 from datetime import datetime
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from rezscan_app.utils.audit_logging import log_audit_action
 
-# Setup logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
 scanlog_bp = Blueprint('scanlog', __name__)
 
-def log_audit_action(username, action, target, details=None):
-    """Insert an audit log entry into the audit_log table."""
-    try:
-        with get_db() as conn:
-            c = conn.cursor()
-            c.execute(
-                'INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)',
-                (username, action, target, details)
-            )
-            conn.commit()
-            logger.debug(f"Audit log created: {username} - {action} - {target}")
-    except sqlite3.Error as e:
-        logger.error(f"Failed to log audit action for {username}: {str(e)}")
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+def user_key_func():
+    if current_user.is_authenticated:
+        return current_user.username
+    return get_remote_address()
 
 @scanlog_bp.route('/scanlog', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
@@ -73,6 +71,7 @@ def scanlog():
 @scanlog_bp.route('/scanlog/delete', methods=['POST'], strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("10/day", key_func=user_key_func)
 def delete_scanlog():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/scanlog/delete route")
@@ -108,6 +107,7 @@ def delete_scanlog():
 @scanlog_bp.route('/scanlog/export', strict_slashes=False)
 @login_required
 @role_required('admin')
+@limiter.limit("50/hour", key_func=user_key_func)
 def export_scanlog():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/scanlog/export route")
@@ -123,7 +123,6 @@ def export_scanlog():
             rows = c.fetchall()
             
             for row in rows:
-                # Split timestamp into date and time
                 timestamp = datetime.strptime(row[2], '%Y-%m-%d %H:%M:%S') if row[2] else None
                 date_str = timestamp.strftime(DATEFORMAT) if timestamp else ''
                 time_str = timestamp.strftime(TIMEFORMAT) if timestamp else ''

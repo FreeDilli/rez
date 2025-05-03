@@ -4,41 +4,49 @@ from rezscan_app.models.database import get_db
 from datetime import datetime
 import logging
 import pandas as pd
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from rezscan_app.config import Config
+from rezscan_app.utils.audit_logging import log_audit_action
+import pytz
 
 resident_activity_tracker_bp = Blueprint('resident_activity_tracker', __name__)
 logger = logging.getLogger(__name__)
+
+# Initialize Limiter (configured in app.py)
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+def user_key_func():
+    if current_user.is_authenticated:
+        return current_user.username
+    return get_remote_address()
 
 @resident_activity_tracker_bp.route('/live', strict_slashes=False)
 @login_required
 def live_dashboard():
     logger.debug(f"User {current_user.username} accessing Resident Activity Tracker")
     
-    # Get sorting parameters
     sort = request.args.get('sort', 'timestamp')
-    direction = request.args.get('direction', 'desc')  # Changed default from 'asc' to 'desc'
+    direction = request.args.get('direction', 'desc')
     
-    # Validate sort and direction
     valid_sorts = ['name', 'timestamp']
     sort = sort if sort in valid_sorts else 'timestamp'
-    direction = direction if direction in ['asc', 'desc'] else 'desc'  # Changed default from 'asc' to 'desc'
+    direction = direction if direction in ['asc', 'desc'] else 'desc'
     
     checked_in = []
     try:
         with get_db() as conn:
             c = conn.cursor()
+            log_audit_action(
+                username=current_user.username,
+                action='view',
+                target='resident_activity_tracker',
+                details=f'Accessed resident activity dashboard with sort={sort}, direction={direction}'
+            )
 
-            # Log audit entry for dashboard access
-            c.execute("""
-                INSERT INTO audit_log (username, action, target, details)
-                VALUES (?, ?, ?, ?)
-            """, (
-                current_user.username,
-                'view',
-                'resident_activity_tracker',
-                f'Accessed resident activity dashboard with sort={sort}, direction={direction}'
-            ))
-
-            # Fetch latest scan for each resident with name
             c.execute('''
                 SELECT s.mdoc, MAX(s.timestamp) AS latest_time, r.name
                 FROM scans s
@@ -59,47 +67,35 @@ def live_dashboard():
                 if result:
                     checked_in.append(result)
             
-            # Sort the checked_in list
             if sort == 'name':
                 checked_in.sort(key=lambda x: (x[0] or 'Unknown Resident').lower(), reverse=(direction == 'desc'))
             elif sort == 'timestamp':
                 checked_in.sort(key=lambda x: x[5], reverse=(direction == 'desc'))
 
             logger.info(f"User {current_user.username} successfully loaded {len(checked_in)} checked-in residents")
-
             conn.commit()
 
     except Exception as e:
         logger.error(f"Error retrieving resident activity for user {current_user.username}: {str(e)}", exc_info=True)
         flash("Error loading resident activity.", "danger")
-        
-        # Log error to audit log
-        try:
-            with get_db() as conn:
-                c = conn.cursor()
-                c.execute("""
-                    INSERT INTO audit_log (username, action, target, details)
-                    VALUES (?, ?, ?, ?)
-                """, (
-                    current_user.username,
-                    'view_failed',
-                    'resident_activity_tracker',
-                    f'Failed to load resident activity: {str(e)}'
-                ))
-                conn.commit()
-        except Exception as audit_error:
-            logger.error(f"Failed to write audit log for dashboard error: {str(audit_error)}")
+        log_audit_action(
+            username=current_user.username,
+            action='view_failed',
+            target='resident_activity_tracker',
+            details=f'Failed to load resident activity: {str(e)}'
+        )
 
     return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
 
 @resident_activity_tracker_bp.route('/live/check_out', methods=['POST'])
 @login_required
+@limiter.limit("100/hour", key_func=user_key_func)
 def check_out():
     mdoc = request.form.get('mdoc')
     location = request.form.get('location')
-    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    local_tz = pytz.timezone(Config.TIMEZONE)
+    current_timestamp = datetime.now(local_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-    # Fetch resident name
     resident_name = None
     try:
         with get_db() as conn:
@@ -124,18 +120,12 @@ def check_out():
                 "INSERT INTO scans (mdoc, timestamp, status, location) VALUES (?, ?, ?, ?)",
                 (mdoc, current_timestamp, "Out", location)
             )
-            
-            # Log audit entry for check-out
-            c.execute("""
-                INSERT INTO audit_log (username, action, target, details)
-                VALUES (?, ?, ?, ?)
-                """, (
-                    current_user.username,
-                    'check_out',
-                    f'resident:{resident_name}',
-                    f'Checked out resident from {location}'
-                ))
-
+            log_audit_action(
+                username=current_user.username,
+                action='check_out',
+                target=f'resident:{resident_name}',
+                details=f'Checked out resident from {location}'
+            )
             conn.commit()
 
             logger.info(f"User {current_user.username} successfully checked out resident {resident_name} from {location}")
@@ -144,28 +134,18 @@ def check_out():
     except Exception as e:
         logger.error(f"Error during check out for resident {resident_name} by user {current_user.username}: {str(e)}", exc_info=True)
         flash(f"Failed to check out resident {resident_name}.", "danger")
-        
-        # Log error to audit log
-        try:
-            with get_db() as conn:
-                c = conn.cursor()
-                c.execute("""
-                    INSERT INTO audit_log (username, action, target, details)
-                    VALUES (?, ?, ?, ?)
-                """, (
-                    current_user.username,
-                    'check_out_failed',
-                    f'resident:{resident_name}',
-                    f'Failed to check out resident from {location}: {str(e)}'
-                ))
-                conn.commit()
-        except Exception as audit_error:
-            logger.error(f"Failed to write audit log for check-out error: {str(audit_error)}")
+        log_audit_action(
+            username=current_user.username,
+            action='check_out_failed',
+            target=f'resident:{resident_name}',
+            details=f'Failed to check out resident from {location}: {str(e)}'
+        )
 
     return redirect(url_for('resident_activity_tracker.live_dashboard'))
 
 @resident_activity_tracker_bp.route('/heatmap-data', methods=['GET'])
 @login_required
+@limiter.limit("100/hour", key_func=user_key_func)
 def heatmap_data():
     logger.debug(f"User {current_user.username} accessing heatmap data")
     
@@ -174,19 +154,13 @@ def heatmap_data():
     try:
         with get_db() as conn:
             c = conn.cursor()
+            log_audit_action(
+                username=current_user.username,
+                action='view',
+                target='heatmap',
+                details=f'Accessed resident activity heatmap data with date_filter={date_filter}'
+            )
 
-            # Log audit entry for heatmap access
-            c.execute("""
-                INSERT INTO audit_log (username, action, target, details)
-                VALUES (?, ?, ?, ?)
-            """, (
-                current_user.username,
-                'view',
-                'heatmap',
-                f'Accessed resident activity heatmap data with date_filter={date_filter}'
-            ))
-
-            # Fetch latest scan for each resident with status = 'In'
             c.execute('''
                 SELECT s.mdoc, MAX(s.timestamp) AS latest_time, r.name, r.unit, r.housing_unit, r.level, s.location
                 FROM scans s
@@ -204,23 +178,16 @@ def heatmap_data():
                     'values': []
                 })
 
-            # Convert to DataFrame
             df = pd.DataFrame(data, columns=['mdoc', 'latest_time', 'name', 'unit', 'housing_unit', 'level', 'location'])
             df['timestamp'] = pd.to_datetime(df['latest_time'])
+            df['time_bucket'] = df['timestamp'].dt.floor('H').dt.strftime('%Y-%m-%d %H:00')
 
-            # Create hourly time buckets
-            df['time_bucket'] = df['timestamp'].dt.floor('H').dt.strftime('%Y-%m-%d %H:%00')
-
-            # Group by location and time_bucket, count residents
             heatmap_data = df.groupby(['location', 'time_bucket']).size().unstack(fill_value=0)
-
-            # Prepare data for Plotly
             locations = heatmap_data.index.tolist()
             time_buckets = heatmap_data.columns.tolist()
             values = heatmap_data.values.tolist()
 
             logger.info(f"User {current_user.username} successfully loaded heatmap data with {len(locations)} locations and {len(time_buckets)} time buckets")
-
             conn.commit()
 
             return jsonify({
@@ -231,24 +198,12 @@ def heatmap_data():
 
     except Exception as e:
         logger.error(f"Error generating heatmap data for user {current_user.username}: {str(e)}", exc_info=True)
-        
-        # Log error to audit log
-        try:
-            with get_db() as conn:
-                c = conn.cursor()
-                c.execute("""
-                    INSERT INTO audit_log (username, action, target, details)
-                    VALUES (?, ?, ?, ?)
-                """, (
-                    current_user.username,
-                    'view_failed',
-                    'heatmap',
-                    f'Failed to load heatmap data: {str(e)}'
-                ))
-                conn.commit()
-        except Exception as audit_error:
-            logger.error(f"Failed to write audit log for heatmap error: {str(audit_error)}")
-
+        log_audit_action(
+            username=current_user.username,
+            action='view_failed',
+            target='heatmap',
+            details=f'Failed to load heatmap data: {str(e)}'
+        )
         return jsonify({'error': 'Failed to generate heatmap data'}), 500
 
 @resident_activity_tracker_bp.route('/heatmap', methods=['GET'])
@@ -258,15 +213,12 @@ def heatmap():
     try:
         with get_db() as conn:
             c = conn.cursor()
-            c.execute("""
-                INSERT INTO audit_log (username, action, target, details)
-                VALUES (?, ?, ?, ?)
-            """, (
-                current_user.username,
-                'view',
-                'heatmap_page',
-                'Accessed resident activity heatmap page'
-            ))
+            log_audit_action(
+                username=current_user.username,
+                action='view',
+                target='heatmap_page',
+                details='Accessed resident activity heatmap page'
+            )
             conn.commit()
     except Exception as e:
         logger.error(f"Failed to write audit log for heatmap page access: {str(e)}")

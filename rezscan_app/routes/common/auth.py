@@ -10,24 +10,25 @@ import sqlite3
 from rezscan_app.config import Config
 import pytz
 from urllib.parse import urlparse, urljoin
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import re
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
 
-def log_audit_action(username, action, target, details=None):
-    """Insert an audit log entry into the audit_log table."""
-    try:
-        with get_db() as conn:
-            conn.execute(
-                'INSERT INTO audit_log (username, action, target, details) VALUES (?, ?, ?, ?)',
-                (username, action, target, details)
-            )
-            conn.commit()
-            logger.debug(f"Audit log created: {username} - {action} - {target}")
-    except sqlite3.Error as e:
-        logger.error(f"Failed to log audit action for {username}: {str(e)}")
+# Initialize Limiter (configured in app.py)
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+def user_key_func():
+    if current_user.is_authenticated:
+        return current_user.username
+    return get_remote_address()
 
 def role_required(*allowed_roles):
     def decorator(f):
@@ -38,6 +39,7 @@ def role_required(*allowed_roles):
             if not current_user.is_authenticated:
                 logger.warning(f"Unauthenticated access attempt to {request.path}")
                 flash("Please log in to access this page.", "warning")
+                from rezscan_app.utils.audit_logging import log_audit_action
                 log_audit_action(
                     username='anonymous',
                     action='unauthenticated_access',
@@ -47,6 +49,7 @@ def role_required(*allowed_roles):
                 return redirect(url_for('auth.login'))
             if current_user.role not in allowed_roles:
                 logger.warning(f"User {username} (role: {current_user.role}) attempted unauthorized access to {request.path}")
+                from rezscan_app.utils.audit_logging import log_audit_action
                 log_audit_action(
                     username=username,
                     action='unauthorized_access',
@@ -65,7 +68,6 @@ def is_safe_url(target):
         return False
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    # Compare netloc without port and allow http/https
     ref_netloc = ref_url.netloc.split(':')[0]
     test_netloc = test_url.netloc.split(':')[0]
     is_safe = test_url.scheme in ('http', 'https') and ref_netloc == test_netloc
@@ -83,34 +85,49 @@ def index():
     return redirect(url_for('auth.login'))
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("50/hour", key_func=user_key_func)
 def login():
-    username = request.form['username'].strip() if request.method == 'POST' else 'anonymous'
+    username = request.form.get('username', '').strip() if request.method == 'POST' else 'anonymous'
     logger.debug(f"User {username} accessing /login route with method: {request.method}")
     
     if request.method == 'POST':
-        password = request.form['password'].strip()
+        if not re.match(r'^[a-zA-Z0-9_]{1,50}$', username):
+            logger.warning(f"Login failed for username {username}: Invalid username format")
+            from rezscan_app.utils.audit_logging import log_audit_action
+            log_audit_action(
+                username=username,
+                action='login_failed',
+                target='login',
+                details='Invalid username format'
+            )
+            flash("Invalid username format. Use alphanumeric characters and underscores, max 50 characters.", "warning")
+            return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
+
+        password = request.form.get('password', '').strip()
         logger.debug(f"Login attempt for username: {username}")
 
         if not username or not password:
             logger.warning(f"Login failed for username {username}: Missing username or password")
-            flash("Username and password are required.", "warning")
+            from rezscan_app.utils.audit_logging import log_audit_action
             log_audit_action(
                 username=username,
                 action='login_failed',
                 target='login',
                 details='Missing username or password'
             )
+            flash("Username and password are required.", "warning")
             return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
         if len(password) < MIN_PASSWORD_LENGTH:
             logger.warning(f"Login failed for username {username}: Password too short")
-            flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
+            from rezscan_app.utils.audit_logging import log_audit_action
             log_audit_action(
                 username=username,
                 action='login_failed',
                 target='login',
                 details=f'Password less than {MIN_PASSWORD_LENGTH} characters'
             )
+            flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
             return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
         try:
@@ -124,6 +141,7 @@ def login():
                     conn.execute("UPDATE users SET last_login = ? WHERE username = ?", (last_login, username))
                     conn.commit()
                 logger.info(f"User {username} logged in successfully, role: {user.role}, last_login: {last_login}")
+                from rezscan_app.utils.audit_logging import log_audit_action
                 log_audit_action(
                     username=username,
                     action='login_success',
@@ -139,17 +157,19 @@ def login():
                 return redirect(get_role_redirect(user))
             else:
                 logger.warning(f"Login failed for username {username}: Invalid username or password")
-                flash("Invalid username or password", "warning")
+                from rezscan_app.utils.audit_logging import log_audit_action
                 log_audit_action(
                     username=username,
                     action='login_failed',
                     target='login',
                     details='Invalid username or password'
                 )
+                flash("Invalid username or password", "warning")
                 return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
         except sqlite3.Error as e:
             logger.error(f"Database error during login for username {username}: {str(e)}")
+            from rezscan_app.utils.audit_logging import log_audit_action
             log_audit_action(
                 username=username,
                 action='error',
@@ -171,6 +191,7 @@ def logout():
     local_tz = pytz.timezone(Config.TIMEZONE)
     local_now = datetime.now(local_tz)
     logout_user()
+    from rezscan_app.utils.audit_logging import log_audit_action
     log_audit_action(
         username=username,
         action='logout',

@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, jsonify, request
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from rezscan_app.models.User import User
@@ -11,9 +11,16 @@ import logging
 from datetime import datetime
 from traceback import format_exc
 import sqlite3
+from rezscan_app.models.database import get_db
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
+
+def user_key_func():
+    """Return the username for authenticated users, else the remote address."""
+    if current_user.is_authenticated:
+        return current_user.username
+    return get_remote_address()
 
 def create_app():
     app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -39,6 +46,19 @@ def create_app():
     }
     app.config.from_object(config_map[env])
     logger.debug(f"Loaded configuration: {config_map[env].__name__}")
+
+    # Initialize Flask-Limiter
+    try:
+        limiter = Limiter(
+            key_func=user_key_func,
+            default_limits=["200 per day", "50 per hour"],
+            storage_uri="memory://",  # Use redis:// for production
+        )
+        limiter.init_app(app)
+        logger.info("Flask-Limiter initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing Flask-Limiter: {str(e)}")
+        raise
 
     # Load login manager
     try:
@@ -122,7 +142,11 @@ def create_app():
     with app.app_context():
         try:
             init_db()
-            logger.info("Database initialized successfully")
+            # Create index on scans(mdoc, timestamp) for performance
+            with get_db() as conn:
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_scans_mdoc_timestamp ON scans(mdoc, timestamp);")
+                conn.commit()
+            logger.info("Database initialized successfully with scans index")
         except Exception as e:
             logger.error(f"Error initializing database: {str(e)}")
             raise
