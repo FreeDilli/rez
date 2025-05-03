@@ -144,29 +144,43 @@ def create_app():
         blueprints_dir = Path(__file__).parent / 'routes'
         logger.debug(f"Scanning blueprints directory: {blueprints_dir}")
         
-        for module_path in blueprints_dir.glob('*.py'):
-            if module_path.name.startswith('__'):
-                logger.debug(f"Skipping special file: {module_path.name}")
-                continue
+        def scan_directory(directory):
+            for item in directory.rglob('*.py'):
+                if item.name.startswith('__'):
+                    logger.debug(f"Skipping special file: {item.name}")
+                    continue
+                    
+                # Convert the file path to a module path
+                relative_path = item.relative_to(blueprints_dir.parent)
+                module_parts = list(relative_path.parts[:-1]) + [relative_path.stem]
+                module_name = f"rezscan_app.{'.'.join(module_parts)}"
                 
-            module_name = f"rezscan_app.routes.{module_path.stem}"
-            try:
-                logger.debug(f"Attempting to load module: {module_name}")
-                # Import the module dynamically
-                spec = importlib.util.spec_from_file_location(module_name, module_path)
-                module = importlib.util.module_from_spec(spec)
-                sys.modules[module_name] = module
-                spec.loader.exec_module(module)
-                
-                # Look for blueprint instance in the module
-                for attr_name in dir(module):
-                    attr = getattr(module, attr_name)
-                    if hasattr(attr, '__class__') and attr.__class__.__name__ == 'Blueprint':
-                        app.register_blueprint(attr)
-                        logger.info(f"Successfully registered blueprint: {attr_name}")
-                        
-            except Exception as e:
-                logger.error(f"Error registering blueprint from {module_name}: {str(e)}")
+                try:
+                    logger.debug(f"Attempting to load module: {module_name}")
+                    # Import the module dynamically
+                    spec = importlib.util.spec_from_file_location(module_name, item)
+                    if spec is None:
+                        logger.error(f"Failed to create spec for module: {module_name}")
+                        continue
+                    module = importlib.util.module_from_spec(spec)
+                    sys.modules[module_name] = module
+                    spec.loader.exec_module(module)
+                    
+                    # Look for blueprint instance in the module
+                    for attr_name in dir(module):
+                        attr = getattr(module, attr_name)
+                        if hasattr(attr, '__class__') and attr.__class__.__name__ == 'Blueprint':
+                            app.register_blueprint(attr)
+                            logger.info(f"Successfully registered blueprint: {attr_name} from {module_name}")
+                            
+                except Exception as e:
+                    logger.error(f"Error registering blueprint from {module_name}: {str(e)}")
+
+        try:
+            scan_directory(blueprints_dir)
+            logger.info("Blueprint registration completed")
+        except Exception as e:
+            logger.error(f"Error during blueprint registration: {str(e)}")
 
     try:
         logger.debug("Starting blueprint registration process")
@@ -178,29 +192,34 @@ def create_app():
     # Error Handlers
     @app.errorhandler(403)
     def forbidden_error(error):
-        logger.warning(f"403 Forbidden error occurred: {str(error)}")
-        return render_template('403.html'), 403
+        logger.warning(f"403 Forbidden error occurred: {str(error)}, URL: {request.url}, Method: {request.method}")
+        return render_template('common/403.html'), 403
 
     @app.errorhandler(404)
     def page_not_found_error(error):
         logger.warning(f"404 Not Found error occurred: {error}, URL: {request.url}, Method: {request.method}, Referrer: {request.referrer}")
-        return render_template('404.html'), 404
+        return render_template('common/404.html'), 404
+
+    @app.errorhandler(429)
+    def rate_limit_exceeded(error):
+        logger.warning(f"429 Rate Limit Exceeded: {str(error)}, URL: {request.url}")
+        return render_template('common/429.html'), 429
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        logger.error(f"500 Internal Server error occurred: {str(error)}")
-        return render_template('500.html'), 500
+        logger.error(f"500 Internal Server error occurred: {str(error)}, URL: {request.url}")
+        return render_template('common/500.html'), 500
     
     @app.errorhandler(504)
-    def internal_server_error(error):
-        logger.error(f"500 Internal Server error occurred: {str(error)}")
-        return render_template('504.html'), 500
+    def gateway_timeout_error(error):
+        logger.error(f"504 Gateway Timeout error occurred: {str(error)}")
+        return render_template('common/504.html'), 504
 
     @app.errorhandler(Exception)
     def handle_error(error):
         logger.error(f"Unhandled error: {str(error)}\n{format_exc()}")
-        return render_template('error.html', error=str(error)), 500
-    
+        error_message = "An unexpected error occurred" if not app.config['DEBUG'] else str(error)
+        return render_template('common/error.html', error=error_message), 500
     
     # Register is_training_mode globally for Jinja
     from rezscan_app.utils.settings import is_training_mode

@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block title %}Scanner - RezScan{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Scanner</h2>
+
+{% if current_location %}
+<div class="mb-4">
+  <span class="badge text-bg-primary">Location: {{ current_location }}</span>
+</div>
+{% endif %}
+
+<!-- 🎯 Scan Form -->
+<form method="POST" action="{{ url_for('scanner.scanner') }}" autocomplete="off" id="scan-form">
+  <div class="mb-4">
+    <label for="mdoc" class="form-label">Scan MDOC Barcode</label>
+    <input type="text" id="mdoc" name="mdoc" class="form-control form-control-lg" autofocus required>
+  </div>
+  <button type="submit" id="scan-button" class="btn btn-success btn-lg w-100">Submit Scan</button>
+</form>
+
+<!-- 👤 Last Scan Info (auto-refreshable) -->
+<script>
+  // Auto-refresh last scan every 10 seconds with animation
+  setInterval(() => {
+    fetch("{{ url_for('scanner.last_scan_partial') }}")
+      .then(res => res.text())
+      .then(html => {
+        const section = document.getElementById("last-scan-section");
+        section.innerHTML = html;
+        section.classList.remove("fade-highlight");
+        void section.offsetWidth; // Trigger reflow
+        section.classList.add("fade-highlight");
+      })
+      .catch(err => console.error("Error refreshing last scan:", err));
+  }, 10000);
+
+  // Prevent empty form submission
+  const scanForm = document.getElementById("scan-form");
+  if (scanForm) {
+    scanForm.addEventListener("submit", (event) => {
+      const scanInput = document.getElementById("mdoc");
+      if (!scanInput.value.trim()) {
+        event.preventDefault();
+        const alertDiv = document.createElement("div");
+        alertDiv.className = "alert alert-danger alert-dismissible fade show";
+        alertDiv.role = "alert";
+        alertDiv.innerHTML = `
+          Please enter a barcode.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector(".mb-4")?.before(alertDiv);
+        setTimeout(() => alertDiv.remove(), 5000);
+      }
+    });
+  }
+</script>
+{% endblock %}
