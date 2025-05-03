@@ -63,7 +63,7 @@
             </form>
             <form method="POST" action="{{ url_for('users.reset_password', username=user.username) }}" class="d-inline">
               <button type="submit" class="btn btn-sm btn-outline-warning"
-                onclick="return confirm('Reset password for {{ user.username }} to temp1234?');"
+                onclick="return confirm('Reset password for {{ user.username }} to a random password?');"
                 {% if user.username == current_user.username %}disabled title="Cannot reset your own password"{% endif %}>
                 Reset
               </button>
