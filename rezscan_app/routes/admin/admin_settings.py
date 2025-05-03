@@ -39,5 +39,5 @@ def manage_settings():
             cat, key, val = row
             grouped_settings.setdefault(cat, []).append((key, val))
 
-        return render_template('admin_settings.html', settings=grouped_settings)
+        return render_template('admin/admin_settings.html', settings=grouped_settings)
 

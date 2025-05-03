@@ -84,7 +84,7 @@ def manage_locations():
         )
         flash("Database error occurred.", "danger")
     
-    return render_template('locations.html', locations=locations, LOCATION_TYPES=LOCATION_TYPES)
+    return render_template('admin/scan_locations.html', locations=locations, LOCATION_TYPES=LOCATION_TYPES)
 
 @locations_bp.route('/admin/locations/delete/<int:location_id>', methods=['POST'], strict_slashes=False)
 @login_required

@@ -90,7 +90,7 @@ def live_dashboard():
         except Exception as audit_error:
             logger.error(f"Failed to write audit log for dashboard error: {str(audit_error)}")
 
-    return render_template('resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
+    return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
 
 @resident_activity_tracker_bp.route('/live/check_out', methods=['POST'])
 @login_required
@@ -270,4 +270,4 @@ def heatmap():
             conn.commit()
     except Exception as e:
         logger.error(f"Failed to write audit log for heatmap page access: {str(e)}")
-    return render_template('heatmap.html')
+    return render_template('common/heatmap.html')

@@ -130,7 +130,7 @@ def view_audit_log():
         total_pages = 1
         actions = []
 
-    return render_template('audit_log.html',
+    return render_template('admin/audit_log.html',
                            logs=logs,
                            page=page,
                            total_pages=total_pages,

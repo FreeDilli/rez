@@ -17,4 +17,4 @@ def upload_movement():
         session['movement_text'] = movement_text  # Save to session
         return redirect(url_for('movement_match.match_preview'))
 
-    return render_template('upload_movement_preview.html', raw_text=session.get('movement_text', ''))
+    return render_template('schedule/upload_movement_preview.html', raw_text=session.get('movement_text', ''))

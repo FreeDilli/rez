@@ -41,4 +41,4 @@ def admin_dashboard():
         'total_users': total_users
     }
 
-    return render_template('admin_dashboard.html', stats=stats)
+    return render_template('admin/admin_dashboard.html', stats=stats)

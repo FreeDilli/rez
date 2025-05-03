@@ -19,7 +19,7 @@ def dashboard():
     if role == 'admin':
         return redirect(url_for('admin.admin_dashboard'))
 
-    template_name = f"{role}_dashboard.html"
+    template_name = f"common/{role}_dashboard.html"
 
     try:
         stats = {}
@@ -57,4 +57,4 @@ def dashboard():
     except Exception as e:
         logger.error(f"Dashboard template not found or error for role: {role} - {str(e)}")
         flash('Dashboard not available for your role yet.', 'warning')
-        return render_template('404.html'), 404
+        return render_template('common/404.html'), 404

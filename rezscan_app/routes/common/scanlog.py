@@ -59,7 +59,7 @@ def scanlog():
             )
             
             logger.info(f"User {username} successfully retrieved scanlog data")
-            return render_template('scanlog.html', scans=data, status_options=status_options, location_options=location_options)
+            return render_template('common/scanlog.html', scans=data, status_options=status_options, location_options=location_options)
     except sqlite3.Error as e:
         logger.error(f"Database error for user {username} in scanlog: {str(e)}")
         log_audit_action(
@@ -68,7 +68,7 @@ def scanlog():
             target='scanlog',
             details=f"Database error: {str(e)}"
         )
-        return render_template('error.html', message=f"Database error: {str(e)}"), 500
+        return render_template('common/error.html', message=f"Database error: {str(e)}"), 500
     
 @scanlog_bp.route('/scanlog/delete', methods=['POST'], strict_slashes=False)
 @login_required

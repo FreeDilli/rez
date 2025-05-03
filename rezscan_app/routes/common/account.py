@@ -103,4 +103,4 @@ def account():
             except Exception as audit_error:
                 logger.error(f"Failed to write audit log for account update error: {str(audit_error)}")
 
-    return render_template('account.html', user=current_user)
+    return render_template('common/account.html', user=current_user)

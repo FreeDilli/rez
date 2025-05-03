@@ -55,7 +55,7 @@ def scanner():
                     details=f"Error decoding POST data: {str(e)}"
                 )
                 flash("Invalid POST data received.", "danger")
-                return render_template('scanner.html')
+                return render_template('common/scanner.html')
 
         if not raw_input:
             logger.warning(f"User {username} submitted scan with no MDOC")
@@ -66,7 +66,7 @@ def scanner():
                 details='No MDOC provided'
             )
             flash("No barcode scanned.", "warning")
-            return render_template('scanner.html')
+            return render_template('common/scanner.html')
 
         if '-' not in raw_input:
             logger.warning(f"User {username} submitted invalid scan format: {raw_input}")
@@ -77,7 +77,7 @@ def scanner():
                 details='Invalid scan format (missing prefix-MDOC separator)'
             )
             flash("Invalid scan format. Expected format: PREFIX-MDOC", "warning")
-            return render_template('scanner.html')
+            return render_template('common/scanner.html')
 
         prefix, mdoc = raw_input.split('-', 1)
         logger.debug(f"User {username} parsed prefix: {prefix}, mdoc: {mdoc}")
@@ -109,7 +109,7 @@ def scanner():
         target='scan',
         details='Accessed scanner page'
     )
-    return render_template('scanner.html', clear_input=clear_input)
+    return render_template('common/scanner.html', clear_input=clear_input)
 
 @scanner_bp.route('/scanner/_last_scan_partial')
 @login_required

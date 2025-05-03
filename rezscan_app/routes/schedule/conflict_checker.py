@@ -58,7 +58,7 @@ def check_conflicts():
                             'groups': group_list
                         })
 
-        return render_template('conflict_checker.html', selected_date=selected_date, conflicts=conflicts)
+        return render_template('schedule/conflict_checker.html', selected_date=selected_date, conflicts=conflicts)
 
     except Exception as e:
-        return render_template('conflict_checker.html', selected_date=selected_date, conflicts=[])
+        return render_template('schedule/conflict_checker.html', selected_date=selected_date, conflicts=[])

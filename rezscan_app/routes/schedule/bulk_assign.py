@@ -39,7 +39,7 @@ def bulk_assign():
                 flash(f"Successfully assigned {len(selected_mdocs)} resident(s) to group.", "success")
                 return redirect(url_for('schedules.manage_schedules'))
 
-            return render_template('bulk_assign.html', groups=groups, residents=residents)
+            return render_template('schedule/bulk_assign.html', groups=groups, residents=residents)
 
     except Exception as e:
         flash("An error occurred while assigning residents.", "danger")

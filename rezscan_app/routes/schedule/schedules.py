@@ -44,11 +44,11 @@ def manage_schedules():
             c.execute(query, params)
             groups = c.fetchall()
 
-            return render_template('schedules.html', groups=groups, category_filter=category_filter, categories=categories)
+            return render_template('schedule/schedules.html', groups=groups, category_filter=category_filter, categories=categories)
     except Exception as e:
         logger.error(f"Error listing schedules: {e}")
         flash('An error occurred while retrieving schedules.', 'danger')
-        return render_template('schedules.html', groups=[], category_filter=category_filter, categories=[])
+        return render_template('schedule/schedules.html', groups=[], category_filter=category_filter, categories=[])
 
 @schedules_bp.route('/schedule/create', methods=['GET', 'POST'])
 @login_required
@@ -75,7 +75,7 @@ def create_schedule():
             flash(f'Error creating schedule group: {e}', 'danger')
             return redirect(url_for('schedules.create_schedule'))
 
-    return render_template('schedule_form.html', action='Create', schedule={})
+    return render_template('schedule/schedule_form.html', action='Create', schedule={})
 
 @schedules_bp.route('/schedule/<int:group_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -159,7 +159,7 @@ def edit_schedule(group_id):
             c.execute('SELECT name FROM locations ORDER BY name')
             locations = [row[0] for row in c.fetchall()]
 
-            return render_template('schedule_form.html', action='Edit', schedule=schedule, blocks=blocks, locations=locations)
+            return render_template('schedule/schedule_form.html', action='Edit', schedule=schedule, blocks=blocks, locations=locations)
     except Exception as e:
         logger.error(f"Error in edit_schedule for group_id {group_id}: {e}")
         flash('An error occurred while accessing the schedule.', 'danger')
@@ -233,7 +233,7 @@ def assign_schedule(group_id):
                 flash('Schedule group not found.', 'warning')
                 return redirect(url_for('schedules.manage_schedules'))
 
-            return render_template('schedule_assign.html', group_id=group_id, group_name=group[0], residents=residents, assigned=assigned)
+            return render_template('schedule/schedule_assign.html', group_id=group_id, group_name=group[0], residents=residents, assigned=assigned)
     except Exception as e:
         logger.error(f"Error in assign_schedule for group_id {group_id}: {e}")
         flash('An error occurred while accessing resident assignments.', 'danger')
@@ -271,13 +271,13 @@ def live_schedule():
 
             active_rows = c.fetchall()
 
-        return render_template('live_schedule.html', active_rows=active_rows, current_day=current_day, current_time=current_time)
+        return render_template('schedule/live_schedule.html', active_rows=active_rows, current_day=current_day, current_time=current_time)
     except Exception as e:
         logger.error(f"Error loading live schedule: {e}")
         flash('An error occurred while loading the live schedule.', 'danger')
-        return render_template('live_schedule.html', active_rows=[], current_day='Unknown', current_time='--:--')
+        return render_template('schedule/live_schedule.html', active_rows=[], current_day='Unknown', current_time='--:--')
     
 @schedules_bp.route('/schedule/import')
 @login_required
 def import_schedule():
-    return render_template('import_schedule.html')
+    return render_template('schedule/import_schedule.html')

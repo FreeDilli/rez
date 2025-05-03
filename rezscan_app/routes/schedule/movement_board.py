@@ -70,7 +70,7 @@ def view_movement_schedule():
             'residents': residents_by_group.get(block['group_id'], [])
         })
 
-    return render_template('movement_board.html',
+    return render_template('schedule/movement_board.html',
                            selected_date=selected_date,
                            selected_category=selected_category,
                            selected_location=selected_location,

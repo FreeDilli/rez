@@ -23,7 +23,7 @@ def match_preview():
 
     parsed_blocks = []
     if not raw_text:
-        return render_template('match_preview.html', blocks=[], raw_text="")
+        return render_template('schedule/match_preview.html', blocks=[], raw_text="")
 
     db = get_db()
     c = db.cursor()
@@ -57,7 +57,7 @@ def match_preview():
             "residents": residents
         })
 
-    return render_template("match_preview.html", blocks=parsed_blocks, raw_text=raw_text)
+    return render_template("schedule/match_preview.html", blocks=parsed_blocks, raw_text=raw_text)
 
 
 

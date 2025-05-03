@@ -57,7 +57,7 @@ def lookup():
         except Exception as e:
             flash("Failed to look up schedule.", "danger")
 
-    return render_template('resident_schedule_lookup.html',
+    return render_template('schedule/resident_schedule_lookup.html',
                            schedule_entries=entries,
                            found_name=found_name,
                            selected_date=selected_date)

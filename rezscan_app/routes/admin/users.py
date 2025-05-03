@@ -50,7 +50,7 @@ def manage_users():
                     details=f"Failed to add user {target_username}: Password too short"
                 )
                 flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
-                return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
+                return render_template('admin/users.html', users=get_users(), valid_roles=VALID_ROLES)
             if role not in VALID_ROLES:
                 logger.warning(f"User {username} failed to add user '{target_username}': Invalid role '{role}'")
                 log_audit_action(
@@ -60,7 +60,7 @@ def manage_users():
                     details=f"Failed to add user {target_username}: Invalid role {role}"
                 )
                 flash(f"Invalid role selected.", "warning")
-                return render_template('users.html', users=get_users(), valid_roles=VALID_ROLES)
+                return render_template('admin/users.html', users=get_users(), valid_roles=VALID_ROLES)
             hashed_password = generate_password_hash(password)
             logger.debug(f"User {username} adding user '{target_username}' with role '{role}'")
             try:
@@ -114,7 +114,7 @@ def manage_users():
 
     users = get_users()
     logger.debug(f"User {username} fetched {len(users)} users")
-    return render_template('users.html', users=users, valid_roles=VALID_ROLES)
+    return render_template('admin/users.html', users=users, valid_roles=VALID_ROLES)
 
 def get_users():
     """Helper function to fetch users."""
@@ -235,7 +235,7 @@ def edit_user(username):
         flash("Database error fetching user.", "danger")
         return redirect(url_for('users.manage_users'))
 
-    return render_template('edit_user.html', user=user, valid_roles=VALID_ROLES)
+    return render_template('admin/edit_user.html', user=user, valid_roles=VALID_ROLES)
 
 @users_bp.route('/admin/users/reset/<username>', methods=['POST'])
 @login_required

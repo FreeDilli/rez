@@ -54,7 +54,7 @@ def role_required(*allowed_roles):
                     details=f'Role {current_user.role} not in allowed roles {allowed_roles}'
                 )
                 flash("You do not have permission to access this page.", "danger")
-                return render_template('403.html', message='Access Denied'), 403
+                return render_template('common/403.html', message='Access Denied'), 403
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -100,7 +100,7 @@ def login():
                 target='login',
                 details='Missing username or password'
             )
-            return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
+            return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
         if len(password) < MIN_PASSWORD_LENGTH:
             logger.warning(f"Login failed for username {username}: Password too short")
@@ -111,7 +111,7 @@ def login():
                 target='login',
                 details=f'Password less than {MIN_PASSWORD_LENGTH} characters'
             )
-            return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
+            return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
         try:
             user = User.authenticate(username, password)
@@ -146,7 +146,7 @@ def login():
                     target='login',
                     details='Invalid username or password'
                 )
-                return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
+                return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
         except sqlite3.Error as e:
             logger.error(f"Database error during login for username {username}: {str(e)}")
@@ -157,10 +157,10 @@ def login():
                 details=f"Database error during login: {str(e)}"
             )
             flash("Database error. Please try again later.", "danger")
-            return render_template('login.html', next=request.form.get('next', request.args.get('next', '')))
+            return render_template('common/login.html', next=request.form.get('next', request.args.get('next', '')))
 
     next_page = request.args.get('next', '')
-    return render_template('login.html', next=next_page)
+    return render_template('common/login.html', next=next_page)
 
 @auth_bp.route('/logout')
 @login_required

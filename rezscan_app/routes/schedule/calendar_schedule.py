@@ -68,7 +68,7 @@ def weekly_calendar():
                     })
                     locations.add(location)
 
-        return render_template('calendar_schedule.html',
+        return render_template('schedule/calendar_schedule.html',
                                schedule=schedule,
                                week_days=week_days,
                                time_blocks=time_blocks,
@@ -77,7 +77,7 @@ def weekly_calendar():
                                selected_location=selected_location)
     except Exception as e:
         flash('Error loading calendar view.', 'danger')
-        return render_template('calendar_schedule.html', schedule={}, week_days=[], time_blocks=[], locations=[], selected_date='', selected_location='')
+        return render_template('schedule/calendar_schedule.html', schedule={}, week_days=[], time_blocks=[], locations=[], selected_date='', selected_location='')
 
 @calendar_bp.route('/export', methods=['GET'])
 @login_required

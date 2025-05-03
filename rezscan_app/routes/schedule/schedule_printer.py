@@ -51,10 +51,10 @@ def print_schedule():
                 except Exception:
                     continue
 
-        return render_template('schedule_printer.html',
+        return render_template('schedule/schedule_printer.html',
                                selected_date=selected_date,
                                week_days=week_days,
                                time_blocks=time_blocks,
                                schedule=schedule)
     except Exception as e:
-        return render_template('schedule_printer.html', selected_date=selected_date, week_days=[], time_blocks=[], schedule={})
+        return render_template('schedule/schedule_printer.html', selected_date=selected_date, week_days=[], time_blocks=[], schedule={})

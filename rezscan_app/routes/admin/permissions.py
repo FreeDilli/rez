@@ -46,4 +46,4 @@ def permission_test():
     else:
         access_list = ROLE_ACCESS.get(selected_role, [])
 
-    return render_template('permission_test.html', selected_role=selected_role, access_list=access_list)
+    return render_template('admin/permission_test.html', selected_role=selected_role, access_list=access_list)

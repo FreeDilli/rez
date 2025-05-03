@@ -192,28 +192,34 @@ def create_app():
     # Error Handlers
     @app.errorhandler(403)
     def forbidden_error(error):
-        logger.warning(f"403 Forbidden error occurred: {str(error)}")
-        return render_template('403.html'), 403
+        logger.warning(f"403 Forbidden error occurred: {str(error)}, URL: {request.url}, Method: {request.method}")
+        return render_template('common/403.html'), 403
 
     @app.errorhandler(404)
     def page_not_found_error(error):
         logger.warning(f"404 Not Found error occurred: {error}, URL: {request.url}, Method: {request.method}, Referrer: {request.referrer}")
-        return render_template('404.html'), 404
+        return render_template('common/404.html'), 404
+
+    @app.errorhandler(429)
+    def rate_limit_exceeded(error):
+        logger.warning(f"429 Rate Limit Exceeded: {str(error)}, URL: {request.url}")
+        return render_template('common/429.html'), 429
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        logger.error(f"500 Internal Server error occurred: {str(error)}")
-        return render_template('500.html'), 500
+        logger.error(f"500 Internal Server error occurred: {str(error)}, URL: {request.url}")
+        return render_template('common/500.html'), 500
     
     @app.errorhandler(504)
-    def internal_server_error(error):
-        logger.error(f"500 Internal Server error occurred: {str(error)}")
-        return render_template('504.html'), 500
+    def gateway_timeout_error(error):
+        logger.error(f"504 Gateway Timeout error occurred: {str(error)}")
+        return render_template('common/504.html'), 504
 
     @app.errorhandler(Exception)
     def handle_error(error):
         logger.error(f"Unhandled error: {str(error)}\n{format_exc()}")
-        return render_template('error.html', error=str(error)), 500
+        error_message = "An unexpected error occurred" if not app.config['DEBUG'] else str(error)
+        return render_template('common/error.html', error=error_message), 500
     
     # Register is_training_mode globally for Jinja
     from rezscan_app.utils.settings import is_training_mode
