@@ -200,3 +200,57 @@ def export_audit_log():
         log_audit_action(username, 'export_failed', 'audit_log', f"Database error: {str(e)}")
         flash("Error exporting audit log.", "danger")
         return redirect(url_for('audit_log.view_audit_log'))
+
+@audit_log_bp.route('/admin/auditlog/delete', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def delete_audit_log():
+    username = current_user.username
+    logger.debug(f"User {username} accessing audit log deletion")
+
+    if request.method == 'POST':
+        if request.form.get('confirm') != 'yes':
+            flash("Deletion not confirmed.", "warning")
+            logger.warning(f"User {username} failed to confirm audit log deletion")
+            return redirect(url_for('audit_log.view_audit_log'))
+
+        try:
+            with get_db() as conn:
+                c = conn.cursor()
+                # Delete all audit log entries
+                c.execute("DELETE FROM audit_log")
+                # Insert new audit log entry for the deletion
+                timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+                c.execute("""
+                    INSERT INTO audit_log (timestamp, username, action, target, details)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    timestamp,
+                    username,
+                    'delete',
+                    'audit_log',
+                    f'Audit log cleared by {username}'
+                ))
+                conn.commit()
+                logger.info(f"User {username} successfully deleted all audit log entries and logged the action")
+                flash("Audit log successfully deleted.", "success")
+        except sqlite3.Error as e:
+            logger.error(f"User {username} failed to delete audit log: {str(e)}")
+            log_audit_action(
+                username=username,
+                action='delete_failed',
+                target='audit_log',
+                details=f"Database error: {str(e)}"
+            )
+            flash(f"Error deleting audit log: {str(e)}", "danger")
+
+        return redirect(url_for('audit_log.view_audit_log'))
+
+    # GET request: Render confirmation page
+    log_audit_action(
+        username=username,
+        action='view',
+        target='audit_log_delete',
+        details='Viewed audit log deletion confirmation page'
+    )
+    return render_template('admin/audit_log_delete.html')

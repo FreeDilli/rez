@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block title %}Delete Audit Log{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">🗑️ Delete Audit Log</h2>
+  <div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">Warning!</h4>
+    <p>This action will permanently delete all audit log entries from the database. This cannot be undone.</p>
+    <hr>
+    <p class="mb-0">Are you sure you want to proceed?</p>
+  </div>
+  <form method="POST" action="{{ url_for('audit_log.delete_audit_log') }}">
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" name="confirm" value="yes" id="confirm" required aria-label="Confirm Deletion">
+      <label class="form-check-label" for="confirm">I understand and confirm deletion of all audit log entries.</label>
+    </div>
+    <button type="submit" class="btn btn-danger" aria-label="Delete Audit Log">Delete Audit Log</button>
+    <a href="{{ url_for('audit_log.view_audit_log') }}" class="btn btn-secondary" aria-label="Cancel">Cancel</a>
+  </form>
+</div>
+{% endblock %}
