@@ -54,7 +54,13 @@
 
                     {% if current_user.role in ['admin', 'officer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>Resident Tracker</span></a>
+                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>Active Locations</span></a>
+                        </li>
+                    {% endif %}
+
+                    {% if current_user.role in ['officer'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>My Unit</span></a>
                         </li>
                     {% endif %}
 

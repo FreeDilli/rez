@@ -104,6 +104,7 @@ def init_db():
                         role TEXT NOT NULL,
                         theme TEXT,
                         default_view TEXT,
+                        default_unit TEXT,
                         last_login DATETIME
                     )
                 ''')
