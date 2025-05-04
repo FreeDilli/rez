@@ -766,3 +766,135 @@ def upload_residents():
         )
         flash(f"Error reading CSV: {str(e)}", 'error')
         return jsonify({'success': False, 'message': f"Error reading CSV: {str(e)}"}), 500
+    
+@residents_bp.route('/unit_residents', methods=['GET'], strict_slashes=False)
+@login_required
+def unit_residents():
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /unit_residents route")
+
+    search = request.args.get('search', '').strip()
+    filter_level = request.args.get('filterLevel', '').strip()
+    sort = request.args.get('sort', 'name')
+    direction = request.args.get('direction', 'asc')
+    page = int(request.args.get('page', 1)) if request.args.get('page', '1').isdigit() else 1
+    per_page = 10
+
+    # Get default_unit from users
+    default_unit = 'All Units'
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("SELECT default_unit FROM users WHERE username = ?", (username,))
+            result = c.fetchone()
+            if result and result[0]:
+                default_unit = result[0]
+    except sqlite3.Error as e:
+        logger.error(f"Error fetching default_unit for user {username}: {str(e)}")
+        flash("Error loading user settings.", "danger")
+
+    # Get level options
+    level_options = []
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("SELECT DISTINCT level FROM residents WHERE level IS NOT NULL ORDER BY level")
+            level_options = [row[0] for row in c.fetchall()]
+    except sqlite3.Error as e:
+        logger.error(f"Error fetching level options for user {username}: {str(e)}")
+        flash("Error loading filter options.", "danger")
+
+    # Validate filter
+    if filter_level and filter_level not in level_options:
+        filter_level = ''
+
+    # Build query
+    query = """
+        SELECT name, mdoc, unit, housing_unit, level, last_scan_location, last_scan_time, last_scan_status
+        FROM resident_last_scan
+        WHERE (housing_unit = ? OR ? = 'All Units')
+    """
+    params = [default_unit, default_unit]
+
+    if search:
+        query += " AND (name LIKE ? OR mdoc LIKE ?)"
+        params.extend([f'%{search}%', f'%{search}%'])
+    if filter_level:
+        query += " AND level = ?"
+        params.append(filter_level)
+
+    # Validate sort
+    valid_sorts = ['name', 'mdoc', 'level']
+    sort = sort if sort in valid_sorts else 'name'
+    direction = direction if direction in ['asc', 'desc'] else 'asc'
+
+    # Count filtered residents
+    count_query = "SELECT COUNT(*) FROM resident_last_scan WHERE (housing_unit = ? OR ? = 'All Units')"
+    count_params = [default_unit, default_unit]
+    if search:
+        count_query += " AND (name LIKE ? OR mdoc LIKE ?)"
+        count_params.extend([f'%{search}%', f'%{search}%'])
+    if filter_level:
+        count_query += " AND level = ?"
+        count_params.append(filter_level)
+
+    # Add sorting and pagination
+    sort_field = 'mdoc' if sort == 'mdoc' else sort
+    if sort == 'mdoc':
+        sort_field = 'CAST(mdoc AS INTEGER)'
+    query += f" ORDER BY {sort_field} {direction}"
+    query += " LIMIT ? OFFSET ?"
+    params.extend([per_page, (page - 1) * per_page])
+
+    residents = []
+    filtered_count = 0
+    total_count = 0
+    total_pages = 1
+
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(query, params)
+            columns = ['name', 'mdoc', 'unit', 'housing_unit', 'level', 'last_scan_location', 'last_scan_time', 'last_scan_status']
+            residents = [dict(zip(columns, row)) for row in c.fetchall()]
+
+            c.execute(count_query, count_params)
+            filtered_count = c.fetchone()[0]
+
+            c.execute("SELECT COUNT(*) FROM resident_last_scan WHERE (housing_unit = ? OR ? = 'All Units')", [default_unit, default_unit])
+            total_count = c.fetchone()[0]
+
+            total_pages = max((filtered_count + per_page - 1) // per_page, 1)
+
+            logger.info(f"User {username} fetched {len(residents)} residents for unit {default_unit} (filtered: {filtered_count}, total: {total_count})")
+            log_audit_action(
+                username=username,
+                action='view',
+                target='unit_residents',
+                details=f"Viewed residents for unit {default_unit} with search={search}, filter=[level:{filter_level}], sort={sort}, direction={direction}, page={page}"
+            )
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error for user {username} in unit_residents: {str(e)}")
+        log_audit_action(
+            username=username,
+            action='view_failed',
+            target='unit_residents',
+            details=f"Database error: {str(e)}"
+        )
+        flash("Error loading residents.", "danger")
+
+    return render_template(
+        'common/unit_residents.html',
+        residents=residents,
+        search=search,
+        sort=sort,
+        direction=direction,
+        page=page,
+        total_pages=total_pages,
+        filterLevel=filter_level,
+        filtered_count=filtered_count,
+        total_count=total_count,
+        level_options=level_options,
+        default_unit=default_unit
+    )
