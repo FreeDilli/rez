@@ -32,11 +32,26 @@ def live_dashboard():
     sort = request.args.get('sort', 'timestamp')
     direction = request.args.get('direction', 'desc')
     
+    # Get user's default_view from users table
+    default_view = 'All Locations'
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("SELECT default_view FROM users WHERE username = ?", (current_user.username,))
+            result = c.fetchone()
+            if result and result[0]:
+                default_view = result[0]
+    except Exception as e:
+        logger.error(f"Error fetching default_view for user {current_user.username}: {str(e)}")
+    
+    selected_view = request.args.get('view', default_view)  # Allow view override via query param
+    
     valid_sorts = ['name', 'timestamp']
     sort = sort if sort in valid_sorts else 'timestamp'
     direction = direction if direction in ['asc', 'desc'] else 'desc'
     
     checked_in = []
+    locations = []
     try:
         with get_db() as conn:
             c = conn.cursor()
@@ -44,9 +59,14 @@ def live_dashboard():
                 username=current_user.username,
                 action='view',
                 target='resident_activity_tracker',
-                details=f'Accessed resident activity dashboard with sort={sort}, direction={direction}'
+                details=f'Accessed resident activity dashboard with sort={sort}, direction={direction}, view={selected_view}'
             )
 
+            # Get all locations from locations table
+            c.execute('SELECT name FROM locations ORDER BY name')
+            locations = [row[0] for row in c.fetchall()]
+
+            # Get latest scans
             c.execute('''
                 SELECT s.mdoc, MAX(s.timestamp) AS latest_time, r.name
                 FROM scans s
@@ -57,12 +77,17 @@ def live_dashboard():
             logger.debug(f"Retrieved {len(latest_scans)} latest scans")
 
             for mdoc, latest_time, name in latest_scans:
-                c.execute('''
+                query = '''
                     SELECT r.name, s.mdoc, r.unit, r.housing_unit, r.level, s.timestamp, s.location
                     FROM scans s
                     LEFT JOIN residents r ON s.mdoc = r.mdoc
                     WHERE s.mdoc = ? AND s.timestamp = ? AND s.status = 'In'
-                ''', (mdoc, latest_time))
+                '''
+                params = (mdoc, latest_time)
+                if selected_view != 'All Locations':
+                    query += ' AND s.location = ?'
+                    params += (selected_view,)
+                c.execute(query, params)
                 result = c.fetchone()
                 if result:
                     checked_in.append(result)
@@ -85,7 +110,7 @@ def live_dashboard():
             details=f'Failed to load resident activity: {str(e)}'
         )
 
-    return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction)
+    return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction, locations=locations, selected_view=selected_view)
 
 @resident_activity_tracker_bp.route('/live/check_out', methods=['POST'], strict_slashes=False)
 @login_required

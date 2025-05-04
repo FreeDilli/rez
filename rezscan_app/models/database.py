@@ -102,6 +102,8 @@ def init_db():
                         username TEXT UNIQUE NOT NULL,
                         password TEXT NOT NULL,
                         role TEXT NOT NULL,
+                        theme TEXT,
+                        default_view TEXT,
                         last_login DATETIME
                     )
                 ''')
