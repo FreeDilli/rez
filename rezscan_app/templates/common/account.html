@@ -25,7 +25,7 @@
         </div>
 
         <div class="mb-3">
-            <label for="default_view" class="form-label">Default View</label>
+            <label for="default_view" class="form-label">Default Scan Location View</label>
             <select class="form-select" id="default_view" name="default_view" required>
                 <option value="All Locations" {% if user.default_view == 'All Locations' %}selected{% endif %}>All Locations</option>
                 {% for location in locations %}
