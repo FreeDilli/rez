@@ -2,9 +2,9 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from flask_login import login_required
 from rezscan_app.routes.common.auth import role_required
 
-schedules_bp = Blueprint('schedules', __name__)
+mvmt_schedules_bp = Blueprint('mvmt_schedules', __name__)
 
-@schedules_bp.route('/schedule/upload_movement', methods=['GET', 'POST'])
+@mvmt_schedules_bp.route('/schedule/upload_movement', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'scheduling')
 def upload_movement():

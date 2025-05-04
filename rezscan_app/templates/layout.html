@@ -60,12 +60,12 @@
 
                     {% if current_user.role in ['officer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>My Unit</span></a>
+                            <a class="nav-link {% if request.path.startswith('/unit_residents') %}active{% endif %}" href="{{ url_for('residents.unit_residents') }}">👥 <span>My Unit</span></a>
                         </li>
                     {% endif %}
 
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path.startswith('/admin/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">🙋‍♂️ <span>Residents</span></a>
+                        <a class="nav-link {% if request.path.startswith('/residents') %}active{% endif %}" href="{{ url_for('residents.residents') }}">🙋‍♂️ <span>All Residents</span></a>
                     </li>
 
                     {% if current_user.role == 'admin' %}
@@ -76,7 +76,7 @@
 
                     {% if current_user.role in ['admin', 'officer', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/scan' %}active{% endif %}" href="{{ url_for('scanner.scanner') }}">📡 <span>Scanner</span></a>
+                            <a class="nav-link {% if request.path == '/scanner' %}active{% endif %}" href="{{ url_for('scanner.scanner') }}">📡 <span>Scanner</span></a>
                         </li>
                     {% endif %}
 
@@ -88,7 +88,7 @@
 
                     {% if current_user.role in ['admin', 'scheduling'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/scheduling') %}active{% endif %}" href="{{ url_for('scheduling.dashboard') }}">📅 <span>Scheduling</span></a>
+                            <a class="nav-link {% if request.path.startswith('/schedule') %}active{% endif %}" href="{{ url_for('scheduling.dashboard') }}">📅 <span>Scheduling</span></a>
                         </li>
                     {% endif %}
 

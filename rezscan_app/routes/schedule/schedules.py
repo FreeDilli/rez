@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 schedules_bp = Blueprint('schedules', __name__)
 
-@schedules_bp.route('/schedule/schedules')
+@schedules_bp.route('/schedule/schedules', strict_slashes=False)
 @login_required
 def manage_schedules():
     category_filter = request.args.get('category')

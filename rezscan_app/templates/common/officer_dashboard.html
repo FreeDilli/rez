@@ -47,6 +47,15 @@
     <div class="col">
       <div class="card h-100 shadow-sm border-primary">
         <div class="card-body text-center">
+          <h5 class="card-title">🔎 View My Residents</h5>
+          <p class="card-text">View Residents assigend to your unit.</p>
+          <a href="{{ url_for('residents.unit_residents') }}" class="btn btn-primary">View Residents</a>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 shadow-sm border-primary">
+        <div class="card-body text-center">
           <h5 class="card-title">📋 View Scan Log</h5>
           <p class="card-text">Review recent scan activity and statuses.</p>
           <a href="{{ url_for('scanlog.scanlog') }}" class="btn btn-primary">View Logs</a>
