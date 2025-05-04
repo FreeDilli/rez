@@ -46,9 +46,15 @@
                         </li>
                     {% endif %}
 
+                    {% if current_user.role not in ['admin'] %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('user_dashboard.dashboard') }}">👥 <span> Dashboard</span></a>
+                        </li>
+                    {% endif %}
+
                     {% if current_user.role in ['admin', 'officer'] %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>Live Dashboard</span></a>
+                            <a class="nav-link {% if request.path.startswith('/live') %}active{% endif %}" href="{{ url_for('resident_activity_tracker.live_dashboard') }}">👥 <span>Resident Tracker</span></a>
                         </li>
                     {% endif %}
 
