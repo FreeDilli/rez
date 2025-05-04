@@ -145,6 +145,7 @@ def residents():
 
 @residents_bp.route('/residents/add', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
+@role_required('admin','officer')
 @limiter.limit("50/hour", key_func=user_key_func)
 def add_resident():
     username = current_user.username if current_user.is_authenticated else 'unknown'
@@ -244,7 +245,7 @@ def add_resident():
 
 @residents_bp.route('/residents/edit/<int:mdoc>', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
-@role_required('admin')
+@role_required('admin','officer')
 @limiter.limit("50/hour", key_func=user_key_func)
 def edit_resident(mdoc):
     username = current_user.username if current_user.is_authenticated else 'unknown'
