@@ -130,6 +130,33 @@ def init_db():
                 logger.error(f"Error creating scans_with_residents view: {str(e)}")
                 raise
 
+            # Resident Last Scans view
+            try:
+                c.execute('''
+                CREATE VIEW IF NOT EXISTS resident_last_scan AS
+                SELECT 
+                    r.name,
+                    r.mdoc,
+                    r.unit,
+                    r.housing_unit,
+                    r.level,
+                    s.location AS last_scan_location,
+                    s.timestamp AS last_scan_time,
+                    s.status AS last_scan_status
+                FROM residents r
+                LEFT JOIN scans s ON r.mdoc = s.mdoc
+                WHERE s.timestamp = (
+                    SELECT MAX(timestamp)
+                    FROM scans
+                    WHERE mdoc = r.mdoc
+                )
+                OR s.timestamp IS NULL
+            ''')
+                logger.debug("Created resident_last_scan view")
+            except sqlite3.Error as e:
+                logger.error(f"Error creating resident_last_scan view: {str(e)}")
+                raise
+
             # Audit Log table
             try:
                 c.execute('''
