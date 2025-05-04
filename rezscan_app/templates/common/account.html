@@ -25,6 +25,26 @@
         </div>
 
         <div class="mb-3">
+            <label for="default_view" class="form-label">Default View</label>
+            <select class="form-select" id="default_view" name="default_view" required>
+                <option value="All Locations" {% if user.default_view == 'All Locations' %}selected{% endif %}>All Locations</option>
+                {% for location in locations %}
+                    <option value="{{ location }}" {% if user.default_view == location %}selected{% endif %}>{{ location }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="default_unit" class="form-label">Default Unit</label>
+            <select class="form-select" id="default_unit" name="default_unit" required>
+                <option value="All Units" {% if user.default_unit == 'All Units' %}selected{% endif %}>All Units</option>
+                {% for unit in housing_units %}
+                    <option value="{{ unit }}" {% if user.default_unit == unit %}selected{% endif %}>{{ unit }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
             <label for="new_password" class="form-label">New Password</label>
             <input type="password" id="new_password" name="new_password" class="form-control" 
                    placeholder="Leave blank to keep current password" minlength="8" 

@@ -33,7 +33,7 @@
       </div>
 
       <div class="col-md-4">
-        <label class="form-label" for="unit">Select Area</label>
+        <label class="form-label" for="unit">Select Unit</label>
         <select name="unit" id="unit" class="form-select" required aria-label="Select Area">
           {% for option in UNIT_OPTIONS %}
           <option value="{{ option }}" {% if option == resident[3] %}selected{% endif %}>{{ option }}</option>
