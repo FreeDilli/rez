@@ -42,10 +42,6 @@ class Config:
     # --- Feature Toggles ---
     ENABLE_FEATURE_X = bool(int(os.getenv('ENABLE_FEATURE_X', 0)))
 
-    # --- API Keys ---
-    CORIS_API_URL = os.getenv('CORIS_API_URL', 'https://coris.example.gov/api/residents')
-    CORIS_API_KEY = os.getenv('CORIS_API_KEY', 'default-key')
-
 class DevelopmentConfig(Config):
     """Configuration for development environment."""
     DEBUG = True

@@ -3,52 +3,72 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-4">🔎 Match Preview for Movement Data</h2>
+  <h2 class="mb-4">🧠 Match Preview</h2>
 
   <form method="POST" action="{{ url_for('movement_match.match_preview') }}">
     <div class="mb-3">
-      <label for="movement_text" class="form-label">Paste OCR Text from PDF</label>
-      <textarea name="movement_text" id="movement_text" rows="12" class="form-control">{{ raw_text }}</textarea>
+      <label for="movement_text" class="form-label">Paste Movement Schedule</label>
+      <textarea class="form-control" id="movement_text" name="movement_text" rows="8">{{ raw_text }}</textarea>
     </div>
-    <div class="text-end">
-      <button type="submit" class="btn btn-primary">🔍 Re-Analyze</button>
-    </div>
+    <button type="submit" class="btn btn-primary">🔍 Parse & Preview</button>
   </form>
 
-  {% if blocks %}
-  <hr>
-  <h4 class="mt-4">🧾 Parsed Blocks</h4>
+  <hr class="my-4" />
+
+  <div class="mb-3">
+    <form method="GET" action="{{ url_for('schedule_match_review.review_matches') }}">
+      <button class="btn btn-outline-secondary">📋 Review Unmatched</button>
+    </form>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Summary:</strong>
+    ✅ Matched: {{ summary.matched }},
+    ❓ Unmatched: {{ summary.unmatched }},
+    ⚠️ Conflicted: {{ summary.conflicted }},
+    🔎 Fuzzy Suggestions: {{ summary.fuzzy }}
+  </div>
+
   {% for block in blocks %}
     <div class="card mb-3">
       <div class="card-header">
-        <strong>{{ block.start }}</strong> — {{ block.title }}
+        <strong>{{ block.start }} — {{ block.title }}</strong>
       </div>
       <div class="card-body">
-        {% if block.residents %}
-          <ul class="list-group">
-            {% for r in block.residents %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ r.name }}
-                <span class="text-muted small">
-                  {% if r.mdoc %}MDOC: {{ r.mdoc }}{% else %}No MDOC{% endif %} |
-                  {% if r.housing %}{{ r.housing }}{% else %}No Housing{% endif %}
-                  {% if r.matched %}
-                    <span class="badge bg-success ms-2">✅ Matched</span>
-                  {% else %}
-                    <span class="badge bg-danger ms-2">❌ Not Found</span>
-                  {% endif %}
-                </span>
-              </li>
+        {% if block.matched %}
+          <h6>✅ Matched</h6>
+          <ul>
+            {% for item in block.matched %}
+              <li>{{ item.name }} — MDOC: {{ item.mdoc }} ({{ item.housing_unit }})</li>
             {% endfor %}
           </ul>
-        {% else %}
-          <p class="text-muted">No residents parsed.</p>
+        {% endif %}
+        {% if block.unmatched %}
+          <h6 class="text-danger">❓ Unmatched</h6>
+          <ul>
+            {% for item in block.unmatched %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if block.conflicts %}
+          <h6 class="text-warning">⚠️ Conflicted</h6>
+          <ul>
+            {% for item in block.conflicts %}
+              <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if block.fuzzy %}
+          <h6 class="text-secondary">🔎 Fuzzy Suggestions</h6>
+          <ul>
+            {% for item in block.fuzzy %}
+              <li>Suggested: {{ item.name }} — MDOC: {{ item.mdoc }} ({{ item.housing_unit }})</li>
+            {% endfor %}
+          </ul>
         {% endif %}
       </div>
     </div>
   {% endfor %}
-  {% endif %}
 </div>
 {% endblock %}
-
-

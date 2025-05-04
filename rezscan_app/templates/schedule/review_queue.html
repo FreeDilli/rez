@@ -1,0 +1,75 @@
+{% extends 'layout.html' %}
+{% block title %}Schedule Match Review - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">🕵️ Schedule Match Review</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if matches %}
+    <table class="table table-bordered table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Block Title</th>
+          <th>Type</th>
+          <th>Original Name</th>
+          <th>MDOC</th>
+          <th>Housing Unit</th>
+          <th>Suggested Match</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in matches %}
+          <tr>
+            <td>{{ m.block_title }}</td>
+            <td>
+              {% if m.match_type == 'unmatched' %}
+                <span class="badge bg-warning text-dark">Unmatched</span>
+              {% elif m.match_type == 'conflict' %}
+                <span class="badge bg-danger">Conflict</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ m.match_type }}</span>
+              {% endif %}
+            </td>
+            <td>{{ m.name }}</td>
+            <td>{{ m.mdoc or '—' }}</td>
+            <td>{{ m.housing_unit or '—' }}</td>
+            <td>
+              {% if m.suggestion_name %}
+                ✅ {{ m.suggestion_name }}<br>
+                MDOC: {{ m.suggestion_mdoc }}<br>
+                {{ m.suggestion_housing_unit }}
+              {% else %}
+                <em class="text-muted">No suggestion</em>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              {% if m.suggestion_mdoc and m.group_id %}
+                <form method="POST" action="{{ url_for('schedule_match_review.approve_match', match_id=m.id) }}" class="d-inline">
+                  <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('schedule_match_review.delete_match', match_id=m.id) }}" class="d-inline ms-1">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-info">There are no pending matches for review.</div>
+  {% endif %}
+</div>
+{% endblock %}

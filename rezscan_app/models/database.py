@@ -193,6 +193,29 @@ def init_db():
             except sqlite3.Error as e:
                 logger.error(f"Error creating resident_schedules table: {str(e)}")
                 raise
+            
+            # Schedule Match Review table
+            try:
+                c.execute('''
+                    CREATE TABLE IF NOT EXISTS schedule_match_review (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        block_title TEXT NOT NULL,
+                        block_time TEXT,
+                        source_line TEXT NOT NULL,
+                        suggested_mdoc TEXT,
+                        suggested_name TEXT,
+                        suggested_housing TEXT,
+                        status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+                        reviewed_by TEXT,
+                        reviewed_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                logger.debug("Created schedule_match_review table")
+            except sqlite3.Error as e:
+                logger.error(f"Error creating schedule_match_review table: {str(e)}")
+                raise
+
 
             # Import History table
             try:

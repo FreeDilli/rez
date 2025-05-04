@@ -1,0 +1,63 @@
+{% extends 'layout.html' %}
+{% block title %}Schedule Match Review - RezScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">📋 Schedule Match Review</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if staged_matches %}
+    <form method="POST" action="{{ url_for('schedule_match_review.handle_match_action') }}">
+      <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name (Input)</th>
+            <th scope="col">MDOC</th>
+            <th scope="col">Block</th>
+            <th scope="col">Suggested Match</th>
+            <th scope="col">Type</th>
+            <th scope="col" class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in staged_matches %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ item.name_input }}</td>
+              <td>{{ item.mdoc_input or '—' }}</td>
+              <td>{{ item.block_title }}</td>
+              <td>
+                {% if item.name_suggestion %}
+                  {{ item.name_suggestion }}<br>
+                  <small class="text-muted">MDOC: {{ item.mdoc_suggestion }} | {{ item.housing_unit }}</small>
+                {% else %}
+                  <span class="text-muted fst-italic">None</span>
+                {% endif %}
+              </td>
+              <td>{{ item.match_type|capitalize }}</td>
+              <td class="text-center">
+                <input type="hidden" name="match_ids" value="{{ item.id }}">
+                <button type="submit" name="action_{{ item.id }}" value="approve" class="btn btn-success btn-sm me-1">✔ Approve</button>
+                <button type="submit" name="action_{{ item.id }}" value="delete" class="btn btn-danger btn-sm">🗑 Delete</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+  {% else %}
+    <div class="alert alert-info">No staged matches to review at this time.</div>
+  {% endif %}
+</div>
+{% endblock %}
