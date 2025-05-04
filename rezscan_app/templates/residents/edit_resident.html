@@ -6,29 +6,30 @@
 <div class="container mt-4">
   <h2 class="mb-4">Edit Resident</h2>
   <form method="POST" enctype="multipart/form-data" class="card p-4" id="editResidentForm">
+    <input type="hidden" name="referer" value="{{ request.referrer or url_for('resident_activity_tracker.live_dashboard') }}">
     <div class="row g-3">
       <div class="col-md-6">
         <input type="text" 
-        name="name" 
-        pattern="^[A-Za-z, ]+$" 
-        class="form-control" 
-        placeholder="LAST NAME, FIRST NAME" 
-        value="{{ resident[1] }}"
-        oninput="filterInput(this);" 
-        required 
-        aria-label="Full Name">
+               name="name" 
+               pattern="^[A-Za-z, ]+$" 
+               class="form-control" 
+               placeholder="LAST NAME, FIRST NAME" 
+               value="{{ resident[1] }}"
+               oninput="filterInput(this);" 
+               required 
+               aria-label="Full Name">
       </div>
       <div class="col-md-6">
         <input type="text" 
-        name="mdoc" 
-        id="mdoc" 
-        class="form-control" 
-        placeholder="" 
-        oninput="filterNumberInput(this);"
-        value="{{ resident[2] }}"
-        required
-        maxlength="10"
-        aria-label="MDOC Number">
+               name="mdoc" 
+               id="mdoc" 
+               class="form-control" 
+               placeholder="" 
+               oninput="filterNumberInput(this);"
+               value="{{ resident[2] }}"
+               required
+               maxlength="10"
+               aria-label="MDOC Number">
         <div id="mdocError" class="invalid-feedback"></div>
       </div>
 

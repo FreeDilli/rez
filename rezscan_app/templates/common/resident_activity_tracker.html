@@ -29,15 +29,39 @@
   .collapse-transition {
     transition: height 0.3s ease;
   }
+  /* Styles for view select */
+  .view-select-container {
+    min-width: 200px;
+  }
+  .view-select {
+    background-color: #ffffff;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .view-select:hover {
+    border-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  .view-select:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
 </style>
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-4">Resident Activity Tracker</h2>
-    <div>
-      <form action="{{ url_for('resident_activity_tracker.live_dashboard') }}" method="GET" class="d-inline me-2">
+    <div class="d-flex align-items-center">
+      <form action="{{ url_for('resident_activity_tracker.live_dashboard') }}" method="GET" class="d-inline me-2 view-select-container">
         <input type="hidden" name="sort" value="{{ sort }}">
         <input type="hidden" name="direction" value="{{ direction }}">
-        <select name="view" onchange="this.form.submit()" aria-label="Select view">
+        <select name="view" onchange="this.form.submit()" class="form-select view-select" aria-label="Select view">
           <option value="All Locations" {% if selected_view == 'All Locations' %}selected{% endif %}>All Locations</option>
           {% for location in locations %}
             <option value="{{ location }}" {% if selected_view == location %}selected{% endif %}>{{ location }}</option>

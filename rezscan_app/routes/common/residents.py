@@ -305,7 +305,9 @@ def edit_resident(mdoc):
                         details=f"Updated resident: {name}, MDOC: {new_mdoc}, Unit: {unit}, Housing: {housing_unit}, Level: {level}"
                     )
                     flash(f"Resident {resident_name} updated successfully.", "success")
-                    return redirect(url_for('residents.residents'))
+                    #return redirect(url_for('residents.residents'))
+                    referer = request.form.get('referer') or request.referrer or url_for('residents.residents')
+                    return redirect(referer)
                 except sqlite3.IntegrityError:
                     logger.error(f"User {username} failed to edit resident: MDOC {new_mdoc} already exists")
                     log_audit_action(
