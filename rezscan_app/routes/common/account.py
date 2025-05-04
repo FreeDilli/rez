@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from rezscan_app.models.database import get_db
@@ -57,26 +57,25 @@ def account():
         logger.error(f"Error fetching housing units for user {current_user.username}: {str(e)}")
         flash("Error loading housing units.", "danger")
 
-    # Get user's current details, including default_view and default_unit
+    # Get user's current details
     user_data = {
         'username': current_user.username,
         'role': current_user.role,
-        'theme': getattr(current_user, 'theme', 'dark'),
+        'theme': current_user.theme,
         'default_view': 'All Locations',
-        'default_unit': 'All Units'  # Default fallback
+        'default_unit': 'All Units'
     }
     try:
         with get_db() as conn:
             c = conn.cursor()
             c.execute(
-                "SELECT theme, default_view, default_unit FROM users WHERE username = ?",
+                "SELECT default_view, default_unit FROM users WHERE username = ?",
                 (current_user.username,)
             )
             result = c.fetchone()
             if result:
-                user_data['theme'] = result[0] or 'dark'
-                user_data['default_view'] = result[1] or 'All Locations'
-                user_data['default_unit'] = result[2] or 'All Units'
+                user_data['default_view'] = result[0] or 'All Locations'
+                user_data['default_unit'] = result[1] or 'All Units'
     except Exception as e:
         logger.error(f"Error fetching user data for {current_user.username}: {str(e)}")
         flash("Error loading user data.", "danger")
@@ -132,10 +131,13 @@ def account():
                     )
 
                 conn.commit()
+                # Update current_user.theme to reflect the new theme
+                current_user.theme = theme
 
             logger.info(f"Successfully updated account for user {current_user.username}")
             flash('Account updated successfully.', 'success')
-            return redirect(url_for('account.account'))
+            # Pass theme in redirect to trigger frontend update
+            return redirect(url_for('account.account', _theme=theme))
 
         except Exception as e:
             logger.error(f"Error updating account for user {current_user.username}: {str(e)}", exc_info=True)
@@ -148,3 +150,37 @@ def account():
             )
 
     return render_template('common/account.html', user=user_data, locations=locations, housing_units=housing_units)
+
+@account_bp.route('/update_theme', methods=['POST'])
+@login_required
+@limiter.limit("50/hour", key_func=user_key_func)
+def update_theme():
+    try:
+        data = request.get_json()
+        new_theme = data.get('theme')
+        if new_theme not in ['light', 'dark']:
+            return jsonify({'success': False, 'message': 'Invalid theme'}), 400
+
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute(
+                "UPDATE users SET theme = ? WHERE id = ?",
+                (new_theme, current_user.id)
+            )
+            conn.commit()
+
+        # Update current_user.theme to reflect the new theme
+        current_user.theme = new_theme
+
+        logger.info(f"User {current_user.username} updated theme to {new_theme}")
+        log_audit_action(
+            username=current_user.username,
+            action='update_theme',
+            target='account',
+            details=f'Changed theme to {new_theme}'
+        )
+        return jsonify({'success': True, 'message': 'Theme updated successfully'}), 200
+
+    except Exception as e:
+        logger.error(f"Error updating theme for user {current_user.username}: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error updating theme'}), 500

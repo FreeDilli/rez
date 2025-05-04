@@ -3,10 +3,11 @@ from rezscan_app.models.database import get_db
 from werkzeug.security import check_password_hash
 
 class User(UserMixin):
-    def __init__(self, id, username, role):
+    def __init__(self, id, username, role, theme=None):
         self.id = id
         self.username = username
         self.role = role
+        self.theme = theme or 'dark'
 
     def get_id(self):
         return str(self.id)
@@ -21,11 +22,11 @@ class User(UserMixin):
             return None
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT id, username, role FROM users WHERE id = ?", (user_id,))
+        cursor.execute("SELECT id, username, role, theme FROM users WHERE id = ?", (user_id,))
         user = cursor.fetchone()
         cursor.close()
         if user:
-            return User(id=user['id'], username=user['username'], role=user['role'])
+            return User(id=user['id'], username=user['username'], role=user['role'], theme=user['theme'])
         return None
 
     @staticmethod
@@ -34,9 +35,9 @@ class User(UserMixin):
             return None
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT id, username, password, role FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT id, username, password, role, theme FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         cursor.close()
         if user and check_password_hash(user['password'], password):
-            return User(id=user['id'], username=user['username'], role=user['role'])
+            return User(id=user['id'], username=user['username'], role=user['role'], theme=user['theme'])
         return None

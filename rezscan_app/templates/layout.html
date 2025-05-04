@@ -8,9 +8,15 @@
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script>
-        // Apply theme
-        const storedTheme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.setAttribute('data-bs-theme', storedTheme);
+        // Apply theme from query param, server (user_theme), or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryTheme = urlParams.get('_theme');
+        const serverTheme = '{{ user_theme }}';
+        const storedTheme = localStorage.getItem('theme') || serverTheme;
+        const activeTheme = queryTheme || storedTheme;
+        document.documentElement.setAttribute('data-bs-theme', activeTheme);
+        localStorage.setItem('theme', activeTheme);
+
         // Apply sidebar state synchronously
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         document.write(`
@@ -24,6 +30,34 @@
                 }
             </style>
         `);
+
+        // Function to toggle theme, save to localStorage, and sync with server
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Send AJAX request to update theme on server if authenticated
+            {% if current_user.is_authenticated %}
+            fetch('{{ url_for("account.update_theme") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ theme: newTheme }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Failed to update theme on server:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating theme:', error);
+            });
+            {% endif %}
+        }
     </script>
 </head>
 
@@ -147,7 +181,6 @@
                 </div>
             {% endif %}
 
-
             {% block content %}{% endblock %}
         </main>
     </div>
@@ -161,4 +194,3 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
-

@@ -85,6 +85,13 @@ def create_app():
             logger.error(f"Unexpected error loading user {user_id}: {str(e)}\n{format_exc()}")
             return None
 
+    # Context processor to inject user theme into all templates
+    @app.context_processor
+    def inject_user_theme():
+        if current_user.is_authenticated:
+            return {'user_theme': current_user.theme}
+        return {'user_theme': 'dark'}
+
     # Register Jinja2 filters
     @app.template_filter('datetimeformat')
     def datetimeformat(value):
