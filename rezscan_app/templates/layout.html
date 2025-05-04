@@ -110,7 +110,7 @@
 
                     {% if current_user.role == 'admin' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/admin/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">📍 <span>Locations</span></a>
+                            <a class="nav-link {% if request.path.startswith('/admin/locations') %}active{% endif %}" href="{{ url_for('locations.manage_locations') }}">📍 <span>Scan Locations</span></a>
                         </li>
                     {% endif %}
 
