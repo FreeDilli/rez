@@ -63,11 +63,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Automatically close alerts after 5 seconds (5000 milliseconds)
-setTimeout(function() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        const bsAlert = new bootstrap.Alert(alert);
-        bsAlert.close();
-    });
-}, 4000);
+// Select all alerts that do not have the 'no-auto-dismiss' class and dismiss them after 4 seconds
+document.querySelectorAll('.alert:not(.no-auto-dismiss)').forEach(alert => {
+    setTimeout(() => {
+      alert.style.transition = 'opacity 0.5s';
+      alert.style.opacity = '0';
+      setTimeout(() => alert.remove(), 500); // Remove after fade-out
+    }, 4000); // Auto-dismiss after 3 seconds
+  });
