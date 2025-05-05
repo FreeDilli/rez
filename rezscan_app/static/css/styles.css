@@ -129,3 +129,50 @@ main .container {
 .d-inline + .d-inline {
     margin-left: 8px;
 }
+
+.info-box {
+    background-color: #ffffff; /* White background for contrast */
+    border: 2px solid #005566; /* Dark teal border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 15px; /* Reduced padding for smaller size */
+    margin-bottom: 1rem; /* Space below */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Subtle shadow */
+    max-width: 500px; /* Reduced width for smaller box */
+    font-size: 1rem; /* Slightly smaller font size */
+    line-height: 1.5; /* Slightly tighter line spacing */
+  }
+  .info-box h5 {
+    color: #212529; /* Near-black for contrast */
+    font-weight: 700; /* Bold heading */
+    font-size: 1.15rem; /* Smaller heading size */
+    margin-bottom: 0.5rem; /* Reduced space below heading */
+  }
+  .info-box ul {
+    padding-left: 20px; /* Reduced space for bullets */
+    color: #212529; /* Near-black for body text */
+  }
+  .info-box li {
+    margin-bottom: 0.4rem; /* Reduced space between list items */
+  }
+  .info-box code {
+    background-color: #e9ecef; /* Light gray for code */
+    color: #212529; /* Dark text for code */
+    padding: 2px 5px; /* Slightly smaller padding */
+    border-radius: 4px; /* Rounded corners */
+    font-size: 0.9rem; /* Smaller code font */
+  }
+  .info-box strong, .info-box em {
+    color: #212529; /* High contrast for bold/italic */
+  }
+  .info-box .btn {
+    font-size: 0.9rem; /* Smaller button text */
+  }
+
+  .custom-info {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #d1ecf1;
+    border-radius: 4px;
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }

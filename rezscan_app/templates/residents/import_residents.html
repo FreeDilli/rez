@@ -10,16 +10,16 @@
     <a href="{{ url_for('residents.add_resident') }}" aria-label="Add Single Resident">Click here</a>
   </p>
 {% endif %}
-  <div class="alert alert-secondary" id="instructionsBox">
-    <h5 class="mb-1">📄 CSV Import Guidelines</h5>
-    <ul class="mb-1">
-      <li><strong>Required headers:</strong> <code>{{ CSV_REQUIRED_HEADERS|join(', ') }}</code></li>
-      <li><strong>Optional header:</strong> <code>{{ CSV_OPTIONAL_HEADERS|join(', ') }}</code></li>
-      <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
-      <li>Rows without a valid <code>mdoc</code> will be skipped</li>
-    </ul>
-    <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm" aria-label="Download Sample CSV">📄 Download Sample CSV</a>
-  </div>
+<div class="info-box" id="instructionsBox">
+  <h5 class="mb-1">📄 CSV Import Guidelines</h5>
+  <ul class="mb-1">
+    <li><strong>Required headers:</strong> <code>{{ CSV_REQUIRED_HEADERS|join(', ') }}</code></li>
+    <li><strong>Optional header:</strong> <code>{{ CSV_OPTIONAL_HEADERS|join(', ') }}</code></li>
+    <li>Headers are <em>case-insensitive</em> (e.g., <code>Name</code> or <code>name</code> are both valid)</li>
+    <li>Rows without a valid <code>mdoc</code> will be skipped</li>
+  </ul>
+  <a href="{{ url_for('static', filename='residents_template.csv') }}" class="btn btn-outline-secondary btn-sm" aria-label="Download Sample CSV">📄 Download Sample CSV</a>
+</div>
   <!-- Upload Form -->
   <form id="uploadForm" class="mb-4">
     <div class="form-group mb-3">

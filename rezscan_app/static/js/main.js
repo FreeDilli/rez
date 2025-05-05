@@ -62,3 +62,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Automatically close alerts after 5 seconds (5000 milliseconds)
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 4000);
