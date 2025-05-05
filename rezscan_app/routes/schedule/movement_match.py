@@ -1,9 +1,16 @@
+#movement_match.py
 from flask import Blueprint, render_template, session, request, flash
 from flask_login import login_required
 from rezscan_app.routes.common.auth import role_required
 from rezscan_app.models.database import get_db
+from rezscan_app.utils.schedule_parser import parse_source_line
 import re
 import difflib
+import logging
+from rezscan_app.utils.logging_config import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 movement_match_bp = Blueprint('movement_match', __name__)
 
@@ -179,7 +186,7 @@ def match_preview():
                     elif suggested and len(suggested) > 1:
                         conflicts.append(line.strip())
                 else:
-                    unmatched.append(line.strip())
+                    unmatched.append((line.strip(), parse_source_line(line)))
             elif result == 'conflict':
                 conflicts.append(line.strip())
             else:
@@ -209,24 +216,75 @@ def match_preview():
     db.commit()
 
     for block in parsed_blocks:
-        for item in block['unmatched'] + block['conflicts']:
+        for original, parsed in block['unmatched']:
+            match = None
+            if parsed['suggested_mdoc'] and parsed['suggested_mdoc'] in residents_by_mdoc:
+                match = residents_by_mdoc[parsed['suggested_mdoc']]
+            elif parsed['suggested_name']:
+                key = parsed['suggested_name'].lower()
+                options = residents_by_name.get(key, [])
+                if len(options) == 1:
+                    match = options[0]
+                elif parsed['suggested_housing']:
+                    options = [r for r in options if r['housing_unit'] and parsed['suggested_housing'].lower() in r['housing_unit'].lower()]
+                    if len(options) == 1:
+                        match = options[0]
+
+            if match:
+                logger.debug(f"✅ Auto-approving: {match['name']} from line '{original}'")
+                c.execute('''
+                    INSERT INTO schedule_match_review (
+                        block_title, block_time, source_line,
+                        suggested_name, suggested_mdoc, suggested_housing,
+                        match_type, status, reviewed_by, reviewed_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, 'auto', 'approved', 'system', CURRENT_TIMESTAMP)
+                ''', (
+                    block['title'], block['start'], original,
+                    match['name'], match['mdoc'], match['housing_unit']
+                ))
+            else:
+                logger.debug(f"Inserting unmatched item: {original}")
+                c.execute('''
+                    INSERT INTO schedule_match_review (
+                        block_title, block_time, source_line,
+                        suggested_name, suggested_mdoc, suggested_housing,
+                        match_type, status
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, 'unmatched', 'pending')
+                ''', (
+                    block['title'], block['start'], original,
+                    parsed['suggested_name'], parsed['suggested_mdoc'], parsed['suggested_housing']
+                ))
+
+        for item in block['conflicts']:
+            logger.debug(f"Inserting conflict item: {item}")
             c.execute('''
                 INSERT INTO schedule_match_review (
                     block_title, block_time, source_line,
-                    suggested_mdoc, suggested_name, suggested_housing,
-                    status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    match_type, status
+                )
+                VALUES (?, ?, ?, 'conflict', 'pending')
             ''', (
-                block['title'],
-                block['start'],
-                item if isinstance(item, str) else str(item),
-                None,
-                None,
-                None,
-                'pending'
-            ))
+                block['title'], block['start'], item))
+
+        for item in block['fuzzy']:
+            logger.debug(f"Inserting fuzzy item: {item['original']}")
+            c.execute('''
+                INSERT INTO schedule_match_review (
+                    block_title, block_time, source_line,
+                    suggested_name, suggested_mdoc, suggested_housing,
+                    match_type, status
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 'fuzzy', 'pending')
+            ''', (
+                block['title'], block['start'], item['original'],
+                item['name'], item['mdoc'], item['housing_unit']))
 
     db.commit()
+    c.execute("SELECT COUNT(*) FROM schedule_match_review")
+    count = c.fetchone()[0]
+    logger.debug(f"✅ Review table now contains {count} entries for {len(parsed_blocks)} blocks")
 
     return render_template('schedule/match_preview.html',
                            blocks=parsed_blocks,

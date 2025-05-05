@@ -235,6 +235,7 @@ def init_db():
                         suggested_mdoc TEXT,
                         suggested_name TEXT,
                         suggested_housing TEXT,
+                        match_type TEXT CHECK(match_type IN ('unmatched', 'conflict', 'fuzzy')),
                         status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
                         reviewed_by TEXT,
                         reviewed_at TIMESTAMP,

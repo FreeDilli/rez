@@ -1,49 +1,86 @@
 {% extends 'layout.html' %}
-{% block title %}Schedule Match Review - RezScan{% endblock %}
+{% block title %}Schedule Match Review{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-4">📝 Schedule Match Review</h2>
+  <h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Schedule Match Review</h2>
 
-  {% if matches %}
-    <div class="table-responsive">
-      <table class="table table-bordered table-striped">
-        <thead class="table-light">
-          <tr>
-            <th>Block Title</th>
-            <th>Scheduled Time</th>
-            <th>Matched Name</th>
-            <th>MDOC</th>
-            <th>Housing Unit</th>
-            <th>Original Entry</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for m in matches %}
-          <tr>
-            <td>{{ m.block_title }}</td>
-            <td>{{ m.scheduled_time or 'N/A' }}</td>
-            <td>{{ m.matched_name or 'Unresolved' }}</td>
-            <td>{{ m.mdoc or 'N/A' }}</td>
-            <td>{{ m.housing_unit or 'N/A' }}</td>
-            <td>{{ m.original_entry }}</td>
-            <td class="text-center">
-              <form method="POST" action="{{ url_for('schedule_match_review.approve_match', match_id=m.id) }}" style="display:inline-block">
-                <button class="btn btn-sm btn-success" title="Approve"><i class="bi bi-check-circle"></i></button>
+  <div class="table-responsive">
+    <table class="table table-dark table-hover align-middle">
+      <thead class="table-light text-dark">
+        <tr>
+          <th>ID</th>
+          <th>Block Info</th>
+          <th>Source</th>
+          <th>Suggested Match</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in matches %}
+        <tr>
+          <td>{{ match.id }}</td>
+          <td>
+            <strong>{{ match.block_title }}</strong><br>
+            <small class="text-muted">{{ match.block_time }}</small>
+          </td>
+          <td>{{ match.source_line or '—' }}</td>
+          <td>
+            {% if match.suggested_name %}
+              <strong>{{ match.suggested_name }}</strong><br>
+              {% if match.suggested_mdoc %}<small>MDOC: {{ match.suggested_mdoc }}</small><br>{% endif %}
+              {% if match.suggested_housing %}<small>Housing: {{ match.suggested_housing }}</small>{% endif %}
+            {% else %}
+              —
+            {% endif %}
+            {% if match.candidates and match.candidates|length > 0 %}
+            <div class="text-muted small mt-2">
+              <strong>Found {{ match.candidates|length }} candidate(s):</strong>
+              <ul class="mb-1">
+                {% for c in match.candidates %}
+                  <li>{{ c.name }} — {{ c.mdoc }} ({{ c.housing_unit or 'No housing' }})</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge bg-info text-dark text-capitalize">{{ match.match_type or 'unknown' }}</span>
+          </td>
+          <td>
+            <span class="badge bg-secondary text-capitalize">{{ match.status or 'unknown' }}</span>
+          </td>
+          <td>
+            {% if match.can_auto_approve %}
+              <form method="POST" action="{{ url_for('schedule_review.approve_match_by_id', match_id=match.id) }}">
+                <button class="btn btn-primary btn-sm">Auto-Approve</button>
               </form>
-              <form method="POST" action="{{ url_for('schedule_match_review.delete_match', match_id=m.id) }}" style="display:inline-block" onsubmit="return confirm('Are you sure you want to delete this match?');">
-                <button class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-x-circle"></i></button>
+            {% elif match.candidates %}
+              <form method="POST" action="{{ url_for('schedule_review.approve_manual') }}">
+                <input type="hidden" name="match_id" value="{{ match.id }}">
+                <div class="input-group">
+                  <select name="selected_mdoc" class="form-select form-select-sm">
+                    {% for res in match.candidates %}
+                      <option value="{{ res.mdoc }}">{{ res.name }} ({{ res.mdoc }}) - {{ res.housing_unit }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-success btn-sm" type="submit">Approve</button>
+                </div>
               </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}
-    <div class="alert alert-info">There are currently no pending schedule matches to review.</div>
+            {% else %}
+              <span class="text-muted">No actions</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if matches|length == 0 %}
+    <div class="alert alert-info mt-3">There are no schedule match entries in the system.</div>
   {% endif %}
 </div>
 {% endblock %}
-
