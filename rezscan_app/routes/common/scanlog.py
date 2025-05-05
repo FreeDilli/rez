@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, send_file
+from flask import Blueprint, render_template, redirect, url_for, flash, send_file, request
 from flask_login import current_user, login_required
 from rezscan_app.models.database import get_db
 from rezscan_app.routes.common.auth import role_required
@@ -28,36 +28,84 @@ def user_key_func():
         return current_user.username
     return get_remote_address()
 
-@scanlog_bp.route('/scanlog', methods=['GET', 'POST'], strict_slashes=False)
+@scanlog_bp.route('/scanlog', methods=['GET'], strict_slashes=False)
 @login_required
 def scanlog():
     username = current_user.username if current_user.is_authenticated else 'unknown'
     logger.debug(f"User {username} accessing /admin/scanlog route")
     
+    # Pagination and filter parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+    search = request.args.get('search', '').strip()
+    status = request.args.get('status', '')
+    location = request.args.get('location', '')
+    
     try:
         with get_db() as conn:
             c = conn.cursor()
-            c.execute('SELECT * FROM scans_with_residents ORDER BY timestamp DESC')
+            
+            # Build query with filters
+            query = 'SELECT * FROM scans_with_residents WHERE 1=1'
+            count_query = 'SELECT COUNT(*) FROM scans_with_residents WHERE 1=1'
+            params = []
+            
+            if search:
+                query += ' AND (mdoc LIKE ? OR name LIKE ?)'
+                count_query += ' AND (mdoc LIKE ? OR name LIKE ?)'
+                search_param = f'%{search}%'
+                params.extend([search_param, search_param])
+            
+            if status:
+                query += ' AND status = ?'
+                count_query += ' AND status = ?'
+                params.append(status)
+            
+            if location:
+                query += ' AND location = ?'
+                count_query += ' AND location = ?'
+                params.append(location)
+            
+            # Get total count
+            c.execute(count_query, params)
+            total_records = c.fetchone()[0]
+            total_pages = (total_records + per_page - 1) // per_page
+            
+            # Fetch paginated data
+            query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?'
+            params.extend([per_page, offset])
+            c.execute(query, params)
             data = c.fetchall()
-            logger.debug(f"User {username} fetched {len(data)} scan records")
+            logger.debug(f"User {username} fetched {len(data)} scan records for page {page}")
             
             c.execute('SELECT DISTINCT status FROM scans_with_residents ORDER BY status')
             status_options = [row[0] for row in c.fetchall() if row[0]]
-            logger.debug(f"User {username} fetched {len(status_options)} status options")
             
             c.execute('SELECT DISTINCT location FROM scans_with_residents ORDER BY location')
             location_options = [row[0] for row in c.fetchall() if row[0]]
-            logger.debug(f"User {username} fetched {len(location_options)} location options")
             
             log_audit_action(
                 username=username,
                 action='view',
                 target='scanlog',
-                details=f"Viewed scanlog with {len(data)} records"
+                details=f"Viewed scanlog page {page} with {len(data)} records, search='{search}', status='{status}', location='{location}'"
             )
             
-            logger.info(f"User {username} successfully retrieved scanlog data")
-            return render_template('common/scanlog.html', scans=data, status_options=status_options, location_options=location_options)
+            logger.info(f"User {username} successfully retrieved scanlog data for page {page}")
+            return render_template(
+                'common/scanlog.html', 
+                scans=data, 
+                status_options=status_options, 
+                location_options=location_options,
+                page=page,
+                total_pages=total_pages,
+                per_page=per_page,
+                total_records=total_records,
+                search=search,
+                status=status,
+                location=location
+            )
     except sqlite3.Error as e:
         logger.error(f"Database error for user {username} in scanlog: {str(e)}")
         log_audit_action(

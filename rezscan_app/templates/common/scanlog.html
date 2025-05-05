@@ -7,38 +7,40 @@
   <h2 class="mb-4">Scan Log</h2>
 
   <!-- Filters -->
-  <div class="row g-2 mb-3 align-items-end">
-    <div class="col-md-3">
-      <div class="form-group mb-3">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search by MDOC or Name..." onkeyup="filterTable()" autocomplete="off">
+  <form id="filterForm" action="{{ url_for('scanlog.scanlog') }}" method="GET">
+    <div class="row g-2 mb-3 align-items-end">
+      <div class="col-md-3">
+        <div class="form-group mb-3">
+          <input type="text" id="searchInput" name="search" class="form-control" placeholder="Search by MDOC or Name..." value="{{ search }}" autocomplete="off">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group mb-3">
+          <select id="filterStatus" name="status" class="form-select">
+            <option value="">All Statuses</option>
+            {% for option in status_options %}
+            <option value="{{ option }}" {% if option == status %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group mb-3">
+          <select id="filterLocation" name="location" class="form-select">
+            <option value="">All Locations</option>
+            {% for option in location_options %}
+            <option value="{{ option }}" {% if option == location %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="form-group mb-3">
+          <button type="button" class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
+        </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="form-group mb-3">
-        <select id="filterStatus" class="form-select" onchange="filterTable()">
-          <option value="">All Statuses</option>
-          {% for option in status_options %}
-          <option value="{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="form-group mb-3">
-        <select id="filterLocation" class="form-select" onchange="filterTable()">
-          <option value="">All Locations</option>
-          {% for option in location_options %}
-          <option value="{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="col-md-2">
-      <div class="form-group mb-3">
-        <button class="btn btn-secondary w-100" onclick="resetFilters()">Clear Filters</button>
-      </div>
-    </div>
-  </div>
+  </form>
 
   <!-- Table -->
   <div class="card p-3">
@@ -73,57 +75,66 @@
     <div id="noResults" class="text-center text-gray-500 mt-3" style="display: none;">
       No results found.
     </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Scan log pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('scanlog.scanlog', page=1, search=search, status=status, location=location) }}" aria-label="First">
+            <span aria-hidden="true">First</span>
+          </a>
+        </li>
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('scanlog.scanlog', page=page-1, search=search, status=status, location=location) }}" aria-label="Previous">
+            <span aria-hidden="true">«</span>
+          </a>
+        </li>
+        {% set start_page = [1, page-2]|max %}
+        {% set end_page = [total_pages, page+2]|min %}
+        {% for p in range(start_page, end_page + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('scanlog.scanlog', page=p, search=search, status=status, location=location) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('scanlog.scanlog', page=page+1, search=search, status=status, location=location) }}" aria-label="Next">
+            <span aria-hidden="true">»</span>
+          </a>
+        </li>
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('scanlog.scanlog', page=total_pages, search=search, status=status, location=location) }}" aria-label="Last">
+            <span aria-hidden="true">Last</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
+    
+    <div class="text-center text-muted mt-2">
+      Showing {{ ((page-1)*per_page + 1) }} to {{ [page*per_page, total_records]|min }} of {{ total_records }} records
+    </div>
   </div>
 </div>
 
 <script>
-function filterTable() {
-  const search = document.getElementById("searchInput").value.toLowerCase().trim();
-  const status = document.getElementById("filterStatus").value.toLowerCase();
-  const location = document.getElementById("filterLocation").value.toLowerCase();
-  const rows = document.querySelectorAll("#scansTable tbody tr");
-  const noResults = document.getElementById("noResults");
-  let visibleRows = 0;
-
-  rows.forEach(row => {
-    const rowText = row.innerText.toLowerCase();
-    const rowStatus = row.querySelector("td:nth-child(5)").innerText.toLowerCase();
-    const rowLocation = row.querySelector("td:nth-child(6)").innerText.toLowerCase();
-    const name = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
-
-    let matchSearch = rowText.includes(search);
-    if (search && name) {
-      const [lastName = "", firstName = ""] = name.split(",").map(part => part.trim());
-      const fullName = `${firstName} ${lastName}`.trim();
-      const reverseFullName = `${lastName} ${firstName}`.trim();
-      matchSearch = (
-        firstName.includes(search) ||
-        lastName.includes(search) ||
-        fullName.includes(search) ||
-        reverseFullName.includes(search) ||
-        rowText.includes(search)
-      );
-    }
-
-    const matchStatus = status === "" || rowStatus === status;
-    const matchLocation = location === "" || rowLocation === location;
-
-    if (matchSearch && matchStatus && matchLocation) {
-      row.style.display = "";
-      visibleRows++;
-    } else {
-      row.style.display = "none";
-    }
-  });
-
-  noResults.style.display = visibleRows === 0 ? "block" : "none";
+function submitFilters() {
+  document.getElementById("filterForm").submit();
 }
 
 function resetFilters() {
   document.getElementById("searchInput").value = "";
   document.getElementById("filterStatus").value = "";
   document.getElementById("filterLocation").value = "";
-  filterTable();
+  document.getElementById("filterForm").submit();
 }
+
+document.getElementById("searchInput").addEventListener("input", function() {
+  clearTimeout(this.timeout);
+  this.timeout = setTimeout(submitFilters, 500);
+});
+
+document.getElementById("filterStatus").addEventListener("change", submitFilters);
+document.getElementById("filterLocation").addEventListener("change", submitFilters);
 </script>
 {% endblock %}
