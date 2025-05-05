@@ -186,10 +186,27 @@ def match_preview():
                     elif suggested and len(suggested) > 1:
                         conflicts.append(line.strip())
                 else:
-                    unmatched.append((line.strip(), parse_source_line(line)))
+                    unmatched.append(line.strip())
             elif result == 'conflict':
                 conflicts.append(line.strip())
             else:
+                # ✅ Auto-approve logic here
+                auto_approve = session.get('auto_approve_enabled', True)
+                if auto_approve:
+                    c.execute("SELECT id FROM schedule_groups WHERE name = ?", (block['title'],))
+                    group = c.fetchone()
+                    if group:
+                        group_id = group['id']
+                        c.execute('INSERT OR IGNORE INTO resident_schedules (mdoc, group_id) VALUES (?, ?)', (result['mdoc'], group_id))
+                        c.execute('''
+                            INSERT INTO schedule_match_review (
+                                block_title, block_time, source_line,
+                                suggested_name, suggested_mdoc, suggested_housing,
+                                match_type, status, reviewed_by, reviewed_at
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (block['title'], block['start'], line, result['name'], result['mdoc'], result['housing_unit'], 'fuzzy', 'approved', 'Auto', datetime.now()))
+                        continue
+
                 matched.append({
                     'name': result['name'],
                     'mdoc': result['mdoc'],
@@ -212,81 +229,10 @@ def match_preview():
         'fuzzy': sum(len(b['fuzzy']) for b in parsed_blocks)
     }
 
-    c.execute("DELETE FROM schedule_match_review")
-    db.commit()
-
-    for block in parsed_blocks:
-        for original, parsed in block['unmatched']:
-            match = None
-            if parsed['suggested_mdoc'] and parsed['suggested_mdoc'] in residents_by_mdoc:
-                match = residents_by_mdoc[parsed['suggested_mdoc']]
-            elif parsed['suggested_name']:
-                key = parsed['suggested_name'].lower()
-                options = residents_by_name.get(key, [])
-                if len(options) == 1:
-                    match = options[0]
-                elif parsed['suggested_housing']:
-                    options = [r for r in options if r['housing_unit'] and parsed['suggested_housing'].lower() in r['housing_unit'].lower()]
-                    if len(options) == 1:
-                        match = options[0]
-
-            if match:
-                logger.debug(f"✅ Auto-approving: {match['name']} from line '{original}'")
-                c.execute('''
-                    INSERT INTO schedule_match_review (
-                        block_title, block_time, source_line,
-                        suggested_name, suggested_mdoc, suggested_housing,
-                        match_type, status, reviewed_by, reviewed_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, 'auto', 'approved', 'system', CURRENT_TIMESTAMP)
-                ''', (
-                    block['title'], block['start'], original,
-                    match['name'], match['mdoc'], match['housing_unit']
-                ))
-            else:
-                logger.debug(f"Inserting unmatched item: {original}")
-                c.execute('''
-                    INSERT INTO schedule_match_review (
-                        block_title, block_time, source_line,
-                        suggested_name, suggested_mdoc, suggested_housing,
-                        match_type, status
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, 'unmatched', 'pending')
-                ''', (
-                    block['title'], block['start'], original,
-                    parsed['suggested_name'], parsed['suggested_mdoc'], parsed['suggested_housing']
-                ))
-
-        for item in block['conflicts']:
-            logger.debug(f"Inserting conflict item: {item}")
-            c.execute('''
-                INSERT INTO schedule_match_review (
-                    block_title, block_time, source_line,
-                    match_type, status
-                )
-                VALUES (?, ?, ?, 'conflict', 'pending')
-            ''', (
-                block['title'], block['start'], item))
-
-        for item in block['fuzzy']:
-            logger.debug(f"Inserting fuzzy item: {item['original']}")
-            c.execute('''
-                INSERT INTO schedule_match_review (
-                    block_title, block_time, source_line,
-                    suggested_name, suggested_mdoc, suggested_housing,
-                    match_type, status
-                )
-                VALUES (?, ?, ?, ?, ?, ?, 'fuzzy', 'pending')
-            ''', (
-                block['title'], block['start'], item['original'],
-                item['name'], item['mdoc'], item['housing_unit']))
-
     db.commit()
     c.execute("SELECT COUNT(*) FROM schedule_match_review")
     count = c.fetchone()[0]
-    logger.debug(f"✅ Review table now contains {count} entries for {len(parsed_blocks)} blocks")
+    logger.debug(f"✅ Review table now contains entries for {count} blocks")
 
-    return render_template('schedule/match_preview.html',
-                           blocks=parsed_blocks,
-                           raw_text=raw_text,
-                           summary=summary)
+    return render_template('schedule/match_preview.html', blocks=parsed_blocks, raw_text=raw_text, summary=summary)
+
