@@ -35,7 +35,7 @@
         </div>
 
         <div class="mb-3">
-            <label for="default_unit" class="form-label">Default Unit</label>
+            <label for="default_unit" class="form-label">Default Housing Unit</label>
             <select class="form-select" id="default_unit" name="default_unit" required>
                 <option value="All Units" {% if user.default_unit == 'All Units' %}selected{% endif %}>All Units</option>
                 {% for unit in housing_units %}
