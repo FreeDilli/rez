@@ -40,7 +40,7 @@
             <strong>{{ match.suggested_name or '—' }}</strong><br>
             {% if match.candidates %}
               <small class="text-muted">Found {{ match.candidates | length }} candidate(s):</small>
-              <ul class="small">
+              <ul class="small mb-1">
                 {% for r in match.candidates %}
                   <li>{{ r.name }} — {{ r.mdoc }} ({{ r.housing_unit or 'n/a' }})</li>
                 {% endfor %}
@@ -61,7 +61,7 @@
             {% elif match.db_check and match.candidates %}
               <form method="post" action="{{ url_for('schedule_review.approve_manual') }}">
                 <input type="hidden" name="match_id" value="{{ match.id }}">
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm mb-1">
                   <select name="selected_mdoc" class="form-select">
                     {% for r in match.candidates %}
                     <option value="{{ r.mdoc }}">{{ r.name }} ({{ r.mdoc }})</option>
@@ -70,10 +70,17 @@
                   <button class="btn btn-success" type="submit">Approve</button>
                 </div>
               </form>
-            {% else %}
-              <a href="{{ url_for('schedule_review.review_manual', match_id=match.id) }}" class="btn btn-outline-warning btn-sm">Manual</a>
             {% endif %}
-            <form method="post" action="{{ url_for('schedule_review.delete_match', match_id=match.id) }}" class="mt-1">
+
+            {% if match.status == 'pending' %}
+              <form action="{{ url_for('schedule_review.review_manual', match_id=match.id) }}" method="get" class="mb-1">
+                <button class="btn btn-outline-warning btn-sm" type="submit">
+                  <i class="bi bi-wrench"></i> Manual
+                </button>
+              </form>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('schedule_review.delete_match', match_id=match.id) }}">
               <button class="btn btn-outline-danger btn-sm" type="submit">Reject</button>
             </form>
           </td>
