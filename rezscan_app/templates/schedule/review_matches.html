@@ -5,9 +5,18 @@
 <div class="container mt-4">
   <h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Schedule Match Review</h2>
 
-  <div class="table-responsive">
-    <table class="table table-dark table-hover align-middle">
-      <thead class="table-light text-dark">
+  <!-- Auto-Approve Toggle -->
+  <form method="post" action="{{ url_for('schedule_review.toggle_auto_approve') }}" class="mb-3">
+    <input type="hidden" name="enable" value="{{ '0' if session.get('auto_approve_enabled', True) else '1' }}">
+    <button type="submit" class="btn btn-outline-primary">
+      Auto-Approve High Confidence Matches:
+      <strong>{{ 'On' if session.get('auto_approve_enabled', True) else 'Off' }}</strong>
+    </button>
+  </form>
+
+  {% if matches %}
+    <table class="table table-dark table-bordered align-middle">
+      <thead>
         <tr>
           <th>ID</th>
           <th>Block Info</th>
@@ -24,63 +33,56 @@
           <td>{{ match.id }}</td>
           <td>
             <strong>{{ match.block_title }}</strong><br>
-            <small class="text-muted">{{ match.block_time }}</small>
+            <small>{{ match.block_time }}</small>
           </td>
-          <td>{{ match.source_line or '—' }}</td>
+          <td>{{ match.source_line }}</td>
           <td>
-            {% if match.suggested_name %}
-              <strong>{{ match.suggested_name }}</strong><br>
-              {% if match.suggested_mdoc %}<small>MDOC: {{ match.suggested_mdoc }}</small><br>{% endif %}
-              {% if match.suggested_housing %}<small>Housing: {{ match.suggested_housing }}</small>{% endif %}
-            {% else %}
-              —
-            {% endif %}
-            {% if match.candidates and match.candidates|length > 0 %}
-            <div class="text-muted small mt-2">
-              <strong>Found {{ match.candidates|length }} candidate(s):</strong>
-              <ul class="mb-1">
-                {% for c in match.candidates %}
-                  <li>{{ c.name }} — {{ c.mdoc }} ({{ c.housing_unit or 'No housing' }})</li>
+            <strong>{{ match.suggested_name or '—' }}</strong><br>
+            {% if match.candidates %}
+              <small class="text-muted">Found {{ match.candidates | length }} candidate(s):</small>
+              <ul class="small">
+                {% for r in match.candidates %}
+                  <li>{{ r.name }} — {{ r.mdoc }} ({{ r.housing_unit or 'n/a' }})</li>
                 {% endfor %}
               </ul>
-            </div>
             {% endif %}
           </td>
           <td>
-            <span class="badge bg-info text-dark text-capitalize">{{ match.match_type or 'unknown' }}</span>
+            <span class="badge bg-info text-dark">{{ match.match_type|capitalize }}</span>
           </td>
           <td>
-            <span class="badge bg-secondary text-capitalize">{{ match.status or 'unknown' }}</span>
+            <span class="badge bg-secondary">{{ match.status|capitalize }}</span>
           </td>
           <td>
             {% if match.can_auto_approve %}
-              <form method="POST" action="{{ url_for('schedule_review.approve_match_by_id', match_id=match.id) }}">
-                <button class="btn btn-primary btn-sm">Auto-Approve</button>
+              <form method="post" action="{{ url_for('schedule_review.approve_match_by_id', match_id=match.id) }}">
+                <button class="btn btn-success btn-sm" type="submit">✅ Auto Approve</button>
               </form>
-            {% elif match.candidates %}
-              <form method="POST" action="{{ url_for('schedule_review.approve_manual') }}">
+            {% elif match.db_check and match.candidates %}
+              <form method="post" action="{{ url_for('schedule_review.approve_manual') }}">
                 <input type="hidden" name="match_id" value="{{ match.id }}">
-                <div class="input-group">
-                  <select name="selected_mdoc" class="form-select form-select-sm">
-                    {% for res in match.candidates %}
-                      <option value="{{ res.mdoc }}">{{ res.name }} ({{ res.mdoc }}) - {{ res.housing_unit }}</option>
+                <div class="input-group input-group-sm">
+                  <select name="selected_mdoc" class="form-select">
+                    {% for r in match.candidates %}
+                    <option value="{{ r.mdoc }}">{{ r.name }} ({{ r.mdoc }})</option>
                     {% endfor %}
                   </select>
-                  <button class="btn btn-success btn-sm" type="submit">Approve</button>
+                  <button class="btn btn-success" type="submit">Approve</button>
                 </div>
               </form>
             {% else %}
-              <span class="text-muted">No actions</span>
+              <a href="{{ url_for('schedule_review.review_manual', match_id=match.id) }}" class="btn btn-outline-warning btn-sm">Manual</a>
             {% endif %}
+            <form method="post" action="{{ url_for('schedule_review.delete_match', match_id=match.id) }}" class="mt-1">
+              <button class="btn btn-outline-danger btn-sm" type="submit">Reject</button>
+            </form>
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-  </div>
-
-  {% if matches|length == 0 %}
-    <div class="alert alert-info mt-3">There are no schedule match entries in the system.</div>
+  {% else %}
+    <div class="alert alert-info">No pending matches to review.</div>
   {% endif %}
 </div>
 {% endblock %}
