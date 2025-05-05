@@ -1,4 +1,5 @@
 import re
+from PyPDF2 import PdfReader
 
 def parse_source_line(line):
     result = {
@@ -33,3 +34,44 @@ def parse_source_line(line):
                 break
 
     return result
+def parse_schedule_blocks(pdf_path):
+    text = ""
+    with open(pdf_path, "rb") as f:
+        reader = PdfReader(f)
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+
+    return parse_ocr_text(text)
+
+def parse_ocr_text(raw_text):
+    blocks = []
+    lines = raw_text.splitlines()
+    current_block = None
+
+    time_header_pattern = re.compile(r"(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})", re.IGNORECASE)
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # Detect a new block header
+        if time_header_pattern.search(line) or line.lower().startswith(("wc", "cr", "rm", "unit")):
+            if current_block:
+                blocks.append(current_block)
+            current_block = {
+                "title": line,
+                "time": time_header_pattern.search(line).group(0) if time_header_pattern.search(line) else None,
+                "residents": []
+            }
+        else:
+            if current_block:
+                current_block["residents"].append(line)
+
+    if current_block:
+        blocks.append(current_block)
+
+    return blocks
+
