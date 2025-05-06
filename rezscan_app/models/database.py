@@ -68,6 +68,7 @@ def init_db():
                 c.execute('''
                     CREATE TABLE IF NOT EXISTS locations (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        bldg TEXT NOT NULL,
                         name TEXT NOT NULL UNIQUE,
                         prefix TEXT UNIQUE,
                         type TEXT

@@ -28,11 +28,12 @@ def manage_locations():
         with get_db() as conn:
             c = conn.cursor()
             if request.method == 'POST':
+                bldg = request.form['bldg'].strip()
                 name = request.form['name'].strip()
                 prefix = request.form['prefix'].strip().upper()
                 location_type = request.form['type'].strip()
                 
-                if not (name and prefix and location_type):
+                if not (bldg and name and prefix and location_type):
                     flash("All fields are required.", "warning")
                     log_audit_action(username, 'add_location_failed', 'locations', 'Missing required fields')
                     logger.warning(f"User {username} failed to add location: missing fields")
@@ -42,17 +43,17 @@ def manage_locations():
                     logger.warning(f"User {username} failed to add location: invalid prefix")
                 else:
                     try:
-                        c.execute("INSERT INTO locations (name, prefix, type) VALUES (?, ?, ?)", (name, prefix, location_type))
+                        c.execute("INSERT INTO locations (bldg, name, prefix, type) VALUES (?, ?, ?, ?)", (bldg, name, prefix, location_type))
                         conn.commit()
                         flash(f"Location '{name}' added.", "success")
-                        log_audit_action(username, 'add_location', 'locations', f"Added location: {name}, prefix: {prefix}, type: {location_type}")
+                        log_audit_action(username, 'add_location', 'locations', f"Added location: {name}, bldg: {bldg}, prefix: {prefix}, type: {location_type}")
                         logger.info(f"User {username} added location: {name}")
                     except sqlite3.IntegrityError as e:
                         flash("Location or prefix already exists.", "warning")
                         log_audit_action(username, 'add_location_failed', 'locations', f"Integrity error: {str(e)}")
                         logger.error(f"User {username} failed to add location: {str(e)}")
             
-            c.execute("SELECT id, name, prefix, type FROM locations ORDER BY name")
+            c.execute("SELECT id, bldg, name, prefix, type FROM locations ORDER BY name")
             locations = c.fetchall()
             logger.debug(f"User {username} fetched {len(locations)} locations")
             log_audit_action(username, 'view', 'locations', f"Viewed {len(locations)} locations")
