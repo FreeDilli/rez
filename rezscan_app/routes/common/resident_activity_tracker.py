@@ -31,12 +31,21 @@ def live_dashboard():
     
     sort = request.args.get('sort', 'timestamp')
     direction = request.args.get('direction', 'desc')
-    view_type = request.args.get('view_type', 'Location')  # Building or Location
-    
-    # Set default selected_view based on view_type
-    default_selected_view = 'All Locations' if view_type == 'Location' else 'All Buildings'
-    selected_view = request.args.get('view', default_selected_view)
-    
+
+    # Get all locations and buildings first to validate default_view
+    locations = []
+    buildings = []
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute('SELECT name, bldg FROM locations ORDER BY name')
+            location_data = c.fetchall()
+            locations = [row[0] for row in location_data]
+            buildings = sorted(list(set(row[1] for row in location_data)))
+    except Exception as e:
+        logger.error(f"Error fetching locations/buildings for user {current_user.username}: {str(e)}")
+        flash("Error loading locations/buildings.", "danger")
+
     # Get user's default_view from users table
     default_view = 'All Locations'
     try:
@@ -48,26 +57,37 @@ def live_dashboard():
                 default_view = result[0]
     except Exception as e:
         logger.error(f"Error fetching default_view for user {current_user.username}: {str(e)}")
+
+    # Determine view_type and selected_view based on default_view and URL params
+    view_type = request.args.get('view_type', None)
+    selected_view = request.args.get('view', None)
+
+    if not view_type or not selected_view:
+        # If no URL params, use default_view to set view_type and selected_view
+        if default_view in buildings:
+            view_type = 'Building'
+            selected_view = default_view
+        elif default_view in locations or default_view == 'All Locations':
+            view_type = 'Location'
+            selected_view = default_view
+        else:
+            view_type = 'Location'
+            selected_view = 'All Locations'
+    else:
+        # Validate URL params
+        if view_type == 'Location' and selected_view not in ['All Locations'] + locations:
+            selected_view = 'All Locations'
+        elif view_type == 'Building' and selected_view not in ['All Buildings'] + buildings:
+            selected_view = 'All Buildings'
+
+    valid_sorts = ['name', 'timestamp']
+    sort = sort if sort in valid_sorts else 'timestamp'
+    direction = direction if direction in ['asc', 'desc'] else 'desc'
     
-    # Ensure selected_view is valid for the current view_type
     checked_in = []
-    locations = []
-    buildings = []
     try:
         with get_db() as conn:
             c = conn.cursor()
-            # Get all locations and buildings
-            c.execute('SELECT name, bldg FROM locations ORDER BY name')
-            location_data = c.fetchall()
-            locations = [row[0] for row in location_data]
-            buildings = sorted(list(set(row[1] for row in location_data)))
-
-            # Validate selected_view
-            if view_type == 'Location' and selected_view not in ['All Locations'] + locations:
-                selected_view = 'All Locations'
-            elif view_type == 'Building' and selected_view not in ['All Buildings'] + buildings:
-                selected_view = 'All Buildings'
-
             log_audit_action(
                 username=current_user.username,
                 action='view',
@@ -106,10 +126,6 @@ def live_dashboard():
                     checked_in.append(result)
             
             logger.debug(f"Filtered to {len(checked_in)} checked-in residents for view_type={view_type}, selected_view={selected_view}")
-
-            valid_sorts = ['name', 'timestamp']
-            sort = sort if sort in valid_sorts else 'timestamp'
-            direction = direction if direction in ['asc', 'desc'] else 'desc'
 
             if sort == 'name':
                 checked_in.sort(key=lambda x: (x[0] or 'Unknown Resident').lower(), reverse=(direction == 'desc'))

@@ -25,12 +25,20 @@
         </div>
 
         <div class="mb-3">
-            <label for="default_view" class="form-label">Default Scan Location View</label>
+            <label for="default_view" class="form-label">Default Scan View</label>
             <select class="form-select" id="default_view" name="default_view" required>
-                <option value="All Locations" {% if user.default_view == 'All Locations' %}selected{% endif %}>All Locations</option>
-                {% for location in locations %}
-                    <option value="{{ location }}" {% if user.default_view == location %}selected{% endif %}>{{ location }}</option>
-                {% endfor %}
+                <optgroup label="Locations">
+                    <option value="All Locations" {% if user.default_view == 'All Locations' %}selected{% endif %}>All Locations</option>
+                    {% for location in locations %}
+                        <option value="{{ location }}" {% if user.default_view == location %}selected{% endif %}>{{ location }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Buildings">
+                    <option value="All Buildings" {% if user.default_view == 'All Buildings' %}selected{% endif %}>All Buildings</option>
+                    {% for building in buildings %}
+                        <option value="{{ building }}" {% if user.default_view == building %}selected{% endif %}>{{ building }}</option>
+                    {% endfor %}
+                </optgroup>
             </select>
         </div>
 

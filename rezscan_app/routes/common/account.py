@@ -35,16 +35,19 @@ def account():
         details='Viewed account page'
     )
 
-    # Get all locations from locations table
+    # Get all locations and buildings
     locations = []
+    buildings = []
     try:
         with get_db() as conn:
             c = conn.cursor()
-            c.execute('SELECT name FROM locations ORDER BY name')
-            locations = [row[0] for row in c.fetchall()]
+            c.execute('SELECT name, bldg FROM locations ORDER BY name')
+            location_data = c.fetchall()
+            locations = [row[0] for row in location_data]
+            buildings = sorted(list(set(row[1] for row in location_data)))
     except Exception as e:
-        logger.error(f"Error fetching locations for user {current_user.username}: {str(e)}")
-        flash("Error loading locations.", "danger")
+        logger.error(f"Error fetching locations/buildings for user {current_user.username}: {str(e)}")
+        flash("Error loading locations/buildings.", "danger")
 
     # Get all housing units from residents table
     housing_units = []
@@ -97,7 +100,7 @@ def account():
                 details=f'Password less than {MIN_PASSWORD_LENGTH} characters'
             )
             flash(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.", "warning")
-            return render_template('common/account.html', user=user_data, locations=locations, housing_units=housing_units)
+            return render_template('common/account.html', user=user_data, locations=locations, buildings=buildings, housing_units=housing_units)
 
         try:
             with get_db() as conn:
@@ -131,8 +134,10 @@ def account():
                     )
 
                 conn.commit()
-                # Update current_user.theme to reflect the new theme
+                # Update current_user attributes to reflect changes
                 current_user.theme = theme
+                current_user.default_view = default_view
+                current_user.default_unit = default_unit
 
             logger.info(f"Successfully updated account for user {current_user.username}")
             flash('Account updated successfully.', 'success')
@@ -149,7 +154,7 @@ def account():
                 details=f'Failed to update account: {str(e)}'
             )
 
-    return render_template('common/account.html', user=user_data, locations=locations, housing_units=housing_units)
+    return render_template('common/account.html', user=user_data, locations=locations, buildings=buildings, housing_units=housing_units)
 
 @account_bp.route('/update_theme', methods=['POST'])
 @login_required

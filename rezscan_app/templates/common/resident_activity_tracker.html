@@ -91,6 +91,11 @@
   .clear-search-btn:hover {
     color: #dc3545;
   }
+  .table-highlight {
+    border: 2px solid #007bff;
+    background-color: #e7f1ff;
+    transition: background-color 0.3s ease;
+  }
 </style>
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -147,7 +152,7 @@
 
     {% if view_type == 'Location' and selected_view == 'All Locations' or view_type == 'Building' and selected_view == 'All Buildings' or view_type == 'Building' and selected_view != 'All Buildings' %}
       {% for location, people in grouped.items() %}
-        <div class="card mb-4">
+        <div class="card mb-4" data-table-id="table-{{ loop.index }}">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">{{ location }} ({{ people | length }} Residents)</h5>
             <button class="btn collapse-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="true" aria-controls="collapse-{{ loop.index }}" title="Toggle section">
@@ -203,7 +208,7 @@
         </div>
       {% endfor %}
     {% else %}
-      <div class="card mb-4">
+      <div class="card mb-4" data-table-id="table-single">
         <div class="card-header bg-primary text-white">
           <h5 class="mb-0">{{ selected_view }} ({{ data | length }} Residents)</h5>
         </div>
@@ -265,9 +270,10 @@
     const allTables = document.querySelectorAll('table');
     const clearButtons = document.querySelectorAll('.clear-search-btn');
 
-    // Function to filter a single table
+    // Function to filter a single table and return match count
     function filterTable(table, filter) {
       const rows = table.querySelectorAll('tbody tr');
+      let matchCount = 0;
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
         let match = false;
@@ -279,7 +285,29 @@
           }
         }
         row.style.display = match ? '' : 'none';
+        if (match) matchCount++;
       });
+      return matchCount;
+    }
+
+    // Function to highlight and scroll to tables with matches
+    function updateTableHighlightsAndScroll(filter) {
+      let firstMatchingTable = null;
+      allTables.forEach(table => {
+        const card = table.closest('.card');
+        const matchCount = filterTable(table, filter);
+        if (matchCount > 0) {
+          card.classList.add('table-highlight');
+          if (!firstMatchingTable) {
+            firstMatchingTable = card;
+          }
+        } else {
+          card.classList.remove('table-highlight');
+        }
+      });
+      if (firstMatchingTable) {
+        firstMatchingTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     // Global search handler
@@ -287,13 +315,7 @@
       globalSearchInput.addEventListener('input', function() {
         const filter = this.value.toLowerCase();
         // Apply global search only to tables without active local search
-        allTables.forEach(table => {
-          const tableId = table.id;
-          const localSearchInput = document.querySelector(`.search-input[data-table-id="${tableId}"]`);
-          if (!localSearchInput || !localSearchInput.value) {
-            filterTable(table, filter);
-          }
-        });
+        updateTableHighlightsAndScroll(filter);
       });
     }
 
@@ -302,31 +324,14 @@
       input.addEventListener('input', function() {
         const tableId = this.getAttribute('data-table-id');
         const table = document.getElementById(tableId);
+        const card = table.closest('.card');
         const filter = this.value.toLowerCase();
-        filterTable(table, filter);
-      });
-    });
-
-    // Reset local search when global search is used
-    if (globalSearchInput) {
-      globalSearchInput.addEventListener('input', function() {
-        tableSearchInputs.forEach(input => {
-          if (!input.value) {
-            const tableId = input.getAttribute('data-table-id');
-            const table = document.getElementById(tableId);
-            filterTable(table, this.value.toLowerCase());
-          }
-        });
-      });
-    }
-
-    // Reset global search effects when local search is used
-    tableSearchInputs.forEach(input => {
-      input.addEventListener('input', function() {
-        if (this.value) {
-          const tableId = this.getAttribute('data-table-id');
-          const table = document.getElementById(tableId);
-          filterTable(table, this.value.toLowerCase());
+        const matchCount = filterTable(table, filter);
+        // Highlight table if it has matches
+        if (matchCount > 0) {
+          card.classList.add('table-highlight');
+        } else {
+          card.classList.remove('table-highlight');
         }
       });
     });
@@ -339,6 +344,10 @@
         // Trigger input event to reset filtering
         const event = new Event('input', { bubbles: true });
         searchInput.dispatchEvent(event);
+        // Remove highlights from all tables
+        document.querySelectorAll('.card').forEach(card => {
+          card.classList.remove('table-highlight');
+        });
       });
     });
   });
