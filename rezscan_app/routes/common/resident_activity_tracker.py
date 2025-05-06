@@ -31,6 +31,11 @@ def live_dashboard():
     
     sort = request.args.get('sort', 'timestamp')
     direction = request.args.get('direction', 'desc')
+    view_type = request.args.get('view_type', 'Location')  # Building or Location
+    
+    # Set default selected_view based on view_type
+    default_selected_view = 'All Locations' if view_type == 'Location' else 'All Buildings'
+    selected_view = request.args.get('view', default_selected_view)
     
     # Get user's default_view from users table
     default_view = 'All Locations'
@@ -44,27 +49,31 @@ def live_dashboard():
     except Exception as e:
         logger.error(f"Error fetching default_view for user {current_user.username}: {str(e)}")
     
-    selected_view = request.args.get('view', default_view)  # Allow view override via query param
-    
-    valid_sorts = ['name', 'timestamp']
-    sort = sort if sort in valid_sorts else 'timestamp'
-    direction = direction if direction in ['asc', 'desc'] else 'desc'
-    
+    # Ensure selected_view is valid for the current view_type
     checked_in = []
     locations = []
+    buildings = []
     try:
         with get_db() as conn:
             c = conn.cursor()
+            # Get all locations and buildings
+            c.execute('SELECT name, bldg FROM locations ORDER BY name')
+            location_data = c.fetchall()
+            locations = [row[0] for row in location_data]
+            buildings = sorted(list(set(row[1] for row in location_data)))
+
+            # Validate selected_view
+            if view_type == 'Location' and selected_view not in ['All Locations'] + locations:
+                selected_view = 'All Locations'
+            elif view_type == 'Building' and selected_view not in ['All Buildings'] + buildings:
+                selected_view = 'All Buildings'
+
             log_audit_action(
                 username=current_user.username,
                 action='view',
                 target='resident_activity_tracker',
-                details=f'Accessed resident activity dashboard with sort={sort}, direction={direction}, view={selected_view}'
+                details=f'Accessed resident activity dashboard with sort={sort}, direction={direction}, view_type={view_type}, view={selected_view}'
             )
-
-            # Get all locations from locations table
-            c.execute('SELECT name FROM locations ORDER BY name')
-            locations = [row[0] for row in c.fetchall()]
 
             # Get latest scans
             c.execute('''
@@ -78,20 +87,30 @@ def live_dashboard():
 
             for mdoc, latest_time, name in latest_scans:
                 query = '''
-                    SELECT r.name, s.mdoc, r.unit, r.housing_unit, r.level, s.timestamp, s.location
+                    SELECT r.name, s.mdoc, r.unit, r.housing_unit, r.level, s.timestamp, s.location, l.bldg
                     FROM scans s
                     LEFT JOIN residents r ON s.mdoc = r.mdoc
+                    LEFT JOIN locations l ON s.location = l.name
                     WHERE s.mdoc = ? AND s.timestamp = ? AND s.status = 'In'
                 '''
                 params = (mdoc, latest_time)
-                if selected_view != 'All Locations':
+                if view_type == 'Location' and selected_view != 'All Locations':
                     query += ' AND s.location = ?'
+                    params += (selected_view,)
+                elif view_type == 'Building' and selected_view != 'All Buildings':
+                    query += ' AND l.bldg = ?'
                     params += (selected_view,)
                 c.execute(query, params)
                 result = c.fetchone()
                 if result:
                     checked_in.append(result)
             
+            logger.debug(f"Filtered to {len(checked_in)} checked-in residents for view_type={view_type}, selected_view={selected_view}")
+
+            valid_sorts = ['name', 'timestamp']
+            sort = sort if sort in valid_sorts else 'timestamp'
+            direction = direction if direction in ['asc', 'desc'] else 'desc'
+
             if sort == 'name':
                 checked_in.sort(key=lambda x: (x[0] or 'Unknown Resident').lower(), reverse=(direction == 'desc'))
             elif sort == 'timestamp':
@@ -110,7 +129,8 @@ def live_dashboard():
             details=f'Failed to load resident activity: {str(e)}'
         )
 
-    return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction, locations=locations, selected_view=selected_view)
+    return render_template('common/resident_activity_tracker.html', data=checked_in, sort=sort, direction=direction, 
+                           locations=locations, buildings=buildings, view_type=view_type, selected_view=selected_view)
 
 @resident_activity_tracker_bp.route('/live/check_out', methods=['POST'], strict_slashes=False)
 @login_required

@@ -6,7 +6,7 @@
   {% set current_sort = sort|default('name') %}
   {% set current_dir = direction|default('asc') %}
   {% set next_dir = 'desc' if current_sort == column_name and current_dir == 'asc' else 'asc' %}
-  <a href="{{ url_for('resident_activity_tracker.live_dashboard', sort=column_name, direction=next_dir, view=selected_view) }}" class="text-decoration-none">
+  <a href="{{ url_for('resident_activity_tracker.live_dashboard', sort=column_name, direction=next_dir, view=selected_view, view_type=view_type) }}" class="text-decoration-none">
     {{ label }}
     {% if current_sort == column_name %}
       {% if current_dir == 'asc' %}▲{% else %}▼{% endif %}
@@ -99,11 +99,27 @@
       <form action="{{ url_for('resident_activity_tracker.live_dashboard') }}" method="GET" class="d-inline me-2 view-select-container">
         <input type="hidden" name="sort" value="{{ sort }}">
         <input type="hidden" name="direction" value="{{ direction }}">
+        <select name="view_type" onchange="this.form.submit()" class="form-select view-select" aria-label="Select view type">
+          <option value="Location" {% if view_type == 'Location' %}selected{% endif %}>By Location</option>
+          <option value="Building" {% if view_type == 'Building' %}selected{% endif %}>By Building</option>
+        </select>
+      </form>
+      <form action="{{ url_for('resident_activity_tracker.live_dashboard') }}" method="GET" class="d-inline me-2 view-select-container">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="direction" value="{{ direction }}">
+        <input type="hidden" name="view_type" value="{{ view_type }}">
         <select name="view" onchange="this.form.submit()" class="form-select view-select" aria-label="Select view">
-          <option value="All Locations" {% if selected_view == 'All Locations' %}selected{% endif %}>All Locations</option>
-          {% for location in locations %}
-            <option value="{{ location }}" {% if selected_view == location %}selected{% endif %}>{{ location }}</option>
-          {% endfor %}
+          {% if view_type == 'Location' %}
+            <option value="All Locations" {% if selected_view == 'All Locations' %}selected{% endif %}>All Locations</option>
+            {% for location in locations %}
+              <option value="{{ location }}" {% if selected_view == location %}selected{% endif %}>{{ location }}</option>
+            {% endfor %}
+          {% else %}
+            <option value="All Buildings" {% if selected_view == 'All Buildings' %}selected{% endif %}>All Buildings</option>
+            {% for building in buildings %}
+              <option value="{{ building }}" {% if selected_view == building %}selected{% endif %}>{{ building }}</option>
+            {% endfor %}
+          {% endif %}
         </select>
       </form>
       <a href="{{ url_for('resident_activity_tracker.heatmap') }}" class="btn btn-primary me-2" aria-label="View Heatmap">View Heatmap</a>
@@ -120,16 +136,16 @@
   {% endif %}
 
   {% if data %}
-    {% if selected_view == 'All Locations' %}
-      {% set grouped = {} %}
-      {% for row in data %}
-        {% set location = row[6] %}
-        {% if location not in grouped %}
-          {% set _ = grouped.update({location: []}) %}
-        {% endif %}
-        {% set _ = grouped[location].append(row) %}
-      {% endfor %}
+    {% set grouped = {} %}
+    {% for row in data %}
+      {% set location = row[6] %}
+      {% if location not in grouped %}
+        {% set _ = grouped.update({location: []}) %}
+      {% endif %}
+      {% set _ = grouped[location].append(row) %}
+    {% endfor %}
 
+    {% if view_type == 'Location' and selected_view == 'All Locations' or view_type == 'Building' and selected_view == 'All Buildings' or view_type == 'Building' and selected_view != 'All Buildings' %}
       {% for location, people in grouped.items() %}
         <div class="card mb-4">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
