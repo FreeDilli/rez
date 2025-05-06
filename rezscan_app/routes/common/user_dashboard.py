@@ -52,10 +52,21 @@ def dashboard():
             ''')
             checked_in = c.fetchone()[0]
 
+            c.execute('''
+                SELECT location, COUNT(*) as scan_count
+                FROM scans
+                WHERE location IS NOT NULL
+                GROUP BY location
+                ORDER BY scan_count DESC
+                LIMIT 1
+            ''')
+            top_location = c.fetchone()[0]
+
             stats = {
                 'total_residents': total_residents,
                 'scans_today': scans_today,
-                'checked_in': checked_in
+                'checked_in': checked_in,
+                'top_location': top_location
             }
 
         logger.debug(f"Rendering {template_name} with stats: {stats}")

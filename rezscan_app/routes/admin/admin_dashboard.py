@@ -43,11 +43,22 @@ def admin_dashboard():
         c.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
         total_admins = c.fetchone()[0]
 
+        c.execute('''
+                SELECT location, COUNT(*) as scan_count
+                FROM scans
+                WHERE location IS NOT NULL
+                GROUP BY location
+                ORDER BY scan_count DESC
+                LIMIT 1
+        ''')
+        top_location = c.fetchone()[0]
+
         stats = {
             'total_residents': total_residents,
             'scans_today': scans_today,
             'checked_in': checked_in,
-            'total_users': total_users
+            'total_users': total_users,
+            'top_location': top_location
         }
 
         # log_audit_action(username, 'view', 'admin_dashboard', f"Viewed dashboard with stats: {stats}")
