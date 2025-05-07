@@ -1,24 +1,33 @@
-# Python compiled files
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Python cache files
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.py[cod]
 
-# Virtual environments
-.venv/
-venv/
-env/
+# Flask-specific
+instance/
+logs/
+*.log
+*.db
+*.lock
+
+# VS Code
+.vscode/
+
+# Other common ignores
+*.DS_Store  # macOS
+Thumbs.db   # Windows
+
 
 # Sensitive files
 # config.py  # If it contains sensitive data (consider environment variables instead)
 .env
 *.env
 *.
-
-logs/
-
-.DS_Store
-*.log
-*.db
-*.lock
