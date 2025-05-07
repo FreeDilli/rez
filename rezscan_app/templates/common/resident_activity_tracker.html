@@ -16,86 +16,21 @@
 
 {% block content %}
 <style>
-  .collapse-toggle-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-  }
-  .collapse-toggle-btn i {
-    transition: transform 0.3s ease;
-  }
-  .collapse-toggle-btn.collapsed i {
-    transform: rotate(-90deg);
-  }
-  .collapse-transition {
-    transition: height 0.3s ease;
-  }
-  .view-select-container {
-    min-width: 200px;
-  }
-  .view-select {
-    background-color: #ffffff;
-    border: 2px solid #007bff;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #333;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  .view-select:hover {
-    border-color: #0056b3;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-  .view-select:focus {
-    outline: none;
-    border-color: #0056b3;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-  .search-container {
-    margin: 10px 0;
-    position: relative;
-    display: inline-block;
-  }
-  .search-input, .global-search-input {
-    padding: 8px 30px 8px 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: #fff;
-    color: #333;
-    width: 300px;
-  }
-  .search-input::placeholder, .global-search-input::placeholder {
-    color: #555;
-    opacity: 1;
-  }
-  .search-input:focus, .global-search-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-  .clear-search-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #666;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-  }
-  .clear-search-btn:hover {
-    color: #dc3545;
-  }
-  .table-highlight {
-    border: 2px solid #007bff;
-    background-color: #e7f1ff;
-    transition: background-color 0.3s ease;
-  }
+  .collapse-toggle-btn:hover { background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; }
+  .collapse-toggle-btn i { transition: transform 0.3s ease; }
+  .collapse-toggle-btn.collapsed i { transform: rotate(-90deg); }
+  .collapse-transition { transition: height 0.3s ease; }
+  .view-select-container { min-width: 200px; }
+  .view-select { background-color: #ffffff; border: 2px solid #007bff; border-radius: 8px; padding: 8px 12px; font-size: 1rem; font-weight: 500; color: #333; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+  .view-select:hover { border-color: #0056b3; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); }
+  .view-select:focus { outline: none; border-color: #0056b3; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); }
+  .search-container { margin: 10px 0; position: relative; display: inline-block; }
+  .search-input, .global-search-input { padding: 8px 30px 8px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; background-color: #fff; color: #333; width: 300px; }
+  .search-input::placeholder, .global-search-input::placeholder { color: #555; opacity: 1; }
+  .search-input:focus, .global-search-input:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); }
+  .clear-search-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #666; font-size: 1rem; cursor: pointer; padding: 0; line-height: 1; }
+  .clear-search-btn:hover { color: #dc3545; }
+  .table-highlight { border: 2px solid #007bff; background-color: #e7f1ff; transition: background-color 0.3s ease; }
 </style>
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -128,6 +63,7 @@
         </select>
       </form>
       <a href="{{ url_for('resident_activity_tracker.heatmap') }}" class="btn btn-primary me-2" aria-label="View Heatmap">View Heatmap</a>
+      <button class="btn btn-success me-2" onclick="printTables([1, 6])" aria-label="Print Tables">Print Tables</button>
       {% if current_user.role == 'admin' %}
       <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary" aria-label="Back to Admin">← Back to Admin</a>
       {% endif %}
@@ -264,37 +200,46 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const globalSearchInput = document.querySelector('.global-search-input');
-    const tableSearchInputs = document.querySelectorAll('.search-input');
-    const allTables = document.querySelectorAll('table');
-    const clearButtons = document.querySelectorAll('.clear-search-btn');
+document.addEventListener('DOMContentLoaded', function() {
+  const globalSearchInput = document.querySelector('.global-search-input');
+  const tableSearchInputs = document.querySelectorAll('.search-input');
+  const allTables = document.querySelectorAll('table');
+  const clearButtons = document.querySelectorAll('.clear-search-btn');
 
-    // Function to filter a single table and return match count
-    function filterTable(table, filter) {
-      const rows = table.querySelectorAll('tbody tr');
-      let matchCount = 0;
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        let match = false;
-        // Check all cells except the Actions column
-        for (let i = 0; i < cells.length - 1; i++) {
-          if (cells[i].textContent.toLowerCase().includes(filter)) {
-            match = true;
-            break;
-          }
+  function filterTable(table, filter) {
+    const rows = table.querySelectorAll('tbody tr');
+    let matchCount = 0;
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      let match = false;
+      for (let i = 0; i < cells.length - 1; i++) {
+        if (cells[i].textContent.toLowerCase().includes(filter)) {
+          match = true;
+          break;
         }
-        row.style.display = match ? '' : 'none';
-        if (match) matchCount++;
-      });
-      return matchCount;
-    }
+      }
+      row.style.display = match ? '' : 'none';
+      if (match) matchCount++;
+    });
+    return matchCount;
+  }
 
-    // Function to highlight and scroll to tables with matches
-    function updateTableHighlightsAndScroll(filter) {
-      let firstMatchingTable = null;
-      allTables.forEach(table => {
-        const card = table.closest('.card');
+  function resetTable(table) {
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      row.style.display = '';
+    });
+    const card = table.closest('.card');
+    card.classList.remove('table-highlight');
+  }
+
+  function updateTableHighlightsAndScroll(filter) {
+    let firstMatchingTable = null;
+    allTables.forEach(table => {
+      const card = table.closest('.card');
+      if (filter.trim() === '') {
+        resetTable(table);
+      } else {
         const matchCount = filterTable(table, filter);
         if (matchCount > 0) {
           card.classList.add('table-highlight');
@@ -304,52 +249,98 @@
         } else {
           card.classList.remove('table-highlight');
         }
-      });
-      if (firstMatchingTable) {
-        firstMatchingTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    });
+    if (firstMatchingTable) {
+      firstMatchingTable.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
 
-    // Global search handler
-    if (globalSearchInput) {
-      globalSearchInput.addEventListener('input', function() {
-        const filter = this.value.toLowerCase();
-        // Apply global search only to tables without active local search
-        updateTableHighlightsAndScroll(filter);
-      });
-    }
+  if (globalSearchInput) {
+    globalSearchInput.addEventListener('input', function() {
+      const filter = this.value.toLowerCase();
+      updateTableHighlightsAndScroll(filter);
+    });
+  }
 
-    // Per-table search handler
-    tableSearchInputs.forEach(input => {
-      input.addEventListener('input', function() {
-        const tableId = this.getAttribute('data-table-id');
-        const table = document.getElementById(tableId);
-        const card = table.closest('.card');
-        const filter = this.value.toLowerCase();
+  tableSearchInputs.forEach(input => {
+    input.addEventListener('input', function() {
+      const tableId = this.getAttribute('data-table-id');
+      const table = document.getElementById(tableId);
+      const card = table.closest('.card');
+      const filter = this.value.toLowerCase();
+      if (filter.trim() === '') {
+        resetTable(table);
+      } else {
         const matchCount = filterTable(table, filter);
-        // Highlight table if it has matches
         if (matchCount > 0) {
           card.classList.add('table-highlight');
         } else {
           card.classList.remove('table-highlight');
         }
-      });
-    });
-
-    // Clear button handler
-    clearButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const searchInput = this.previousElementSibling;
-        searchInput.value = '';
-        // Trigger input event to reset filtering
-        const event = new Event('input', { bubbles: true });
-        searchInput.dispatchEvent(event);
-        // Remove highlights from all tables
-        document.querySelectorAll('.card').forEach(card => {
-          card.classList.remove('table-highlight');
-        });
-      });
+      }
     });
   });
+
+  clearButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const searchInput = this.previousElementSibling;
+      searchInput.value = '';
+      const event = new Event('input', { bubbles: true });
+      searchInput.dispatchEvent(event);
+    });
+  });
+
+  window.printTables = function(columnsToHide = []) {
+    const tables = document.querySelectorAll('table');
+    if (tables.length === 0) {
+      alert('No tables found to print.');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Tables</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            th { background-color: #343a40; color: white; }
+            tbody tr:nth-child(odd) { background-color: #ffffff; }
+            tbody tr:nth-child(even) { background-color: #f2f2f2; border-top: 2px solid #999; border-bottom: 2px solid #999; }
+            h5 { margin-top: 20px; margin-bottom: 10px; }
+            ${columnsToHide.map(colIndex => `
+              th:nth-child(${colIndex + 1}),
+              td:nth-child(${colIndex + 1}) {
+                display: none;
+              }
+            `).join('')}
+          </style>
+        </head>
+        <body>
+    `);
+
+    tables.forEach((table, index) => {
+      const card = table.closest('.card');
+      const locationHeader = card.querySelector('.card-header h5').textContent;
+      printWindow.document.write(`
+        <h5>${locationHeader}</h5>
+        ${table.outerHTML}
+      `);
+    });
+
+    printWindow.document.write(`
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+});
 </script>
 {% endblock %}
