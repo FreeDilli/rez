@@ -51,7 +51,8 @@ def admin_dashboard():
                 ORDER BY scan_count DESC
                 LIMIT 1
         ''')
-        top_location = c.fetchone()[0]
+        result = c.fetchone()
+        top_location = result[0] if result else None
 
         stats = {
             'total_residents': total_residents,
