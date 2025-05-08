@@ -54,5 +54,17 @@
       }
     });
   }
+
+  // Refocus input on blur, unless another input or button is focused
+const scanInput = document.getElementById("mdoc");
+scanInput.addEventListener("blur", (event) => {
+  // Delay refocus to allow other elements to receive focus
+  setTimeout(() => {
+    // Only refocus if no other input or button is currently focused
+    if (!document.activeElement.matches("input, button, select, textarea")) {
+      scanInput.focus();
+    }
+  }, 0);
+});
 </script>
 {% endblock %}
