@@ -15,7 +15,7 @@ __pycache__/
 instance/
 logs/
 *.log
-*.db
+#*.db
 *.lock
 
 # VS Code
