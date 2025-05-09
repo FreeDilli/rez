@@ -169,3 +169,111 @@ def last_scan_partial():
         scan = None
 
     return render_template('partials/_last_scan_partial.html', last_scan=scan)
+
+@scanner_bp.route('/scanner-full', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
+@limiter.limit("50/hour", key_func=user_key_func)
+def scanner_full():
+    username = current_user.username if current_user.is_authenticated else 'unknown'
+    logger.debug(f"User {username} accessing /scan route with method: {request.method}")
+    logger.debug(f"Request headers: {request.headers}")
+    logger.debug(f"Request referrer: {request.referrer}")
+
+    clear_input = False
+    if request.method == 'POST':
+        logger.debug(f"User {username} submitted form data: {request.form}")
+        logger.debug(f"Raw POST data: {request.data}")
+
+        raw_input = None
+        if request.form:
+            raw_input = request.form.get('mdoc', '').strip()
+        elif request.data:
+            try:
+                raw_input = request.data.decode('utf-8').strip()
+                logger.debug(f"User {username} submitted raw POST data: {raw_input}")
+            except Exception as e:
+                logger.error(f"Error decoding raw POST data for user {username}: {str(e)}")
+                log_audit_action(
+                    username=username,
+                    action='error',
+                    target='scan',
+                    details=f"Error decoding POST data: {str(e)}"
+                )
+                flash("Invalid POST data received.", "danger")
+                return render_template('common/scanner-full.html')
+
+        if not raw_input:
+            logger.warning(f"User {username} submitted scan with no MDOC")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details='No MDOC provided'
+            )
+            flash("No barcode scanned.", "warning")
+            return render_template('common/scanner-full.html')
+
+        if '-' not in raw_input:
+            logger.warning(f"User {username} submitted invalid scan format: {raw_input}")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details='Invalid scan format (missing prefix-MDOC separator)'
+            )
+            flash("Invalid scan format. Expected format: PREFIX-MDOC", "warning")
+            return render_template('common/scanner-full.html')
+
+        prefix, mdoc = raw_input.split('-', 1)
+        logger.debug(f"User {username} parsed prefix: {prefix}, mdoc: {mdoc}")
+
+        if not re.match(r'^[a-zA-Z0-9]{1,10}$', prefix):
+            logger.warning(f"User {username} submitted invalid prefix format: {prefix}")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details='Invalid prefix format'
+            )
+            flash("Invalid prefix format. Use alphanumeric characters, max 10 characters.", "warning")
+            return render_template('common/scanner-full.html')
+
+        if not re.match(r'^\d{1,10}$', mdoc):
+            logger.warning(f"User {username} submitted invalid MDOC format: {mdoc}")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details='Invalid MDOC format'
+            )
+            flash("Invalid MDOC format. Use numeric characters, max 10 digits.", "warning")
+            return render_template('common/scanner-full.html')
+
+        try:
+            message = process_scan(mdoc.strip(), prefix.strip().upper())
+            logger.info(f"User {username} successfully processed scan for MDOC: {mdoc}")
+            log_audit_action(
+                username=username,
+                action='scan',
+                target='scan',
+                details=f"Processed scan for MDOC: {mdoc}, Prefix: {prefix}"
+            )
+            flash(message, "success")
+            clear_input = True
+        except Exception as e:
+            logger.error(f"Error processing scan for MDOC {mdoc} by user {username}: {str(e)}")
+            log_audit_action(
+                username=username,
+                action='scan_failed',
+                target='scan',
+                details=f"Error processing scan for MDOC {mdoc}: {str(e)}"
+            )
+            flash(f"Error processing scan: {str(e)}", "danger")
+
+    log_audit_action(
+        username=username,
+        action='view',
+        target='scan',
+        details='Accessed scanner page'
+    )
+    return render_template('common/scanner-full.html', clear_input=clear_input)
