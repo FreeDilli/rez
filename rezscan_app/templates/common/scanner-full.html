@@ -32,6 +32,9 @@
 
         <!-- Scanner Content -->
         <div class="container mt-4">
+            <div class="d-flex justify-content-start mb-3">
+                <a href="{{ url_for('user_dashboard.dashboard') }}" class="btn btn-primary btn-sm">Back to Dashboard</a>
+            </div>
             <h2 class="mb-4 text-center">Scanner</h2>
 
             {% if current_location %}
@@ -44,7 +47,7 @@
             <form method="POST" action="{{ url_for('scanner.scanner_full') }}" autocomplete="off" id="scan-form">
                 <div class="mb-3">
                     <label for="mdoc" class="form-label">Scan MDOC Barcode</label>
-                    <input type="text" id="mdoc" name="mdoc" class="form-control form-control-lg" maxlength="15" autofocus required>
+                    <input type="text" id="mdoc" name="mdoc" class="form-control form-control-lg" autofocus required>
                 </div>
                 <button type="submit" id="scan-button" class="btn btn-success btn-lg w-100">Submit Scan</button>
             </form>
@@ -62,15 +65,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Auto-refresh last scan every 10 seconds
-        // setInterval(() => {
-        //     fetch("{{ url_for('scanner.last_scan_partial') }}")
-        //         .then(res => res.text())
-        //         .then(html => {
-        //             const section = document.getElementById("last-scan-section");
-        //             section.innerHTML = html;
-        //         })
-        //         .catch(err => console.error("Error refreshing last scan:", err));
-        // }, 10000);
+        setInterval(() => {
+            fetch("{{ url_for('scanner.last_scan_partial') }}")
+                .then(res => res.text())
+                .then(html => {
+                    const section = document.getElementById("last-scan-section");
+                    section.innerHTML Nomination = html;
+                })
+                .catch(err => console.error("Error refreshing last scan:", err));
+        }, 10000);
 
         // Prevent empty form submission
         const scanForm = document.getElementById("scan-form");
