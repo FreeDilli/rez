@@ -2,12 +2,20 @@ import sqlite3
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
+import pytz
 from rezscan_app.config import Config
 from rezscan_app.utils.logging_config import setup_logging
 
 # Configure logging
 setup_logging()
 logger = logging.getLogger(__name__)
+
+# Initialize timezone from Config
+try:
+    APP_TIMEZONE = pytz.timezone(Config.TIMEZONE)
+except pytz.exceptions.UnknownTimeZoneError:
+    logger.error(f"Invalid timezone '{Config.TIMEZONE}' in config. Falling back to 'America/New_York'.")
+    APP_TIMEZONE = pytz.timezone('America/New_York')
 
 TOO_SOON_SECONDS = 1  # configurable scan cooldown
 
@@ -54,13 +62,15 @@ def process_scan(mdoc: str, prefix: str) -> str:
             """, (mdoc,))
             last_scan = cursor.fetchone()
             
-            now = datetime.now()
+            # Use configured timezone for current time
+            now = datetime.now(APP_TIMEZONE)
             scan_time = now
             out_time = now - timedelta(seconds=1)
 
             if last_scan:
                 last_location, last_status, last_timestamp = last_scan
-                last_timestamp = datetime.strptime(last_timestamp, "%Y-%m-%d %H:%M:%S")
+                # Parse stored timestamp as configured timezone
+                last_timestamp = APP_TIMEZONE.localize(datetime.strptime(last_timestamp, "%Y-%m-%d %H:%M:%S"))
 
                 if (now - last_timestamp).total_seconds() < TOO_SOON_SECONDS:
                     logger.info(f"Ignored rapid scan for MDOC '{mdoc}' at {location_name}")
@@ -107,10 +117,11 @@ def insert_scan(cursor: sqlite3.Cursor, mdoc: str, timestamp: datetime, status: 
     Args:
         cursor: Database cursor.
         mdoc: The resident's MDOC identifier.
-        timestamp: The timestamp of the scan.
+        timestamp: The timestamp of the scan (in configured timezone).
         status: The scan status ('In' or 'Out').
         location: The location name.
     """
+    # Ensure timestamp is in configured timezone and format as string
     timestamp_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute("""
         INSERT INTO scans (mdoc, timestamp, status, location)
